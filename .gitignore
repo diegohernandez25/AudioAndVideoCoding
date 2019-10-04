@@ -1,0 +1,17 @@
+MakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_instal:l.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+**.png
+**.jpeg
+**.jpg
+**.y4m
+**/build/
