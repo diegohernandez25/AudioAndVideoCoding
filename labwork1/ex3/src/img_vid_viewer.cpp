@@ -5,33 +5,37 @@
 
 
 int main(int argc, char* argv[]) {
-	cv::Mat image;
 	bool isVid;
 
 	// read from args
-	if (argc > 1) {
+	if (argc > 2) {
 		if (argv[1] == std::string("-v")) {
 			isVid = 1;
 		} else if (argv[1] == std::string("-i")) {
 			isVid = 0;
 		} else {
-			std::cout << "Invalid argument \"" << argv[1] << "\". Valid flags are: " << std::endl;
-			std::cout << "	-v: video files" << std::endl;
-			std::cout << "	-i: image files" << std::endl;
-			return 0;
+			std::cout << "Invalid argument \"" << argv[1] << "\". Valid flags are: " << std::endl
+					  << "	-v: video files" << std::endl
+					  << "	-i: image files" << std::endl;
+			return -1;
 		}
 	} else {
-		std::cout << "Usage:" << std::endl;
-		std::cout << "	-v <path_to_image1> <path_to_image2> ..." << std::endl;
-		std::cout << "	or" << std::endl;
-		std::cout << "	-i <path_to_video1> <path_to_video2> ..." << std::endl;
-		std::cout << "\nPress ESC or \"q\" to quit. Press <left> and <right> arrows to move through different images" << std::endl;
+		std::cout << "Usage:" << std::endl
+				  << "	-v <path_to_image1> <path_to_image2> ..." << std::endl
+				  << "	or" << std::endl
+				  << "	-i <path_to_video1> <path_to_video2> ..." << std::endl
+			  	  << "\nPress ESC or \"q\" to quit. Press <left> and <right> arrows to move through different images" << std::endl;
 		return 0;
 	}
 
 	if (isVid) {
-		// TODO
+		cv::VideoCapture cap("bus_cif.y4m");
+		if(!cap.isOpened()){
+			std::cout << "Error opening video stream or file" << std::endl;
+			return -1;
+		}
 	} else {
+		cv::Mat image;
 		cv::namedWindow("Image viewer", cv::WINDOW_AUTOSIZE);
 		int pressedKey;
 
