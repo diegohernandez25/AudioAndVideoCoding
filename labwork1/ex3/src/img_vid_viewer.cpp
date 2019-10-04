@@ -4,6 +4,24 @@
 #include <opencv2/highgui.hpp>
 
 
+int wait(int &i, int len) {
+	char pressedKey = cv::waitKey(25);
+	// If left key is pressed and it's not the first file
+	if (pressedKey == 81 && i > 2) {
+		i--;
+		return -1;
+	// If right key is pressed and it's not the last file
+	} else if (pressedKey == 83 && i<len) {
+		i++;
+		return -1;
+	// If "ESC" or "q" is pressed
+	} else if (pressedKey == 113 || pressedKey == 27) {
+		std::cout << 3 << std::endl;
+		return 0;
+	}
+	return 1;
+}
+
 int main(int argc, char* argv[]) {
 	bool isVid;
 
@@ -28,43 +46,57 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
-	if (isVid) {
-		cv::VideoCapture cap("bus_cif.y4m");
-		if(!cap.isOpened()){
-			std::cout << "Error opening video stream or file" << std::endl;
-			return -1;
-		}
-	} else {
-		cv::Mat image;
-		cv::namedWindow("Image viewer", cv::WINDOW_AUTOSIZE);
-		int pressedKey;
+	cv::Mat image;
+	cv::Mat frame;
+	cv::VideoCapture cap;
+	int i=2;
+	int ret;
 
-		for (int i = 2; i < argc; i++) {
+	while (true) {
+		std::cout << "Showing " << argv[i] << std::endl;
+
+		if (!isVid) {
 			image = cv::imread(argv[i], cv::IMREAD_UNCHANGED );
-			pressedKey = 0;
-
 			if(image.empty() )	{
 				std::cout << "Image file could not be open." << std::endl;
 				return -1;
 			}
-
 			cv::imshow("Image viewer", image );
+		} else {
+			cap.open(argv[i]);
 
-			while (true) {
-				pressedKey = cv::waitKey(0);
-				std::cout << pressedKey << std::endl;
-				if (pressedKey == 81 && i > 2) {
-					i -= 2;
-					break;
-				} else if (pressedKey == 83 && i< argc-1) {
-					break;
-				} else if (pressedKey == 113 || pressedKey == 27) {
-					return 0;
-				}
+			if(!cap.isOpened()){
+				std::cout << "Error opening video stream or file" << std::endl;
+				return -1;
 			}
 		}
-		cv::destroyWindow("Image viewer" );
+
+		while (true) {
+			if (isVid) {
+				cap >> frame;
+
+				if (frame.empty())
+				break;
+
+				cv::imshow( "Video player", frame );
+			}
+			ret = wait(i, argc-1);
+			// Request to quit was received
+			if (ret == 0) {
+				return 0;
+			// Request for next/previous file was received
+			} else if (ret < 0) {
+				break;
+			}
+		}
 	}
+
+	if (isVid) {	
+		cap.release();
+	}
+		
+	// Closes all the frames
+	cv::destroyAllWindows();
 
 	return 0;
 }
