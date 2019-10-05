@@ -3,11 +3,20 @@
 #include <fstream>
 #include <cstdint>
 #include "Wav/Wav.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/plot.hpp"
+#include "opencv2/opencv.hpp"
+#include "opencv2/core/mat.hpp"
+
+
 
 using namespace std;
+using namespace cv;
 
-int main() {
-    string infile;
+void ex1()
+{   string infile;
     cout << "input file (must be .wav file):";
 
     getline(cin, infile);
@@ -26,5 +35,25 @@ int main() {
     FILE* outFile    = fopen(fileOutput,"w");
     mywav.cpBySample(outFile);
 
+
+}
+
+void test_plot()
+{
+    Wav mywav   = Wav("/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/wav/sample05.wav");
+    mywav.readHeader();
+    mywav.plotSampling();
+}
+
+void debug()
+{
+    signed int b =  0xffff8000;
+    cout << b << endl;
+    cout << dec << -32768<< " " << hex <<  -32768;
+
+}
+
+int main() {
+    test_plot();
     return 0;
 }

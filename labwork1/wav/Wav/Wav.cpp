@@ -4,6 +4,7 @@
 
 #include "Wav.h"
 
+
 /**
  * Gets file size.
  *
@@ -30,9 +31,7 @@ void Wav::cpBySample(FILE *outwavfile)
     wav_hdr wavHeader;
     int headerSize = sizeof(wav_hdr);
     size_t bytesRead = fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
-    cout << "read done"<< endl;
     fwrite(&wavHeader, 1, (size_t) headerSize, outwavfile);
-    cout << "write done" << endl;
     char buffer[wavHeader.bitsPerSample];
     while(!feof(inwavfile))
     {   fread(buffer, 1, (size_t ) wavHeader.bitsPerSample, inwavfile);
@@ -41,7 +40,50 @@ void Wav::cpBySample(FILE *outwavfile)
     fflush(outwavfile);
 }
 
+/**
+ * Plots sample into a graph. Note samples values are parsed from -1 to 1.
+ *
+ * */
+void Wav::plotSampling()
+{   FILE* inwavfile   = fopen(Wav::filePath.c_str(),"r");
+    wav_hdr wavHeader;
+    int headerSize = sizeof(wav_hdr);
+    size_t bytesRead = fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
+    signed char buffer[(wavHeader.bitsPerSample/8)*wavHeader.NumOfChan];
+    int depth = wavHeader.Subchunk2Size/4;
 
+    vector<double> data_channels[wavHeader.NumOfChan];
+    for( auto it:data_channels)
+        it = *(new vector<double >());
+
+
+    while(!feof(inwavfile))
+    {   fread(buffer, 1, (size_t ) (wavHeader.bitsPerSample/8)*wavHeader.NumOfChan, inwavfile);
+        for(int i=0; i< wavHeader.NumOfChan; i++)
+        {   signed int samp = ((((0xf00 & buffer[i*2+1]) == 0xf00)? 0xffff0000 : 0x00000000) | (((0xff & buffer[i*2+1]) << 8) | (0xff & buffer[i*2])));
+            double fs_scale = ((double) samp/ 0xffff);
+            data_channels[i].push_back(fs_scale);
+        }
+    }
+    int channel = 0;
+    for(auto it : data_channels)
+    {   Mat data(it);
+        Ptr<plot::Plot2d> plot = plot::Plot2d::create(data);
+        while( true ){
+            double value = *it.begin();
+            it.erase(it.begin());
+            it.push_back(value);
+            Mat image;
+            plot->render(image);
+            imshow("Channel "+to_string(channel), image);
+            if( waitKey( 33 ) >= 0 )
+                break;
+
+        }
+        channel++;
+    }
+    destroyAllWindows();
+}
 
 /**
  * Parses Wav file header information.

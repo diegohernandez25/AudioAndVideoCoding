@@ -5,7 +5,7 @@
 		<Option title="test"/>
 		<Option makefile_is_custom="1"/>
 		<Option compiler="gcc"/>
-		<Option virtualFolders="CMake Files\;"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\..\;CMake Files\..\..\..\..\..\..\;CMake Files\..\..\..\..\..\..\..\;CMake Files\..\..\..\..\..\..\..\..\;CMake Files\..\..\..\..\..\..\..\..\..\;CMake Files\..\..\..\..\..\..\..\..\..\..\;CMake Files\..\..\..\..\..\..\..\..\..\..\usr\;CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\;CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\lib\;CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\lib\cmake\;CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\lib\cmake\opencv4\;"/>
 		<Build>
 			<Target title="all">
 				<Option working_dir="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/cmake-build-debug"/>
@@ -34,6 +34,9 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
+					<Add directory="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/libs/matplotlib-cpp"/>
+					<Add directory="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/libs/koolplot"/>
+					<Add directory="/usr/local/include/opencv4"/>
 					<Add directory="/usr/include/c++/7"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
 					<Add directory="/usr/include/c++/7/backward"/>
@@ -57,6 +60,9 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
+					<Add directory="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/libs/matplotlib-cpp"/>
+					<Add directory="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/libs/koolplot"/>
+					<Add directory="/usr/local/include/opencv4"/>
 					<Add directory="/usr/include/c++/7"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
 					<Add directory="/usr/include/c++/7/backward"/>
@@ -95,6 +101,18 @@
 		</Unit>
 		<Unit filename="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/../../../../../../../../../../usr/local/lib/cmake/opencv4/OpenCVConfig-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\lib\cmake\opencv4\"/>
+		</Unit>
+		<Unit filename="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/../../../../../../../../../../usr/local/lib/cmake/opencv4/OpenCVConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\lib\cmake\opencv4\"/>
+		</Unit>
+		<Unit filename="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/../../../../../../../../../../usr/local/lib/cmake/opencv4/OpenCVModules-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\lib\cmake\opencv4\"/>
+		</Unit>
+		<Unit filename="/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/wav/../../../../../../../../../../usr/local/lib/cmake/opencv4/OpenCVModules.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\..\..\..\..\..\usr\local\lib\cmake\opencv4\"/>
 		</Unit>
 	</Project>
 </CodeBlocks_project_file>

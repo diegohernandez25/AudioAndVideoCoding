@@ -11,8 +11,15 @@
 #include <cstdint>
 #include <string>
 
-using namespace std;
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/plot.hpp"
+#include "opencv2/opencv.hpp"
+#include "opencv2/core/mat.hpp"
 
+using namespace std;
+using namespace cv;
 /**
  * Wav header structure.
  * */
@@ -49,6 +56,7 @@ public:
     int getFileSize();
     void cpBySample(FILE *outWavfile);
     void readHeader();
+    void plotSampling();
 };
 
 #endif //TEST_WAV_H
