@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <map>
+#include <gnuplot.h>
 
 //int readData(char* filename, char)
 
@@ -49,6 +50,30 @@ int main(int argc, char* argv[]) {
 		// TODO rounding?
 		counter_mono[(channels[i]+channels[i+1])/2]++;
 	}
+
+	GnuplotPipe gp;
+	gp.sendLine("binwidth=1");
+	gp.sendLine("set boxwidth binwidth");
+	gp.sendLine("bin(x,width)=width*floor(x/width) + binwidth/2.0");
+	gp.sendLine("set title 'Channel 0'");
+	gp.sendLine("set term wxt 0 title 'Channel 0");
+	gp.sendLine("plot '-'smooth freq with boxes");
+	for(auto it = counter_channel0.cbegin(); it != counter_channel0.cend(); ++it) 
+		gp.sendLine(std::to_string(it->first) + " " + std::to_string(it->second));
+
+	gp.sendEndOfData();
+	gp.sendLine("set title 'Channel 1'");
+	gp.sendLine("set term wxt 1 title 'Channel 1'");
+	gp.sendLine("plot '-'smooth freq with boxes");
+	for(auto it = counter_channel1.cbegin(); it != counter_channel1.cend(); ++it) 
+		gp.sendLine(std::to_string(it->first) + " " + std::to_string(it->second));
+		
+	gp.sendEndOfData();
+	gp.sendLine("set title 'Mono'");
+	gp.sendLine("set term wxt 2 title 'Mono'");
+	gp.sendLine("plot '-'smooth freq with boxes");
+	for(auto it = counter_mono.cbegin(); it != counter_mono.cend(); ++it) 
+		gp.sendLine(std::to_string(it->first) + " " + std::to_string(it->second));
 
 	return 0;
 }
