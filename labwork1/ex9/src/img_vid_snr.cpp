@@ -62,7 +62,12 @@ int main(int argc, char* argv[]) {
 
 		// Quit if not able to read images
 		if (image_original.empty() || image_compressed.empty()) {
-			std::cout << "Image file could not be open." << std::endl;
+			std::cout << "Error: Image file could not be open." << std::endl;
+			return -1;
+		}
+
+		if (image_original.cols != image_compressed.cols || image_original.rows != image_compressed.rows) {
+			std::cout << "Error: Both images must have the same dimensions." << std::endl;
 			return -1;
 		}
 
