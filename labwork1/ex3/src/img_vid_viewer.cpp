@@ -43,10 +43,10 @@ int main(int argc, char* argv[]) {
 	// Print usage instructions if not enough parameters are given
 	} else {
 		std::cout << "Usage:" << std::endl
-				  << "	-v <path_to_image1> <path_to_image2> ..." << std::endl
+				  << "	-i <path_to_image1> <path_to_image2> ..." << std::endl
 				  << "	or" << std::endl
-				  << "	-i <path_to_video1> <path_to_video2> ..." << std::endl
-			  	  << "\nPress ESC or \"q\" to quit. Press <left> and <right> arrows to move through different images" << std::endl;
+				  << "	-v <path_to_video1> <path_to_video2> ..." << std::endl
+			  	  << "\nPress ESC or \"q\" to quit. Press <left> and <right> arrows to move through different files" << std::endl;
 		return 0;
 	}
 
