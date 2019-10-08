@@ -26,6 +26,34 @@ double calculatePsnr(cv::Mat mat1, cv::Mat mat2) {
 	return 10*std::log10((255*255)/(double(sum)/size));
 }
 
+int processMats(cv::Mat orig, cv::Mat compr) {
+	// Quit if not able to read images
+	if (orig.empty() || compr.empty()) {
+		std::cout << "Error: Image file could not be open." << std::endl;
+		return -1;
+	}
+
+	if (orig.cols != compr.cols || orig.rows != compr.rows) {
+		std::cout << "Error: Both images must have the same dimensions." << std::endl;
+		return -1;
+	}
+
+	cv::Mat split_orig[3], split_compr[3];
+	cv::split(orig, split_orig);
+	cv::split(compr, split_compr);
+	double psnr = 0, tmp;
+
+	for (int i=0; i<3; i++) {
+		tmp = calculatePsnr(split_orig[i], split_compr[i]);
+		if (tmp < 0)
+			return -1;
+		psnr += tmp;
+	}
+	
+	std::cout << "PSNR: " << psnr/3 << "dB" << std::endl;
+	return 0;
+}
+
 int main(int argc, char* argv[]) {
 	bool isVid;
 
@@ -60,54 +88,37 @@ int main(int argc, char* argv[]) {
 		image_original = cv::imread(argv[2], cv::IMREAD_UNCHANGED );
 		image_compressed = cv::imread(argv[3], cv::IMREAD_UNCHANGED );
 
-		// Quit if not able to read images
-		if (image_original.empty() || image_compressed.empty()) {
-			std::cout << "Error: Image file could not be open." << std::endl;
-			return -1;
-		}
-
-		if (image_original.cols != image_compressed.cols || image_original.rows != image_compressed.rows) {
-			std::cout << "Error: Both images must have the same dimensions." << std::endl;
-			return -1;
-		}
-
-		cv::Mat split_orig[3], split_compr[3];
-		cv::split(image_original, split_orig);
-		cv::split(image_compressed, split_compr);
-		double psnr = 0, tmp;
-
-		for (int i=0; i<3; i++) {
-			tmp = calculatePsnr(split_orig[i], split_compr[i]);
-			if (tmp < 0)
-				return -1;
-			psnr += tmp;
-		}
-		
-		std::cout << "PSNR: " << psnr/3 << "dB" << std::endl;
+		return processMats(image_original, image_compressed);
 	
 	} else {
 		// Initialize video
-		cv::VideoCapture cap;
-		cv::Mat frame;
+		cv::VideoCapture cap_orig, cap_compr;
+		cv::Mat frame_orig, frame_compr;
 
 		// Open capture
-		cap.open(argv[2]);
+		cap_orig.open(argv[2]);
+		cap_compr.open(argv[3]);
 
 		// Quit if unable to open capture
-		if(!cap.isOpened()){
+		if(!cap_orig.isOpened() || !cap_compr.isOpened()){
 			std::cout << "Error opening video stream or file" << std::endl;
 			return -1;
 		}
 	
 		while (true) {
 			// Get next frame
-			cap >> frame;
+			cap_orig >> frame_orig;
+			cap_compr >> frame_compr;
 
-			if (frame.empty())
+			if (frame_orig.empty())
 				break;
+			
+			processMats(frame_orig, frame_compr);
+
 		}
 
-		cap.release();
+		cap_orig.release();
+		cap_compr.release();
 	}
 	
 	return 0;
