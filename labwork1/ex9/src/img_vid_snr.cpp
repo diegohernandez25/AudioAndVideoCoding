@@ -1,31 +1,42 @@
 #include <iostream>
 
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 #include <numeric>
 
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+
+// Convert uchar element from the matrix to an int and calculate
+// the power of two
 int pow2(uchar elem) {
 	return int(elem) * int (elem);
 }
 
+// Calculates the PSNR for a given pair of images
 double calculatePsnr(cv::Mat mat1, cv::Mat mat2) {
+	// Initialize matrix
 	cv::Mat diff_mat;
-	cv::absdiff(mat1, mat2, diff_mat);
+	std::vector<int> unrolled_data(size);
+
 	int size = mat1.rows*mat2.cols;
 
-	std::vector<int> vector(size);
-	std::transform(diff_mat.begin<int>(), diff_mat.end<int>(),vector.begin(), pow2);
-	
-	int sum = std::accumulate(vector.begin(), vector.end(), 0);
+	// Calculate the modulus of the difference between both matrices
+	cv::absdiff(mat1, mat2, diff_mat);
+	// Calculate the power of two for each element of the matrix
+	std::transform(diff_mat.begin<int>(), diff_mat.end<int>(), unrolled_data.begin(), pow2);
+	// Sum all the elements
+	int sum = std::accumulate(unrolled_data.begin(), unrolled_data.end(), 0);
 
+	// If the sum of the differences is 0, the images are exactly the same
 	if (sum == 0) {
 		std::cout << "Images are the same." << std::endl;
 		return -1;
 	}
 
+	// Expression for the PSNR
 	return 10*std::log10((255*255)/(double(sum)/size));
 }
 
+// Process the given matrices
 int processMats(cv::Mat orig, cv::Mat compr) {
 	// Quit if not able to read images
 	if (orig.empty() || compr.empty()) {
@@ -33,16 +44,19 @@ int processMats(cv::Mat orig, cv::Mat compr) {
 		return -1;
 	}
 
+	// Compare the dimensions of both images
 	if (orig.cols != compr.cols || orig.rows != compr.rows) {
 		std::cout << "Error: Both images must have the same dimensions." << std::endl;
 		return -1;
 	}
 
+	// Split matrices by color channel
 	cv::Mat split_orig[3], split_compr[3];
 	cv::split(orig, split_orig);
 	cv::split(compr, split_compr);
 	double psnr = 0, tmp;
 
+	// Calculate PSNR for each channel
 	for (int i=0; i<3; i++) {
 		tmp = calculatePsnr(split_orig[i], split_compr[i]);
 		if (tmp < 0)
@@ -50,6 +64,7 @@ int processMats(cv::Mat orig, cv::Mat compr) {
 		psnr += tmp;
 	}
 	
+	// Return the average of the three channels
 	std::cout << "PSNR: " << psnr/3 << "dB" << std::endl;
 	return 0;
 }
@@ -81,15 +96,17 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 	
-	// Compare images
+	// Compare two static images
 	if (!isVid) {
 		// Read images
 		cv::Mat image_original, image_compressed;
 		image_original = cv::imread(argv[2], cv::IMREAD_UNCHANGED );
 		image_compressed = cv::imread(argv[3], cv::IMREAD_UNCHANGED );
 
+		// Process both images
 		return processMats(image_original, image_compressed);
 	
+	// Compare two videos
 	} else {
 		// Initialize video
 		cv::VideoCapture cap_orig, cap_compr;
@@ -104,7 +121,8 @@ int main(int argc, char* argv[]) {
 			std::cout << "Error opening video stream or file" << std::endl;
 			return -1;
 		}
-	
+
+		// Cycle through all the frames
 		while (true) {
 			// Get next frame
 			cap_orig >> frame_orig;
@@ -113,10 +131,12 @@ int main(int argc, char* argv[]) {
 			if (frame_orig.empty())
 				break;
 			
+			// Process current frame from both sources
 			processMats(frame_orig, frame_compr);
 
 		}
 
+		// Closes the capture
 		cap_orig.release();
 		cap_compr.release();
 	}
