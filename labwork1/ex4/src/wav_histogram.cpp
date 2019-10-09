@@ -3,8 +3,6 @@
 #include <map>
 
 #include <sndfile.h>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 
 #include "gnuplot.h"
 
@@ -78,7 +76,7 @@ int main(int argc, char* argv[]) {
 	// Read parameters from arguments
 	if (argc != 2) {
 		std::cout << "Usage:" << std::endl
-				  << "	vid_histogram <path_to_wav1>" << std::endl;
+				  << "	vid_histogram <path_to_wav>" << std::endl;
 		return 0;
 	}
 

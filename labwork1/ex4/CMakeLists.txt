@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8) 
 PROJECT (cav_1)
 
-find_package(OpenCV REQUIRED)
-
 set(VIDHISTOGRAM
     src/wav_histogram.cpp    
 )   
@@ -12,4 +10,4 @@ link_directories( ${CMAKE_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 add_executable( vid_histogram ${VIDHISTOGRAM} )
 
-target_link_libraries(vid_histogram ${OpenCV_LIBS} sndfile)
+target_link_libraries(vid_histogram sndfile)
