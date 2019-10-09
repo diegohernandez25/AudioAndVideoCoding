@@ -41,8 +41,13 @@ void ex1()
 void test_plot()
 {
     Wav mywav   = Wav("/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/wav/sample05.wav");
-    mywav.readHeader();
-    mywav.plotSampling();
+    //mywav.readHeader();
+
+    string path = "/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/wav/sample05_quant.wav";
+    FILE* outFile    = fopen(path.c_str(),"w");
+    mywav.encMidriseUniQuant(15, outFile);
+    fclose(outFile);
+
 }
 
 void debug()
@@ -55,5 +60,6 @@ void debug()
 
 int main() {
     test_plot();
+    cout<<"no prob"<<endl;
     return 0;
 }

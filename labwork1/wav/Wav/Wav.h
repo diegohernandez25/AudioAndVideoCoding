@@ -17,6 +17,7 @@
 #include "opencv2/plot.hpp"
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/mat.hpp"
+#include <cmath>
 
 using namespace std;
 using namespace cv;
@@ -46,10 +47,18 @@ public:
 
     //Attributes
     string filePath;
+    wav_hdr wavHeader;
+    signed char* wavData;
+    vector<char *> data_channels;
 
     //Constructors
     Wav(string fileName)
     {   filePath    = fileName;
+        int headerSize = sizeof(wav_hdr);
+        FILE* inwavfile   = fopen(filePath.c_str(),"r");
+        fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
+        wavData = (signed char*) malloc(wavHeader.Subchunk2Size);
+        fread(wavData, 1, wavHeader.Subchunk2Size, inwavfile);
     }
 
     //Methods
@@ -57,6 +66,11 @@ public:
     void cpBySample(FILE *outWavfile);
     void readHeader();
     void plotSampling();
+    void splitChannels();
+    int recordChannel(uint16_t chn, FILE *outFilePath);
+    int encMidriseUniQuant(int nbits, FILE *outfile);
+    int encMidtreadUniQuant(int nbits, FILE *outfile);
+
 };
 
 #endif //TEST_WAV_H
