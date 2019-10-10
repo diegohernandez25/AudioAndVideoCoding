@@ -1,10 +1,8 @@
 #include <iostream>
 
-#include <map>
+#include <unordered_map>
 
 #include <sndfile.h>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 
 #include "gnuplot.h"
 
@@ -45,8 +43,8 @@ int readData(char* filename, SNDFILE* sound_file, SF_INFO& sound_info,
 }
 
 // Calculates the histogram of each channel and the mono version
-void buildHistogram(std::vector<short>& samples, std::map<short, int>& ch0,
-					std::map<short, int>& ch1, std::map<short, int>& chm) {
+void buildHistogram(std::vector<short>& samples, std::unordered_map<short, int>& ch0,
+					std::unordered_map<short, int>& ch1, std::unordered_map<short, int>& chm) {
 
 	for (int i = 0; i < samples.size()/2; i+=2) {
 		// Increment the number of occurrences of a certain value (key)
@@ -60,7 +58,7 @@ void buildHistogram(std::vector<short>& samples, std::map<short, int>& ch0,
 }
 
 // Shows plots by piping to Gnuplot
-void showPlot(GnuplotPipe& gp, std::map<short, int> ch, std::string window_title,
+void showPlot(GnuplotPipe& gp, std::unordered_map<short, int> ch, std::string window_title,
 			  std::string title, int window_num) {
 
 	gp.sendLine("set title '" + title + "'");
@@ -78,14 +76,14 @@ int main(int argc, char* argv[]) {
 	// Read parameters from arguments
 	if (argc != 2) {
 		std::cout << "Usage:" << std::endl
-				  << "	vid_histogram <path_to_wav1>" << std::endl;
+				  << "	vid_histogram <path_to_wav>" << std::endl;
 		return 0;
 	}
 
 	SNDFILE *sound_file;
 	SF_INFO sound_info;
 	std::vector<short> samples;
-	std::map<short, int> hist_channel0, hist_channel1, hist_mono;
+	std::unordered_map<short, int> hist_channel0, hist_channel1, hist_mono;
 	GnuplotPipe gp;
 
 	// Read data from the provided file
