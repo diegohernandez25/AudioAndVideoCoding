@@ -48,26 +48,32 @@ public:
     //Attributes
     string filePath;
     wav_hdr wavHeader;
+
+    int bytesPerSample;
+
     signed char* wavData;
-    vector<char *> data_channels;
+    vector<signed char *> data_channels;
 
     //Constructors
     Wav(string fileName)
     {   filePath    = fileName;
+        wavData = (signed char*) malloc(wavHeader.Subchunk2Size);
         int headerSize = sizeof(wav_hdr);
+
         FILE* inwavfile   = fopen(filePath.c_str(),"r");
         fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
-        wavData = (signed char*) malloc(wavHeader.Subchunk2Size);
         fread(wavData, 1, wavHeader.Subchunk2Size, inwavfile);
         fclose(inwavfile);
+
+        bytesPerSample = wavHeader.bitsPerSample/8;
     }
 
     //Methods
     int getFileSize();
     void cpBySample(FILE *outWavfile);
     void readHeader();
-    void plotSampling();
     void splitChannels();
+    void freeChannels();
     int recordChannel(uint16_t chn, FILE *outFilePath);
     int encMidriseUniQuant(int nbits, FILE *outfile);
     int encMidtreadUniQuant(int nbits, FILE *outfile);
