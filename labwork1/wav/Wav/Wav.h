@@ -59,6 +59,7 @@ public:
         fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
         wavData = (signed char*) malloc(wavHeader.Subchunk2Size);
         fread(wavData, 1, wavHeader.Subchunk2Size, inwavfile);
+        fclose(inwavfile);
     }
 
     //Methods

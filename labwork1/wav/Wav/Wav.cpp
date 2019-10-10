@@ -60,7 +60,7 @@ void Wav::splitChannels() {
     while(!feof(inwavfile))
     {   fread(buffer, wavHeader.bitsPerSample/8, (size_t ) wavHeader.NumOfChan, inwavfile);
         for(unsigned long i=0; i< wavHeader.NumOfChan; i++) {
-            memcpy(Wav::data_channels.at(i) + numCharSamples, buffer + i * wavHeader.bitsPerSample/8, wavHeader.bitsPerSample/8);
+            memcpy(&Wav::data_channels.at(i) + numCharSamples, buffer + i * wavHeader.bitsPerSample/8, wavHeader.bitsPerSample/8);
         }
         numCharSamples += wavHeader.bitsPerSample/8;
     }
@@ -94,27 +94,25 @@ int Wav::recordChannel(uint16_t chn, FILE *outwavfile)
  * */
 void Wav::plotSampling()
 {   FILE* inwavfile   = fopen(Wav::filePath.c_str(),"r");
-    wav_hdr wavHeader;
+    wav_hdr header;
     int headerSize = sizeof(wav_hdr);
-    signed char buffer[(wavHeader.bitsPerSample/8)*wavHeader.NumOfChan];
+    size_t bytesRead = fread(&header, 1, (size_t) headerSize, inwavfile);
+    signed char buffer[(header.bitsPerSample/8)*header.NumOfChan];
+    int depth = header.Subchunk2Size/4;
 
-    vector<double> data_channels[wavHeader.NumOfChan];
+    vector<double> data_channels[header.NumOfChan];
     for( auto it:data_channels)
         it = *(new vector<double >());
 
 
-    int numCharPerSample = 0;
     while(!feof(inwavfile))
-    {   fread(buffer, 1, (size_t ) (wavHeader.bitsPerSample/8)*wavHeader.NumOfChan, inwavfile);
-        for(int i=0; i< wavHeader.NumOfChan; i++)
+    {   fread(buffer, 1, (size_t ) (header.bitsPerSample/8)*header.NumOfChan, inwavfile);
+        for(int i=0; i< header.NumOfChan; i++)
         {   signed int samp = ((((0xf00 & buffer[i*2+1]) == 0xf00)? 0xffff0000 : 0x00000000) | (((0xff & buffer[i*2+1]) << 8) | (0xff & buffer[i*2])));
             double fs_scale = ((double) samp/ 0xffff);
             data_channels[i].push_back(fs_scale);
-            numCharPerSample+=2;
         }
     }
-
-    fclose(inwavfile);
     int channel = 0;
     for(auto it : data_channels)
     {   Mat data(it);
@@ -135,6 +133,28 @@ void Wav::plotSampling()
     destroyAllWindows();
 }
 
+
+/**
+ * Plot graphs given a vector of points.
+ *
+ * @param points vector of double values
+ *
+ * */
+void plot(vector<double> points)
+{   Mat data(points);
+    Ptr<plot::Plot2d> plot = plot::Plot2d::create(data);
+    while( true ){
+        double value = *points.begin();
+        points.erase(points.begin());
+        points.push_back(value);
+        Mat image;
+        plot->render(image);
+        imshow("Plot", image);
+        if(waitKey( 33 ) >= 0)
+            break;
+    }
+}
+
 /**
  * Encode Quantize Wav file using Midrise approach
  *
@@ -148,8 +168,9 @@ int Wav::encMidriseUniQuant(int nbits, FILE *outfile)
     {   cout << "Can't operate: nbits > numper of bits per sample.";
         return -1;
     }
-    int nbytes  = nbits/8;
-    char mask= ~char(pow(2,nbits%8)-1);
+
+    int nbytes = nbits/8;
+    char mask= ~char(pow(2,nbits % 8)-1);
 
     int sampleSize  = Wav::wavHeader.bitsPerSample/8;
     auto finalData  = (signed char*) alloca(Wav::wavHeader.Subchunk2Size);
@@ -161,10 +182,10 @@ int Wav::encMidriseUniQuant(int nbits, FILE *outfile)
         for(;k<nbytes; k++)
             pfin[k] = 0x00;
 
-        pfin[k] = ptmp[k] & mask;
-
-        for(; k<sampleSize; k++)
-            pfin[k] = ptmp[nbytes+k];
+        pfin[k] = (ptmp[k] & mask);
+        k+=1;
+        for(; k<sampleSize;k++)
+            pfin[k] = ptmp[k];
     }
     fwrite(&(Wav::wavHeader), 1, (size_t) sizeof(wav_hdr), outfile);
     fwrite(finalData, 1, (size_t) Wav::wavHeader.Subchunk2Size, outfile);
@@ -182,11 +203,56 @@ int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
     {   Wav::encMidriseUniQuant(nbits,outfile);
         return 1;
     }
+    auto middelta = (signed short) (pow(2, nbits) / 2);
+    auto threshold = (unsigned short) pow(2, Wav::wavHeader.bitsPerSample -1) -1 - middelta;
+    cout << "middelta:\t" << hex << middelta << endl;
+    cout << "threshold:\t"<< hex << threshold << endl;
+    cin.get();
 
+    short mask_short = ~short(pow(2,nbits%16)-1);
 
+    int sampleSize  = Wav::wavHeader.bitsPerSample/8;
+    auto finalData  = (signed char*) alloca(Wav::wavHeader.Subchunk2Size);
+
+    for(int i=0; i< Wav::wavHeader.Subchunk2Size; i+=sampleSize)
+    {   signed char *ptmp  = Wav::wavData + i;
+        signed char *pfin  = finalData + i;
+
+        auto samp = (signed short)(((0x80 & ptmp[sampleSize -1]) == 0x80)? 0x8000 : 0x0000);
+        //cout << "ptmp[0]:\t" << hex << int (ptmp[0]) << endl;
+        //cout << "ptmp[1]:\t" << hex << int (ptmp[1]) << endl;
+
+        for(int j=0; j <sampleSize; j++)
+            samp |= (0x0000 | (0xff & ptmp[j])<<(j*8));
+
+        //cout << "samp:\t" << hex << samp << endl;
+        if (threshold <= samp)
+        {   cout << "Surpasses threshold" << endl;
+            samp = (short (0x7fff) & mask_short);
+            cin.get();
+        }
+        else
+        {   samp = ((samp + middelta) & mask_short);
+
+        }
+        //samp = (threshold<samp)? short(0x7fff): ((samp + middelta) & mask_short);
+        //cout << "new samp:\t" << hex << samp << endl;
+        if (sampleSize == 2) {
+            pfin[1] = char((0xff00 & samp) >> 8);
+            pfin[0] = char(0x00ff & samp);
+           // cout << "pfin[0]:\t" << hex << int (pfin[0]) << endl;
+            //cout << "pfin[1]:\t" << hex << int (pfin[1]) << endl;
+
+        }
+        else{
+            pfin[0] = char(0x00ff & samp);
+        }
+        cout << "\n\n"<< endl;
+    }
+    fwrite(&(Wav::wavHeader), 1, (size_t) sizeof(wav_hdr), outfile);
+    fwrite(finalData, 1, (size_t) Wav::wavHeader.Subchunk2Size, outfile);
+    return 1;
 }
-
-
 
 /**
  * Parses Wav file header information.
