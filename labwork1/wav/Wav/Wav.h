@@ -45,11 +45,16 @@ typedef struct  WAV_HEADER
 class Wav {
 public:
 
+    #define MIDRISE_QUANT 1
+    #define MIDTREAD_QUANT 2
+
+
     //Attributes
     string filePath;
     wav_hdr wavHeader;
 
     int bytesPerSample;
+    int numSamples;
 
     signed char* wavData;
     vector<signed char *> data_channels;
@@ -57,15 +62,17 @@ public:
     //Constructors
     Wav(string fileName)
     {   filePath    = fileName;
-        wavData = (signed char*) malloc(wavHeader.Subchunk2Size);
         int headerSize = sizeof(wav_hdr);
-
         FILE* inwavfile   = fopen(filePath.c_str(),"r");
+
         fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
+
+        wavData = (signed char*) malloc(wavHeader.Subchunk2Size);
         fread(wavData, 1, wavHeader.Subchunk2Size, inwavfile);
-        fclose(inwavfile);
 
         bytesPerSample = wavHeader.bitsPerSample/8;
+        numSamples = wavHeader.Subchunk2Size/bytesPerSample;
+        fclose(inwavfile);
     }
 
     //Methods
@@ -78,6 +85,9 @@ public:
     int encMidriseUniQuant(int nbits, FILE *outfile);
     int encMidtreadUniQuant(int nbits, FILE *outfile);
 
+    double getSNR(char typeQuant, int nbits, int chn);
+    int midriseQuant(int nbits, signed char* p, int size);
+    int midtreadQuant(int nbits, signed char* p, int size);
 };
 
 #endif //TEST_WAV_H

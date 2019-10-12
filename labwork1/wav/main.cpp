@@ -5,10 +5,9 @@
 #include "Wav/Wav.h"
 
 void test()
-{
-    Wav mywav   = Wav("/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/wav/sample02.wav");
+{   Wav mywav   = Wav("/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/wav/sample02.wav");
     mywav.readHeader();
-
+    cout << "starting" << endl;
     string path = "/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/wav/sample02_cpy.wav";
     FILE* outFile    = fopen(path.c_str(),"w");
     mywav.cpBySample(outFile);
@@ -41,6 +40,12 @@ void test()
     mywav.encMidtreadUniQuant(12, outFile);
     fclose(outFile);
     cout << "Done Midtread Quantization"<< endl;
+
+    double SNR = mywav.getSNR(MIDRISE_QUANT,12,1);
+    cout << "SNR Midrise Quant:\t" << to_string(SNR) << endl;
+
+    SNR = mywav.getSNR(MIDTREAD_QUANT,12,1);
+    cout << "SNR Midtread Quant:\t" << to_string(SNR) << endl;
 }
 
 

@@ -29,8 +29,9 @@ int Wav::getFileSize()
 void Wav::cpBySample(FILE *outwavfile)
 {   int headerSize = sizeof(wav_hdr);
     fwrite(&(Wav::wavHeader), 1, (size_t) headerSize, outwavfile);
-    for(int i=0; i<Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
-    {   signed char *p = Wav::wavData + i;
+    cout << "header done"<<endl;
+    for(unsigned int i=0; i<Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
+    {   signed char *p = (Wav::wavData) + i;
         fwrite(p,1,size_t (Wav::bytesPerSample), outwavfile);
     }
 }
@@ -40,12 +41,12 @@ void Wav::cpBySample(FILE *outwavfile)
  * */
 void Wav::splitChannels() {
     for(int i=0; i< wavHeader.NumOfChan; i++)
-    {   signed char *p = (signed char *) malloc(Wav::wavHeader.Subchunk2Size / Wav::wavHeader.NumOfChan);
+    {   auto *p = (signed char *) malloc(Wav::wavHeader.Subchunk2Size / Wav::wavHeader.NumOfChan);
         Wav::data_channels.push_back(p);
     }
 
     int totalSampleLen  = Wav::bytesPerSample*Wav::wavHeader.NumOfChan;
-    for(int i=0; i< Wav::wavHeader.Subchunk2Size; i+=totalSampleLen) {
+    for(unsigned int i=0; i< Wav::wavHeader.Subchunk2Size; i+=totalSampleLen) {
         signed char *p = Wav::wavData + i;
         int shift = (i / totalSampleLen) * Wav::bytesPerSample;
         for (unsigned long j = 0; j < Wav::wavHeader.NumOfChan; j++)
@@ -157,7 +158,7 @@ int Wav::encMidriseUniQuant(int nbits, FILE *outfile)
     char mask= ~char(pow(2,nbits % 8)-1);
     auto finalData  = (signed char*) alloca(Wav::wavHeader.Subchunk2Size);
 
-    for(int i=0; i< Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
+    for(unsigned int i=0; i< Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
     {   signed char *ptmp  = Wav::wavData + i;
         signed char *pfin  = finalData + i;
         int j =0;
@@ -173,23 +174,76 @@ int Wav::encMidriseUniQuant(int nbits, FILE *outfile)
     return 1;
 }
 
-
-int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
+int Wav::midriseQuant(int nbits, signed char* p, int size)
 {   if(Wav::wavHeader.bitsPerSample < nbits)
     {   cout << "Can't operate: nbits > numper of bits per sample.";
         return -1;
     }
-    if(nbits == 1)
-    {   Wav::encMidriseUniQuant(nbits,outfile);
-        return 1;
+    int nbytes = nbits/8;
+    char mask= ~char(pow(2,nbits % 8)-1);
+
+    for(int i=0; i< size; i+=Wav::bytesPerSample)
+    {   signed char *ptmp  = Wav::wavData + i;
+        signed char *pfin  = p + i;
+        int j =0;
+        for(;j<nbytes; j++)
+            pfin[j] = 0x00;
+
+        pfin[j] = (ptmp[j] & mask);
+        for(j++; j<Wav::bytesPerSample;j++)
+            pfin[j] = ptmp[j];
     }
+    return 1;
+}
+
+int Wav::midtreadQuant(int nbits, signed char* p, int size)
+{   if(Wav::wavHeader.bitsPerSample < nbits)
+    {   cout << "Can't operate: nbits > numper of bits per sample.";
+        return 0;
+    }
+    if(nbits == 1)
+        return Wav::midriseQuant(nbits, p, size);
+
+    auto middelta = (signed short) (pow(2, nbits) / 2);
+    auto maxVal =   (unsigned short) pow(2, Wav::wavHeader.bitsPerSample -1) -1;
+    auto threshold = (unsigned short) pow(2, Wav::wavHeader.bitsPerSample -1) -1 - middelta;
+    short mask_short = ~short(pow(2,nbits%16)-1);
+
+    auto initNegSampVal = short (0x8000);
+    if (Wav::bytesPerSample == 1)
+        initNegSampVal = short (0xff80);
+
+    for(unsigned int i=0; i< Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
+    {   signed char *ptmp  = Wav::wavData + i;
+        signed char *pfin  = p + i;
+
+        auto samp = (signed short)(((0x80 & ptmp[Wav::bytesPerSample -1]) == 0x80)? initNegSampVal : 0x0000);
+        for(int j=0; j <Wav::bytesPerSample; j++)
+            samp |= (0xff & ptmp[j])<<(j*8);
+
+        samp = (threshold<samp)? short(maxVal): ((samp + middelta) & mask_short);
+        if (Wav::bytesPerSample == 2)
+            pfin[1] = char((0xff00 & samp) >> 8);
+
+        pfin[0] = char(0x00ff & samp);
+    }
+    return 1;
+}
+
+int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
+{   if(Wav::wavHeader.bitsPerSample < nbits)
+    {   cout << "Can't operate: nbits > numper of bits per sample.";
+        return 0;
+    }
+    if(nbits == 1)
+       return Wav::encMidriseUniQuant(nbits,outfile);
 
     auto middelta = (signed short) (pow(2, nbits) / 2);
     auto threshold = (unsigned short) pow(2, Wav::wavHeader.bitsPerSample -1) -1 - middelta;
     short mask_short = ~short(pow(2,nbits%16)-1);
     auto finalData  = (signed char*) alloca(Wav::wavHeader.Subchunk2Size);
 
-    for(int i=0; i< Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
+    for(unsigned int i=0; i< Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
     {   signed char *ptmp  = Wav::wavData + i;
         signed char *pfin  = finalData + i;
 
@@ -197,7 +251,6 @@ int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
         for(int j=0; j <Wav::bytesPerSample; j++)
             samp |= (0xff & ptmp[j])<<(j*8);
 
-        //samp = ((samp + middelta) & mask_short);
         samp = (threshold<samp)? short(0x7fff): ((samp + middelta) & mask_short);
         if (Wav::bytesPerSample == 2) {
             pfin[1] = char((0xff00 & samp) >> 8);
@@ -211,6 +264,60 @@ int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
     fwrite(&(Wav::wavHeader), 1, (size_t) sizeof(wav_hdr), outfile);
     fwrite(finalData, 1, (size_t) Wav::wavHeader.Subchunk2Size, outfile);
     return 1;
+}
+
+double  Wav::getSNR(char typeQuant, int nbits, int chn)
+{   vector<double> xi;
+    vector<double> xiQuant;
+    double ES = 0;
+    double ER = 0;
+    int N = Wav::numSamples / Wav::wavHeader.NumOfChan;
+    auto* pQuant = (signed char*) malloc(Wav::wavHeader.Subchunk2Size);
+    int ch_index = chn -1;
+    int shift = Wav::bytesPerSample*Wav::wavHeader.NumOfChan + ch_index*Wav::bytesPerSample;
+    signed char *pData;
+    signed char *pQuantTmp;
+
+    if (typeQuant == MIDRISE_QUANT)
+    {   if(!Wav::midriseQuant(nbits, pQuant, Wav::wavHeader.Subchunk2Size))
+        {   cout << "Could not quantize file." << endl;
+            return 0;
+        }
+    }
+    else if(typeQuant == MIDTREAD_QUANT)
+    {   if(!Wav::midtreadQuant(nbits, pQuant, Wav::wavHeader.Subchunk2Size))
+        {   cout << "Could not quantize file." << endl;
+            return 0;
+        }
+    }
+    else{
+        cout << "Undefined type" << endl;
+        return 0;
+    }
+
+    for(unsigned int i=0; i<Wav::wavHeader.Subchunk2Size; i+=shift) {
+        pData = Wav::wavData + i;
+        pQuantTmp = pQuant + i;
+
+        auto sampOrigValue = (signed short)(((0x80 & pData[Wav::bytesPerSample -1]) == 0x80)? 0x8000 : 0x0000);
+        auto sampQuantValue = (signed short)(((0x80 & pQuantTmp[Wav::bytesPerSample -1]) == 0x80)? 0x8000 : 0x0000);
+        for(int k=0; k <Wav::bytesPerSample; k++)
+        {   sampOrigValue   |= (0xff & pData[k])<<(k*8);
+            sampQuantValue  |= (0xff & pQuantTmp[k])<<(k*8);
+        }
+        xi.push_back(sampOrigValue);
+        xiQuant.push_back(sampQuantValue);
+    }
+    free(pQuant);
+    for(long i =0; i<N; i++)
+    {   ES += std::pow(std::abs(xi.at((unsigned long) i)),2);
+        ER += std::pow(std::abs(xi.at((unsigned long) i) - xiQuant.at((unsigned long) i)),2);
+    }
+    ES *= (double) 1/N;
+    ER *= (double) 1/N;
+
+    return 10*std::log10(ES/ER);
+
 }
 
 /**
@@ -233,6 +340,5 @@ void Wav::readHeader()
     cout << "Audio Format               :" << Wav::wavHeader.AudioFormat << endl;
     ///< Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM
     cout << "Block align                :" << Wav::wavHeader.blockAlign << endl;
-    cout << "Data string                :" << wavHeader.Subchunk2ID[0] << wavHeader.Subchunk2ID[1] << wavHeader.Subchunk2ID[2] << wavHeader.Subchunk2ID[3] << endl;
-
+    cout << "Data string                :" << Wav::wavHeader.Subchunk2ID[0] << Wav::wavHeader.Subchunk2ID[1] << Wav::wavHeader.Subchunk2ID[2] << Wav::wavHeader.Subchunk2ID[3] << endl;
 }
