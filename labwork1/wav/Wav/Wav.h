@@ -85,7 +85,7 @@ public:
     int encMidriseUniQuant(int nbits, FILE *outfile);
     int encMidtreadUniQuant(int nbits, FILE *outfile);
 
-    double getSNR(char typeQuant, int nbits, int chn);
+    double getSNR(char typeQuant, int nbits, int chn,int& maxAbsError);
     int midriseQuant(int nbits, signed char* p, int size);
     int midtreadQuant(int nbits, signed char* p, int size);
 };

@@ -266,11 +266,12 @@ int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
     return 1;
 }
 
-double  Wav::getSNR(char typeQuant, int nbits, int chn)
+double  Wav::getSNR(char typeQuant, int nbits, int chn, int& maxAbsError)
 {   vector<double> xi;
     vector<double> xiQuant;
-    double ES = 0;
-    double ER = 0;
+    double ES = 0,ER = 0, tmp;
+    maxAbsError = 0;
+
     int N = Wav::numSamples / Wav::wavHeader.NumOfChan;
     auto* pQuant = (signed char*) malloc(Wav::wavHeader.Subchunk2Size);
     int ch_index = chn -1;
@@ -309,15 +310,18 @@ double  Wav::getSNR(char typeQuant, int nbits, int chn)
         xiQuant.push_back(sampQuantValue);
     }
     free(pQuant);
+
     for(long i =0; i<N; i++)
     {   ES += std::pow(std::abs(xi.at((unsigned long) i)),2);
-        ER += std::pow(std::abs(xi.at((unsigned long) i) - xiQuant.at((unsigned long) i)),2);
+        tmp = std::abs(xi.at((unsigned long) i) - xiQuant.at((unsigned long) i));
+        ER += std::pow(tmp,2);
+        if(maxAbsError<tmp)
+            maxAbsError = tmp;
     }
     ES *= (double) 1/N;
     ER *= (double) 1/N;
-
+    cout << "Maximum Absolute Error:\t"<< maxAbsError << endl;
     return 10*std::log10(ES/ER);
-
 }
 
 /**
