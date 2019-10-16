@@ -6,12 +6,11 @@
 #include <algorithm>
 #include <vector>
 #include <numeric>
-#include <math.h>
+#include <cmath>
+#include <tuple>
+
 #include "gnuplot.h"
 
-
-using namespace cv;
-using namespace std;
 
 #define CHANNEL_R 2
 #define CHANNEL_G 1
@@ -24,13 +23,24 @@ using namespace std;
 #define PLOT_G 1
 #define PLOT_B 0
 #define PLOT_MERGE 3
-#define PLOT_ALL 4
+#define PLOT_ALL_RGB 4
+#define PLOT_ALL 5
 
+using namespace cv;
+using namespace std;
+
+/**
+ * Filter function.
+ * @param begin Iterator starting point.
+ * @param end Iterator ending point.
+ * @param f lambda function to operate.
+ *
+ * @return elements that are according to the given lambda function criteria.
+ * */
 template <class InputIterator,class Functor>
 std::vector<typename std::iterator_traits<InputIterator>::value_type>
 filter( InputIterator begin, InputIterator end, Functor f )
-{
-    using ValueType = typename std::iterator_traits<InputIterator>::value_type;
+{   using ValueType = typename std::iterator_traits<InputIterator>::value_type;
     std::vector<ValueType> result;
     result.reserve( std::distance( begin, end ) );
     std::copy_if( begin, end, std::back_inserter( result ),f);
@@ -79,10 +89,10 @@ double getChannelEntropy(Mat image, int channel)
 }
 
 
-double getEntropy(Mat image)
-{   double entropy_r = getChannelEntropy(image, CHANNEL_R);
-    double entropy_g = getChannelEntropy(image, CHANNEL_G);
-    double entropy_b = getChannelEntropy(image, CHANNEL_B);
+double getEntropy(Mat image, double& entropy_r, double& entropy_g, double& entropy_b)
+{   entropy_r = getChannelEntropy(image, CHANNEL_R);
+    entropy_g = getChannelEntropy(image, CHANNEL_G);
+    entropy_b = getChannelEntropy(image, CHANNEL_B);
 
     return (entropy_r + entropy_g + entropy_b)/3;
 }
@@ -113,75 +123,163 @@ double getChannelBlindEntropy(Mat image, int channel)
     return -entropy_chnl;
 }
 
-double getBlindEntropy(Mat image)
-{   double entropy_r = getChannelBlindEntropy(image, CHANNEL_R);
-    double entropy_g = getChannelBlindEntropy(image, CHANNEL_G);
-    double entropy_b = getChannelBlindEntropy(image, CHANNEL_B);
-
+double getBlindEntropy(const Mat& image, double& entropy_r, double& entropy_g, double& entropy_b)
+{   entropy_r = getChannelBlindEntropy(image, CHANNEL_R);
+    entropy_g = getChannelBlindEntropy(image, CHANNEL_G);
+    entropy_b = getChannelBlindEntropy(image, CHANNEL_B);
     return (entropy_r + entropy_g + entropy_b)/3;
-
 }
 
-double videoEntropy()
-{   VideoCapture cap("/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/video/crew_cif.y4m");
-    if(! cap.isOpened())
-        return -1;
+int plotEntropyChannels(int plotType, const string& title, const map<int, double>& entropyValues, const map<int, double>& entropyRValues,
+        const map<int, double>& entropyGValues, const map<int, double>& entropyBValues)
+{   GnuplotPipe gp;
+    gp.sendLine("set title \"" + title + "\"");
+
+    gp.sendLine("set xlabel \"Frame number.\"");
+    gp.sendLine("set ylabel \"Frame entropy value.\"");
+
+    gp.sendLine("set style line 1 linecolor rgb '#828293' linetype 1 linewidth 2 pointtype 7 pointsize 0.1");
+    gp.sendLine("set style line 2 linecolor rgb '#df3635' linetype 1 linewidth 2 pointtype 7 pointsize 0.1");
+    gp.sendLine("set style line 3 linecolor rgb '#41e591' linetype 1 linewidth 2 pointtype 7 pointsize 0.1");
+    gp.sendLine("set style line 4 linecolor rgb '#2c7bef' linetype 1 linewidth 2 pointtype 7 pointsize 0.1");
+
+    switch(plotType)
+    {   case PLOT_ALL:
+            gp.sendLine("plot '-' with linespoints linestyle 1 t \"Merge Channels\","
+                        "'-' with linespoints linestyle 2 t \"Red\","
+                        "'-' with linespoints linestyle 3 t \"Green\","
+                        "'-' with linespoints linestyle 4 t \"Blue\"");
+            break;
+
+        case PLOT_ALL_RGB:
+            gp.sendLine("plot '-' with linespoints linestyle 2 t \"Red\","
+                        "'-' with linespoints linestyle 3 t \"Green\","
+                        "'-' with linespoints linestyle 4 t \"Blue\"");
+            break;
+
+        case PLOT_R:
+            gp.sendLine("plot '-' with linespoints linestyle 2 t \"Red\"");
+            break;
+
+        case PLOT_G:
+            gp.sendLine("plot '-' with linespoints linestyle 2 t \"Green\"");
+            break;
+
+        case PLOT_B:
+            gp.sendLine("plot '-' with linespoints linestyle 2 t \"Blue\"");
+            break;
+    }
+
+    if(plotType == PLOT_MERGE || plotType == PLOT_ALL)
+    {   for(auto it:entropyValues)
+            gp.sendLine(std::to_string(it.first) + " " + std::to_string(it.second));
+        gp.sendEndOfData();
+    }
+
+    if(plotType == PLOT_R|| plotType == PLOT_ALL || plotType == PLOT_ALL_RGB)
+    {   for(auto it:entropyRValues)
+            gp.sendLine(std::to_string(it.first) + " " + std::to_string(it.second));
+        gp.sendEndOfData();
+    }
+
+    if(plotType == PLOT_G|| plotType == PLOT_ALL || plotType == PLOT_ALL_RGB)
+    {   for(auto it:entropyGValues)
+            gp.sendLine(std::to_string(it.first) + " " + std::to_string(it.second));
+        gp.sendEndOfData();
+    }
+
+    if(plotType == PLOT_B|| plotType == PLOT_ALL || plotType == PLOT_ALL_RGB)
+    {   for(auto it:entropyBValues)
+            gp.sendLine(std::to_string(it.first) + " " + std::to_string(it.second));
+        gp.sendEndOfData();
+    }
+    return 1;
+}
+
+template <typename Function>
+tuple<double ,double, double, double> videoEntropy(VideoCapture cap, Function entropyFunc, map<int, double> &entropyValues, map<int, double> &entropyRValues,
+        map<int, double> &entropyGValues,  map<int, double> &entropyBValues)
+{   if(! cap.isOpened())
+        return {NULL,NULL,NULL,NULL};
 
     namedWindow("video",1);
     double frnb(cap.get(CV_CAP_PROP_FRAME_COUNT));
-    std::cout << "frame count = " << frnb << endl;
-    map<int, double> entropyValues;
-    for(int i =0;i<frnb;i++)
-    {
-        cout << "\r\e[K"<< to_string((int)((i/frnb)*100))<<"%"<<flush;
+    std::cout << "frame count : " << frnb << endl;
 
+    double r, g, b, r_mean=0, g_mean=0, b_mean=0, t_mean=0;
+    for(int i =0;i<frnb;i++)
+    {   cout << "\r\e[K"<< to_string((int)((i/frnb)*100))<<"%"<<flush;
         Mat frame;
         cap.set(CV_CAP_PROP_POS_FRAMES, i);
         if(!cap.read(frame))
         {   cout << "Cannot read frame" << endl;
             break;
         }
-        entropyValues[i]=getEntropy(frame);
+        t_mean += entropyValues[i] = entropyFunc(frame,r,g,b);
+        r_mean += entropyRValues[i] = r; g_mean += entropyGValues[i] = g; b_mean += entropyBValues[i] = b;
+
     }
-    cout<< endl;
-    GnuplotPipe gp;
-    gp.sendLine("set title 'Entropia'");
-    gp.sendLine("set style line 1 linecolor rgb '#0060ad' linetype 1 linewidth 2 pointtype 7 pointsize 0.1 ");
-    gp.sendLine("plot 'merge channel' with linespoints linestyle 1");
-
-    for(auto it = entropyValues.cbegin(); it != entropyValues.cend(); ++it)
-        gp.sendLine(std::to_string(it->first) + " " + std::to_string(it->second));
-
-    gp.sendEndOfData();
+    cout<<"\r\e[K100%"<<endl;
+    return {t_mean/frnb, r_mean/frnb, g_mean/frnb, b_mean/frnb};
 }
 
-
-
-
-int main(int argc, char** argv) {
-    if(argc != 2)
-    {
-        cout << "Usage: ex11 ImageToLoadAndDisplay" << endl;
-        return -1;
-    }
-    //GnuplotPipe gp;
-    //gp.sendLine("plot [-pi/2:pi] cos(x),-(sin(x) > sin(x+1) ? sin(x) : sin(x+1))");
-    videoEntropy();
-
-    return 0;
-    Mat image;
-    image   = imread(argv[1], 1);
-
-    cout << "Entropy R:\t"<< getChannelEntropy(image, CHANNEL_R)<<endl;
-    cout << "Entropy G:\t"<< getChannelEntropy(image, CHANNEL_G)<<endl;
-    cout << "Entropy B:\t"<< getChannelEntropy(image, CHANNEL_B)<<endl;
-    cout << "Entopy:\t"<< getEntropy(image)<<endl;
+void ex11_part1(string image_path)
+{   Mat image;
+    image   = imread(image_path, 1);
+    double r,g,b;
+    cout << "Entopy:\t"<< getEntropy(image,r,g,b)<<endl;
+    cout << "Entropy R:\t"<< r <<endl;
+    cout << "Entropy G:\t"<< g <<endl;
+    cout << "Entropy B:\t"<< b <<endl;
     cout << endl;
 
-    cout << "Blind Entropy R:\t"<< getChannelBlindEntropy(image, CHANNEL_R)<<endl;
-    cout << "Blind Entropy G:\t"<< getChannelBlindEntropy(image, CHANNEL_G)<<endl;
-    cout << "Blind Entropy B:\t"<< getChannelBlindEntropy(image, CHANNEL_B)<<endl;
-    cout << "Blind Entopy:\t"<< getBlindEntropy(image)<<endl;
+    cout << "Blind Entopy:\t"<< getBlindEntropy(image,r,g,b)<<endl;
+    cout << "Blind Entropy R:\t"<< r <<endl;
+    cout << "Blind Entropy G:\t"<< g <<endl;
+    cout << "Blind Entropy B:\t"<< b <<endl;
 
+
+}
+
+void ex11_part2(string video_path)
+{   VideoCapture cap(video_path);
+
+    map<int, double> entropyValues, entropyRValues,entropyGValues,entropyBValues;
+    tuple<double, double , double ,double > r_mean =videoEntropy(cap,getEntropy,entropyValues, entropyRValues, entropyGValues,entropyBValues);
+    cout << "Total Video Entropy:\t"<< get<0>(r_mean)<<endl;
+    cout << "Red Video Entropy:\t"<< get<1>(r_mean)<<endl;
+    cout << "Green Video Entropy:\t"<<get<2>(r_mean)<<endl;
+    cout << "Blue Video Entropy:\t"<<get<3>(r_mean)<<endl;
+    plotEntropyChannels(PLOT_ALL,"Entropy", entropyValues, entropyRValues, entropyGValues, entropyBValues);
+
+    entropyValues.clear(); entropyRValues.clear(); entropyGValues.clear(); entropyBValues.clear();
+
+    r_mean =videoEntropy(cap, getBlindEntropy,entropyValues, entropyRValues, entropyGValues,entropyBValues);
+    cout << endl;
+    cout << "Total Video Blind Entropy:\t"<< get<0>(r_mean)<<endl;
+    cout << "Red Video Blind Entropy:\t"<< get<1>(r_mean)<<endl;
+    cout << "Green Video Blind Entropy:\t"<<get<2>(r_mean)<<endl;
+    cout << "Blue Video Blind Entropy:\t"<<get<3>(r_mean)<<endl;
+    plotEntropyChannels(PLOT_ALL,"Blind Entropy", entropyValues, entropyRValues, entropyGValues, entropyBValues);
+
+}
+
+int main(int argc, char** argv) {
+    cout << "Ex11 part 1" << endl;
+    cout << "-----------" << endl;
+    cout << "Image file path: ";
+    string path;
+    getline(cin,path);
+    ex11_part1(path);
+    cout<<endl;
+    cout << "Ex11 part 2" << endl;
+    cout << "-----------" << endl;
+    cout << "Video file path: ";
+    getline(cin,path);
+    ex11_part2(path);
+    cout<<endl;
+
+    cout << "End" << endl;
     return 0;
+
 }
