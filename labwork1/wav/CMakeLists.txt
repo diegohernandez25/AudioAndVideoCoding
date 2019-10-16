@@ -8,8 +8,7 @@ set(WALL "-Wall")
 set(STD_C11 "-std=c++11")
 set(OpenCV_FOUND 1)
 
-include_directories("libs/matplotlib-cpp")
-include_directories("libs/koolplot")
+include_directories(include)
 
 find_package(OpenCV REQUIRED)
 

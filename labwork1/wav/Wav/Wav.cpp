@@ -48,9 +48,10 @@ void Wav::splitChannels() {
     int totalSampleLen  = Wav::bytesPerSample*Wav::wavHeader.NumOfChan;
     for(unsigned int i=0; i< Wav::wavHeader.Subchunk2Size; i+=totalSampleLen) {
         signed char *p = Wav::wavData + i;
-        int shift = (i / totalSampleLen) * Wav::bytesPerSample;
+        unsigned int shift = (i / totalSampleLen) * Wav::bytesPerSample;
         for (unsigned long j = 0; j < Wav::wavHeader.NumOfChan; j++)
             memcpy((Wav::data_channels.at(j)) + shift, p + (j * Wav::bytesPerSample), (size_t) Wav::bytesPerSample);
+
     }
 }
 
@@ -93,54 +94,6 @@ int Wav::recordChannel(uint16_t chn, FILE *outwavfile)
 }
 
 /**
- * Plots sample into a graph. Note samples values are parsed from -1 to 1.
- *
- * */
-/**
-//TODO: Find appropriate library for C++ to plot graphs
-void Wav::plotSampling()
-{   FILE* inwavfile   = fopen(Wav::filePath.c_str(),"r");
-    wav_hdr header;
-    int headerSize = sizeof(wav_hdr);
-    size_t bytesRead = fread(&header, 1, (size_t) headerSize, inwavfile);
-    signed char buffer[(header.bitsPerSample/8)*header.NumOfChan];
-    int depth = header.Subchunk2Size/4;
-
-    vector<double> data_channels[header.NumOfChan];
-    for( auto it:data_channels)
-        it = *(new vector<double >());
-
-
-    while(!feof(inwavfile))
-    {   fread(buffer, 1, (size_t ) (header.bitsPerSample/8)*header.NumOfChan, inwavfile);
-        for(int i=0; i< header.NumOfChan; i++)
-        {   signed int samp = ((((0xf00 & buffer[i*2+1]) == 0xf00)? 0xffff0000 : 0x00000000) | (((0xff & buffer[i*2+1]) << 8) | (0xff & buffer[i*2])));
-            double fs_scale = ((double) samp/ 0xffff);
-            data_channels[i].push_back(fs_scale);
-        }
-    }
-    int channel = 0;
-    for(auto it : data_channels)
-    {   Mat data(it);
-        Ptr<plot::Plot2d> plot = plot::Plot2d::create(data);
-        while( true ){
-            double value = *it.begin();
-            it.erase(it.begin());
-            it.push_back(value);
-            Mat image;
-            plot->render(image);
-            imshow("Channel "+to_string(channel), image);
-            if( waitKey( 33 ) >= 0 )
-                break;
-
-        }
-        channel++;
-    }
-    destroyAllWindows();
-}**/
-
-
-/**
  * Encode Quantize Wav file using Midrise approach
  *
  * @param nbits number of bits to remove.
@@ -174,6 +127,15 @@ int Wav::encMidriseUniQuant(int nbits, FILE *outfile)
     return 1;
 }
 
+/**
+ * Midrise quantizer of wav file.
+ *
+ * @param nbits number of least significant bits of sample to remove (i.e put to zero)
+ * @param p array of signed char to store sample's values.
+ * @param size length in bytes to quantize the wav data.
+ *
+ * @return operation status
+ * */
 int Wav::midriseQuant(int nbits, signed char* p, int size)
 {   if(Wav::wavHeader.bitsPerSample < nbits)
     {   cout << "Can't operate: nbits > numper of bits per sample.";
@@ -196,6 +158,15 @@ int Wav::midriseQuant(int nbits, signed char* p, int size)
     return 1;
 }
 
+/**
+ * Midtread quantizer of wav file.
+ *
+ * @param nbits number of least significant bits of sample to remove (i.e put to zero)
+ * @param p array of signed char to store sample's values.
+ * @param size length in bytes to quantize the wav data.
+ *
+ * @return operation status
+ * */
 int Wav::midtreadQuant(int nbits, signed char* p, int size)
 {   if(Wav::wavHeader.bitsPerSample < nbits)
     {   cout << "Can't operate: nbits > numper of bits per sample.";
@@ -230,6 +201,14 @@ int Wav::midtreadQuant(int nbits, signed char* p, int size)
     return 1;
 }
 
+/**
+ * Midrise quantizer of wav file and store it in output file. Done for experimentation purposes.
+ *
+ * @param nbits number of least significant bits of sample to remove (i.e put to zero)
+ * @param outfile file to store quantized samples values.
+ *
+ * @return operation status
+ * */
 int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
 {   if(Wav::wavHeader.bitsPerSample < nbits)
     {   cout << "Can't operate: nbits > numper of bits per sample.";
@@ -266,40 +245,47 @@ int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
     return 1;
 }
 
-double  Wav::getSNR(char typeQuant, int nbits, int chn, int& maxAbsError)
-{   vector<double> xi;
-    vector<double> xiQuant;
+#define MIDRISE_QUANT 1
+#define MIDTREAD_QUANT 2
+/**
+ *  Get signal-to-noise ratio of wav file associated to a quantizer.
+ *
+ *  @param typeQuant type of quantizer. MIDRISE_QUANT or MIDTREAD_QUANT
+ *  @param nbits number of least significant bits of sample to remove (i.e put to zero)
+ *  @param chn channel number to apply the calculation of SNR and sample absolute error.
+ *
+ *  @return tuple containing the calculated value of SNR and sample absolute error, sequentially.
+ * */
+tuple<double, double> Wav::getSNR(char typeQuant, int nbits, int chn)
+{   vector<double> xi, xiQuant;
     double ES = 0,ER = 0, tmp;
-    maxAbsError = 0;
-
+    double maxAbsError = 0;
     int N = Wav::numSamples / Wav::wavHeader.NumOfChan;
     auto* pQuant = (signed char*) malloc(Wav::wavHeader.Subchunk2Size);
     int ch_index = chn -1;
     int shift = Wav::bytesPerSample*Wav::wavHeader.NumOfChan + ch_index*Wav::bytesPerSample;
-    signed char *pData;
-    signed char *pQuantTmp;
+    signed char *pData, *pQuantTmp;
 
     if (typeQuant == MIDRISE_QUANT)
     {   if(!Wav::midriseQuant(nbits, pQuant, Wav::wavHeader.Subchunk2Size))
         {   cout << "Could not quantize file." << endl;
-            return 0;
+            return {NULL,NULL};
         }
     }
     else if(typeQuant == MIDTREAD_QUANT)
     {   if(!Wav::midtreadQuant(nbits, pQuant, Wav::wavHeader.Subchunk2Size))
         {   cout << "Could not quantize file." << endl;
-            return 0;
+            return {NULL,NULL};
         }
     }
     else{
         cout << "Undefined type" << endl;
-        return 0;
+        return {NULL,NULL};
     }
 
     for(unsigned int i=0; i<Wav::wavHeader.Subchunk2Size; i+=shift) {
         pData = Wav::wavData + i;
         pQuantTmp = pQuant + i;
-
         auto sampOrigValue = (signed short)(((0x80 & pData[Wav::bytesPerSample -1]) == 0x80)? 0x8000 : 0x0000);
         auto sampQuantValue = (signed short)(((0x80 & pQuantTmp[Wav::bytesPerSample -1]) == 0x80)? 0x8000 : 0x0000);
         for(int k=0; k <Wav::bytesPerSample; k++)
@@ -318,10 +304,77 @@ double  Wav::getSNR(char typeQuant, int nbits, int chn, int& maxAbsError)
         if(maxAbsError<tmp)
             maxAbsError = tmp;
     }
-    ES *= (double) 1/N;
-    ER *= (double) 1/N;
-    cout << "Maximum Absolute Error:\t"<< maxAbsError << endl;
-    return 10*std::log10(ES/ER);
+    ES *= (double) 1/N; ER *= (double) 1/N;
+    return {10*std::log10(ES/ER), maxAbsError};
+}
+
+/**
+ * Plots channel's sample's values into a graph.
+ * */
+void Wav::plotChannels()
+{   if(Wav::data_channels.empty())
+        Wav::splitChannels();
+    cout << "Channels splitted"<<endl;
+    int limit =(int) (Wav::wavHeader.Subchunk2Size)/Wav::wavHeader.NumOfChan;
+    auto initNegSampVal = short (0x8000);
+    if (Wav::bytesPerSample == 1)
+        initNegSampVal = short (0xff80);
+    int count=1;
+    for(auto it:Wav::data_channels)
+    {   vector<double> tmp;
+        signed char * pSamp;
+        for(int i=0;i<limit;i+=Wav::bytesPerSample)
+        {   pSamp = it + i;
+            auto value = (signed short)(((0x80 & pSamp[Wav::bytesPerSample -1]) == 0x80)? initNegSampVal : 0x0000);
+            for(int j=0; j <Wav::bytesPerSample; j++)
+                value |= ((0xff & pSamp[j])<<(j*8));
+            tmp.push_back(value);
+        }
+        Wav::plotSamples(tmp,"channel "+to_string(count++));
+
+    }
+}
+
+/**
+ * Plots wav file's sample's values into a graph.
+ * */
+void Wav::plotWav()
+{   auto initNegSampVal = short (0x8000);
+    if (Wav::bytesPerSample == 1)
+        initNegSampVal = short (0xff80);
+
+    vector<double> tmp;
+    signed char * pSamp;
+    for(int i=0;i<Wav::wavHeader.Subchunk2Size;i+=Wav::bytesPerSample)
+    {   pSamp = Wav::wavData + i;
+        auto value = (signed short)(((0x80 & pSamp[Wav::bytesPerSample -1]) == 0x80)? initNegSampVal : 0x0000);
+        for(int j=0; j <Wav::bytesPerSample; j++)
+            value |= ((0xff & pSamp[j])<<(j*8));
+        tmp.push_back(value);
+    }
+    Wav::plotSamples(tmp,"wav file");
+}
+
+
+/**
+ * Plot samples.
+ *
+ * @param samples ordered vector of samples' values.
+ * @param title title of the graph.
+ * */
+void Wav::plotSamples(const vector<double>& samples, const string& title)
+{   GnuplotPipe gp;
+    gp.sendLine("set title \"" + title + "\"");
+
+    gp.sendLine("set xlabel \"Sample number.\"");
+    gp.sendLine("set ylabel \"Sample value.\"");
+    gp.sendLine("set style line 1 linecolor rgb '#" +to_string((int)(111111 + (rand() % (999999 - 111111)+1)))+ "' linetype 1 linewidth 2 pointtype 7 pointsize 0.01");
+    gp.sendLine("plot '-' with linespoints linestyle 2 t \""+title+"\"");
+
+    int i=0;
+    for(auto it:samples)
+        gp.sendLine(std::to_string(i++) + " " + std::to_string(it));
+    gp.sendEndOfData();
 }
 
 /**

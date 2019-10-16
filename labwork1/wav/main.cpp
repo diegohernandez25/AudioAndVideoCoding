@@ -42,18 +42,18 @@ void test()
     cout << "Done Midtread Quantization"<< endl;
 
     int abs_error;
-    double SNR = mywav.getSNR(MIDRISE_QUANT,10,1, abs_error);
-    cout << "SNR Midrise Quant:\t" << to_string(SNR) << endl;
-    cout << "Maximum Absolute Error:\t"<< abs_error << endl;
+    tuple<double, double> res = mywav.getSNR(MIDRISE_QUANT,10,1);
+    cout << "SNR Midrise Quant:\t" << to_string(get<0>(res)) << endl;
+    cout << "Maximum Absolute Error:\t"<< to_string((int) get<1>(res)) << endl;
 
-    SNR = mywav.getSNR(MIDTREAD_QUANT,10,1);
-    cout << "SNR Midtread Quant:\t" << to_string(SNR) << endl;
-    cout << "Maximum Absolute Error:\t"<< abs_error << endl;
+    res = mywav.getSNR(MIDTREAD_QUANT,10,1);
+    cout << "SNR Midtread Quant:\t" << to_string( get<0>(res)) << endl;
+    cout << "Maximum Absolute Error:\t"<< to_string((int) get<1>(res)) << endl;
 }
 
 
-
 int main() {
+
     test();
     return 0;
 }
