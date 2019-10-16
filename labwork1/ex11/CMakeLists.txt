@@ -9,7 +9,7 @@ set(STD_C11 "-std=c++11")
 set(OpenCV_FOUND 1)
 
 find_package(OpenCV REQUIRED)
-
+include_directories(include)
 add_definitions(${WALL})
 add_definitions(${STD_C11})
 add_definitions(${OPENCV_FLAGS})

@@ -1,23 +1,30 @@
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <iostream>
 #include <unordered_map>
 #include <map>
 #include <algorithm>
-#include <iterator>
 #include <vector>
 #include <numeric>
 #include <math.h>
+#include "gnuplot.h"
 
 
 using namespace cv;
 using namespace std;
 
-#define CHANNEL_R 0
+#define CHANNEL_R 2
 #define CHANNEL_G 1
-#define CHANNEL_B 2
+#define CHANNEL_B 0
 
+#define CV_CAP_PROP_POS_FRAMES 1
+#define CV_CAP_PROP_FRAME_COUNT 7
+
+#define PLOT_R 2
+#define PLOT_G 1
+#define PLOT_B 0
+#define PLOT_MERGE 3
+#define PLOT_ALL 4
 
 template <class InputIterator,class Functor>
 std::vector<typename std::iterator_traits<InputIterator>::value_type>
@@ -39,6 +46,11 @@ double getChannelEntropy(Mat image, int channel)
     std::map<pair<int,int>, double> chnl;
     map<int, double> entropyChnl;
     double chnlTotal, prob, meanEntropyCh;
+    double min, max;
+
+    vector<Mat> imageChnl;
+    split(image,imageChnl);
+    minMaxIdx(imageChnl[channel],&min, &max);
 
     for(int i=0; i<image.rows; i++)
     {   for(int j=1; j<image.cols; j++)
@@ -47,7 +59,8 @@ double getChannelEntropy(Mat image, int channel)
             chnl[make_pair(prevNeighIntensity.val[channel],intensity.val[channel])] ++;
         }
     }
-    for(int i=0; i<=255; i++)
+
+    for(int i=(int) min; i<=max; i++)
     {   auto chnlFilt = filter( chnl.begin(), chnl.end(), [&i] (pair<const pair<int,int>,double> p) { return p.first.first == i;} );
 
         chnlTotal = std::accumulate(std::begin(chnlFilt), std::end(chnlFilt), 0,
@@ -108,13 +121,54 @@ double getBlindEntropy(Mat image)
     return (entropy_r + entropy_g + entropy_b)/3;
 
 }
+
+double videoEntropy()
+{   VideoCapture cap("/home/diego/Workspace/ECT/5ano/CAV/project/cav-2019/labwork1/files/video/crew_cif.y4m");
+    if(! cap.isOpened())
+        return -1;
+
+    namedWindow("video",1);
+    double frnb(cap.get(CV_CAP_PROP_FRAME_COUNT));
+    std::cout << "frame count = " << frnb << endl;
+    map<int, double> entropyValues;
+    for(int i =0;i<frnb;i++)
+    {
+        cout << "\r\e[K"<< to_string((int)((i/frnb)*100))<<"%"<<flush;
+
+        Mat frame;
+        cap.set(CV_CAP_PROP_POS_FRAMES, i);
+        if(!cap.read(frame))
+        {   cout << "Cannot read frame" << endl;
+            break;
+        }
+        entropyValues[i]=getEntropy(frame);
+    }
+    cout<< endl;
+    GnuplotPipe gp;
+    gp.sendLine("set title 'Entropia'");
+    gp.sendLine("set style line 1 linecolor rgb '#0060ad' linetype 1 linewidth 2 pointtype 7 pointsize 0.1 ");
+    gp.sendLine("plot 'merge channel' with linespoints linestyle 1");
+
+    for(auto it = entropyValues.cbegin(); it != entropyValues.cend(); ++it)
+        gp.sendLine(std::to_string(it->first) + " " + std::to_string(it->second));
+
+    gp.sendEndOfData();
+}
+
+
+
+
 int main(int argc, char** argv) {
     if(argc != 2)
     {
         cout << "Usage: ex11 ImageToLoadAndDisplay" << endl;
         return -1;
     }
+    //GnuplotPipe gp;
+    //gp.sendLine("plot [-pi/2:pi] cos(x),-(sin(x) > sin(x+1) ? sin(x) : sin(x+1))");
+    videoEntropy();
 
+    return 0;
     Mat image;
     image   = imread(argv[1], 1);
 
