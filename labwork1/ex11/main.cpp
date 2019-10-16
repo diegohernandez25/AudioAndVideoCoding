@@ -31,6 +31,7 @@ using namespace std;
 
 /**
  * Filter function.
+ *
  * @param begin Iterator starting point.
  * @param end Iterator ending point.
  * @param f lambda function to operate.
@@ -47,6 +48,14 @@ filter( InputIterator begin, InputIterator end, Functor f )
     return result;
 }
 
+/**
+ *  Get image channel entropy.
+ *
+ *  @param image image frame.
+ *  @param channel channel number. CHANNEL_R, CHANNEL_G, CHANNEL_B.
+ *
+ *  @return Image's channel's entropy value.
+ * */
 double getChannelEntropy(Mat image, int channel)
 {   if(!image.data)
     {   cout << "Could not open or find the image." << endl;
@@ -55,7 +64,7 @@ double getChannelEntropy(Mat image, int channel)
     Vec3b intensity, prevNeighIntensity;
     std::map<pair<int,int>, double> chnl;
     map<int, double> entropyChnl;
-    double chnlTotal, prob, meanEntropyCh;
+    double chnlTotal, prob, EntropyCh;
     double min, max;
 
     vector<Mat> imageChnl;
@@ -82,13 +91,23 @@ double getChannelEntropy(Mat image, int channel)
         }
         entropyChnl[i] *= -1;
     }
-    meanEntropyCh = (double) std::accumulate(std::begin(entropyChnl), std::end(entropyChnl), 0,
+    EntropyCh = (double) std::accumulate(std::begin(entropyChnl), std::end(entropyChnl), 0,
                                    [](const std::size_t previous, const std::pair<int,double>& p)
                                    { return previous + p.second; }) / entropyChnl.size();
-    return meanEntropyCh;
+    return EntropyCh;
 }
 
 
+/**
+ *  Get image entropy. It takes into account the all channel's entropy values of the image and calculate its mean.
+ *
+ *  @param image image frame.
+ *  @param entropy_r pointer type double to store 'R' channel entropy value of the image.
+ *  @param entropy_g pointer type double to store 'G' channel entropy value of the image.
+ *  @param entropy_b pointer type double to store 'B' channel entropy value of the image.
+ *
+ *  @return Image's entropy value.
+ * */
 double getEntropy(Mat image, double& entropy_r, double& entropy_g, double& entropy_b)
 {   entropy_r = getChannelEntropy(image, CHANNEL_R);
     entropy_g = getChannelEntropy(image, CHANNEL_G);
@@ -97,6 +116,14 @@ double getEntropy(Mat image, double& entropy_r, double& entropy_g, double& entro
     return (entropy_r + entropy_g + entropy_b)/3;
 }
 
+/**
+ *  Get image channel blind entropy.
+ *
+ *  @param image image frame.
+ *  @param channel channel number. CHANNEL_R, CHANNEL_G, CHANNEL_B.
+ *
+ *  @return Image's channel's blind entropy value.
+ * */
 double getChannelBlindEntropy(Mat image, int channel)
 {   if(!image.data)
     {
@@ -123,6 +150,16 @@ double getChannelBlindEntropy(Mat image, int channel)
     return -entropy_chnl;
 }
 
+/**
+ *  Get image blind entropy. It takes into account the all channel's entropy values of the image and calculate its mean.
+ *
+ *  @param image image frame.
+ *  @param entropy_r pointer type double to store 'R' channel blind entropy value of the image.
+ *  @param entropy_g pointer type double to store 'G' channel blind entropy value of the image.
+ *  @param entropy_b pointer type double to store 'B' channel blind entropy value of the image.
+ *
+ *  @return Image's blind entropy value.
+ * */
 double getBlindEntropy(const Mat& image, double& entropy_r, double& entropy_g, double& entropy_b)
 {   entropy_r = getChannelBlindEntropy(image, CHANNEL_R);
     entropy_g = getChannelBlindEntropy(image, CHANNEL_G);
@@ -130,8 +167,19 @@ double getBlindEntropy(const Mat& image, double& entropy_r, double& entropy_g, d
     return (entropy_r + entropy_g + entropy_b)/3;
 }
 
-int plotEntropyChannels(int plotType, const string& title, const map<int, double>& entropyValues, const map<int, double>& entropyRValues,
-        const map<int, double>& entropyGValues, const map<int, double>& entropyBValues)
+/**
+ * Visualize through gnuplot the plot that represents each entropy value of a video's image frame.
+ *
+ * @param plotType type of plot to visualize. PLOT_R, PLOT_G, PLOT_B, PLOT_MERGE, PLOT_ALL_RGB, PLOT_ALL.
+ * @param title title of the graph.
+ * @param entropyValues map of all the entropy values of the video's frames.
+ * @param entropyRValues map of all the entropy values from channel 'R' of the video's frames.
+ * @param entropyGValues map of all the entropy values from channel 'G' of the video's frames.
+ * @param entropyBValues map of all the entropy values from channel 'B' of the video's frames.
+ * */
+void plotEntropyChannels(int plotType, const string& title, const map<int, double>& entropyValues,
+        const map<int, double>& entropyRValues,const map<int, double>& entropyGValues,
+        const map<int, double>& entropyBValues)
 {   GnuplotPipe gp;
     gp.sendLine("set title \"" + title + "\"");
 
@@ -193,12 +241,26 @@ int plotEntropyChannels(int plotType, const string& title, const map<int, double
             gp.sendLine(std::to_string(it.first) + " " + std::to_string(it.second));
         gp.sendEndOfData();
     }
-    return 1;
 }
 
+/**
+ * Calculates entropy of a video according to a given entropy method.
+ *
+ * @param cap video.
+ * @param entropyFunc entropy method used to calculate the entropy if each video's frame.
+ * The available functions are: getEntropy and getBlindEntropy.
+ * @param entropyValues map of all the entropy values of the video's frames.
+ * @param entropyRValues map of all the entropy values from channel 'R' of the video's frames.
+ * @param entropyGValues map of all the entropy values from channel 'G' of the video's frames.
+ * @param entropyBValues map of all the entropy values from channel 'B' of the video's frames.
+ *
+ * @return tuple containing the average values of: total entropy, entropy of channel 'R', entropy of channel 'G',
+ * entropy of channel 'B'.
+ * */
 template <typename Function>
-tuple<double ,double, double, double> videoEntropy(VideoCapture cap, Function entropyFunc, map<int, double> &entropyValues, map<int, double> &entropyRValues,
-        map<int, double> &entropyGValues,  map<int, double> &entropyBValues)
+tuple<double ,double, double, double> videoEntropy(VideoCapture cap, Function entropyFunc,
+        map<int, double> &entropyValues, map<int, double> &entropyRValues, map<int, double> &entropyGValues,
+        map<int, double> &entropyBValues)
 {   if(! cap.isOpened())
         return {NULL,NULL,NULL,NULL};
 
@@ -223,7 +285,12 @@ tuple<double ,double, double, double> videoEntropy(VideoCapture cap, Function en
     return {t_mean/frnb, r_mean/frnb, g_mean/frnb, b_mean/frnb};
 }
 
-void ex11_part1(string image_path)
+/**
+ * Part 1 of exercise 11
+ *
+ * @param image_path path of the image file to analyse.
+ * */
+void ex11_part1(const string image_path)
 {   Mat image;
     image   = imread(image_path, 1);
     double r,g,b;
@@ -237,11 +304,14 @@ void ex11_part1(string image_path)
     cout << "Blind Entropy R:\t"<< r <<endl;
     cout << "Blind Entropy G:\t"<< g <<endl;
     cout << "Blind Entropy B:\t"<< b <<endl;
-
-
 }
 
-void ex11_part2(string video_path)
+/**
+ * Part 2 of exercise 11
+ *
+ * @param video_path path of the video file to analyse.
+ * */
+void ex11_part2(const string video_path)
 {   VideoCapture cap(video_path);
 
     map<int, double> entropyValues, entropyRValues,entropyGValues,entropyBValues;
