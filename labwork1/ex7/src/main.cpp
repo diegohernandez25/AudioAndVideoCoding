@@ -31,7 +31,7 @@ template <typename T> void lbg_init(vector<T>& codebook,int nr_vecs){
 template <typename T> void lbg_calculate(Mat& in,vector<T>& codebook,Mat& result,int iter){
 	uint nr_centroids=codebook.size();
 	uint nr_chan=in.channels();
-	Mat* tmp_calc = new Mat[nr_centroids]; //alloca didnt work?
+	Mat* tmp_calc = new Mat[nr_centroids]; 
 	Mat* tmp_chans = new Mat[nr_chan];
 	Mat* dists = new Mat[nr_centroids];
 	result=Mat::zeros(in.rows,in.cols,CV_16U);
