@@ -84,22 +84,27 @@ void lbg_apply(Mat& v,vector<Scalar>& codebook,Mat& out){
 
 int main(int argc, char* argv[]){
 
-	if(argc!=5){
-		cout<<"Usage: "<<argv[0]<<" in_file lsb|midrise|midtread quantizebits out_file"<<endl;
+	if(argc!=6){
+		cout<<"Usage: "<<argv[0]<<" -v|-i in_file lsb|midrise|midtread quantizebits out_file"<<endl;
+		cout<<"-i : image"<<endl<<"-v : video"<<endl;
 		cout<<"Linde-Buzo-Gray is calculated using the same amount of colors allowed by the quantizebits argument"<<endl;
 		return 1;
 	}
 
-	VideoCapture vc(argv[1]);
-	VideoWriter vw(argv[4],vc.get(CAP_PROP_FOURCC),vc.get(CAP_PROP_FPS),Size(vc.get(CAP_PROP_FRAME_WIDTH),vc.get(CAP_PROP_FRAME_HEIGHT)));
+	bool image=strcmp(argv[1],"-i")==0;
+
+	VideoCapture vc(argv[2]);
+	VideoWriter vw;
+	if(!image) vw= VideoWriter(argv[5],vc.get(CAP_PROP_FOURCC),vc.get(CAP_PROP_FPS),Size(vc.get(CAP_PROP_FRAME_WIDTH),vc.get(CAP_PROP_FRAME_HEIGHT)));
+
 	Mat in;
 	int type;
 
-	if(strcmp(argv[2],"midrise")==0){
+	if(strcmp(argv[3],"midrise")==0){
 		type=0;	
 		cout<<"MidRise"<<endl;
 	}
-	else if(strcmp(argv[2],"midtread")==0){
+	else if(strcmp(argv[3],"midtread")==0){
 		type=1;
 		cout<<"MidTread"<<endl;
 	}
@@ -107,7 +112,7 @@ int main(int argc, char* argv[]){
 		type=2;
 		cout<<"Linde-Buzo-Gray"<<endl;
 	}
-	cout<<pow(2,atoi(argv[3])*3)<<" COLOURS MODE"<<endl;
+	cout<<pow(2,atoi(argv[4])*3)<<" COLOURS MODE"<<endl;
 
 	vc>>in;
 	Mat q(in.rows,in.cols,in.type());	
@@ -116,25 +121,27 @@ int main(int argc, char* argv[]){
 	while(!in.empty()){	
 
 		if(type==0)
-			uniform_midrise<uchar>(in,q,atoi(argv[3]));	
+			uniform_midrise<uchar>(in,q,atoi(argv[4]));	
 		else if(type==1)
-			uniform_midtread<uchar>(in,q,atoi(argv[3]));	
+			uniform_midtread<uchar>(in,q,atoi(argv[4]));	
 		else{
-			lbg_init<Scalar>(codebook,pow(2,atoi(argv[3])*3));
+			lbg_init<Scalar>(codebook,pow(2,atoi(argv[4])*3));
 			lbg_calculate<Scalar>(in,codebook,lbg_result,20);
 			lbg_apply(lbg_result,codebook,q);
 		}
 
 		imshow("Original",in);
 		imshow("Quantized",q);
-		waitKey(1);
+		waitKey(image?0:1);
 
 		/*
 		imwrite(string(argv[3])+"/midrise.png",q);
 		imwrite(string(argv[3])+"/midtread.png",q1);
 		imwrite(string(argv[3])+"/linde_buzo_gray.png",q2);
 		*/
-		vw<<q;
+		if(image) imwrite(argv[5],q);
+		else vw<<q;
+
 		vc>>in;
 	}
 	vc.release();
