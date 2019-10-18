@@ -16,6 +16,9 @@ add_definitions(${WALL})
 add_definitions(${STD_C11})
 add_definitions(${OPENCV_FLAGS})
 
+link_directories( ${CMAKE_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+
 add_executable(main ${SOURCE_FILES})
 
 target_link_libraries(main ${OpenCV_LIBS})
