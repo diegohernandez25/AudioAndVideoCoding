@@ -10,6 +10,8 @@
 #include <fstream>
 #include <cstdint>
 #include <string>
+#include <cmath>
+#include <fstream>
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -17,7 +19,7 @@
 #include "opencv2/plot.hpp"
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/mat.hpp"
-#include <cmath>
+#include "gnuplot.h"
 
 using namespace std;
 using namespace cv;
@@ -85,9 +87,13 @@ public:
     int encMidriseUniQuant(int nbits, FILE *outfile);
     int encMidtreadUniQuant(int nbits, FILE *outfile);
 
-    double getSNR(char typeQuant, int nbits, int chn,int& maxAbsError);
+    tuple<double, double> getSNR(char typeQuant, int nbits, int chn);
     int midriseQuant(int nbits, signed char* p, int size);
     int midtreadQuant(int nbits, signed char* p, int size);
+
+    void plotWav();
+    void plotChannels();
+    void plotSamples(const vector<double>& samples, const string& title);
 };
 
 #endif //TEST_WAV_H

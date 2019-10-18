@@ -3,7 +3,7 @@
 ///<
 
 #include "Wav.h"
-#include <fstream>
+
 
 /**
  * Gets file size.
@@ -29,7 +29,6 @@ int Wav::getFileSize()
 void Wav::cpBySample(FILE *outwavfile)
 {   int headerSize = sizeof(wav_hdr);
     fwrite(&(Wav::wavHeader), 1, (size_t) headerSize, outwavfile);
-    cout << "header done"<<endl;
     for(unsigned int i=0; i<Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
     {   signed char *p = (Wav::wavData) + i;
         fwrite(p,1,size_t (Wav::bytesPerSample), outwavfile);
@@ -222,11 +221,15 @@ int Wav::encMidtreadUniQuant(int nbits, FILE *outfile)
     short mask_short = ~short(pow(2,nbits%16)-1);
     auto finalData  = (signed char*) alloca(Wav::wavHeader.Subchunk2Size);
 
+    auto initNegSampVal = short (0x8000);
+    if (Wav::bytesPerSample == 1)
+        initNegSampVal = short (0xff80);
+
     for(unsigned int i=0; i< Wav::wavHeader.Subchunk2Size; i+=Wav::bytesPerSample)
     {   signed char *ptmp  = Wav::wavData + i;
         signed char *pfin  = finalData + i;
 
-        auto samp = (signed short)(((0x80 & ptmp[Wav::bytesPerSample -1]) == 0x80)? 0x8000 : 0x0000);
+        auto samp = (signed short)(((0x80 & ptmp[Wav::bytesPerSample -1]) == 0x80)? initNegSampVal : 0x0000);
         for(int j=0; j <Wav::bytesPerSample; j++)
             samp |= (0xff & ptmp[j])<<(j*8);
 
@@ -263,7 +266,7 @@ tuple<double, double> Wav::getSNR(char typeQuant, int nbits, int chn)
     int N = Wav::numSamples / Wav::wavHeader.NumOfChan;
     auto* pQuant = (signed char*) malloc(Wav::wavHeader.Subchunk2Size);
     int ch_index = chn -1;
-    int shift = Wav::bytesPerSample*Wav::wavHeader.NumOfChan + ch_index*Wav::bytesPerSample;
+    int shift = Wav::bytesPerSample*Wav::wavHeader.NumOfChan;
     signed char *pData, *pQuantTmp;
 
     if (typeQuant == MIDRISE_QUANT)
@@ -282,12 +285,15 @@ tuple<double, double> Wav::getSNR(char typeQuant, int nbits, int chn)
         cout << "Undefined type" << endl;
         return {NULL,NULL};
     }
+    auto initNegSampVal = short (0x8000);
+    if (Wav::bytesPerSample == 1)
+        initNegSampVal = short (0xff80);
 
     for(unsigned int i=0; i<Wav::wavHeader.Subchunk2Size; i+=shift) {
-        pData = Wav::wavData + i;
-        pQuantTmp = pQuant + i;
-        auto sampOrigValue = (signed short)(((0x80 & pData[Wav::bytesPerSample -1]) == 0x80)? 0x8000 : 0x0000);
-        auto sampQuantValue = (signed short)(((0x80 & pQuantTmp[Wav::bytesPerSample -1]) == 0x80)? 0x8000 : 0x0000);
+        pData = Wav::wavData + i +ch_index*Wav::bytesPerSample;
+        pQuantTmp = pQuant + i + ch_index*Wav::bytesPerSample;
+        auto sampOrigValue = (signed short)(((0x80 & pData[Wav::bytesPerSample -1]) == 0x80)? initNegSampVal : 0x0000);
+        auto sampQuantValue = (signed short)(((0x80 & pQuantTmp[Wav::bytesPerSample -1]) == 0x80)? initNegSampVal : 0x0000);
         for(int k=0; k <Wav::bytesPerSample; k++)
         {   sampOrigValue   |= (0xff & pData[k])<<(k*8);
             sampQuantValue  |= (0xff & pQuantTmp[k])<<(k*8);
@@ -296,7 +302,6 @@ tuple<double, double> Wav::getSNR(char typeQuant, int nbits, int chn)
         xiQuant.push_back(sampQuantValue);
     }
     free(pQuant);
-
     for(long i =0; i<N; i++)
     {   ES += std::pow(std::abs(xi.at((unsigned long) i)),2);
         tmp = std::abs(xi.at((unsigned long) i) - xiQuant.at((unsigned long) i));
@@ -345,7 +350,7 @@ void Wav::plotWav()
 
     vector<double> tmp;
     signed char * pSamp;
-    for(int i=0;i<Wav::wavHeader.Subchunk2Size;i+=Wav::bytesPerSample)
+    for(unsigned int i=0;i<Wav::wavHeader.Subchunk2Size;i+=Wav::bytesPerSample)
     {   pSamp = Wav::wavData + i;
         auto value = (signed short)(((0x80 & pSamp[Wav::bytesPerSample -1]) == 0x80)? initNegSampVal : 0x0000);
         for(int j=0; j <Wav::bytesPerSample; j++)
