@@ -66,7 +66,4 @@ int main(int argc, char* argv[]){
 	}
 	waitKey(0);
 	
-    //cv::namedWindow( "1", cv::WINDOW_AUTOSIZE );
-    //cv::destroyWindow( "Display window" );
-
 }

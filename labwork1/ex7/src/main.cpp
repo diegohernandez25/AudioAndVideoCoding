@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "opencv2/core/core.hpp"
+#include "opencv2/opencv.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 
@@ -83,35 +84,60 @@ void lbg_apply(Mat& v,vector<Scalar>& codebook,Mat& out){
 
 int main(int argc, char* argv[]){
 
-	if(argc!=4){
-		cout<<"Usage: "<<argv[0]<<" file quantizebits out_folder"<<endl;
-		cout<<"Linde-Buzo-Gray is calculated using the same amount of colors alowed by the quantizebits argument"<<endl;
+	if(argc!=5){
+		cout<<"Usage: "<<argv[0]<<" in_file lsb|midrise|midtread quantizebits out_file"<<endl;
+		cout<<"Linde-Buzo-Gray is calculated using the same amount of colors allowed by the quantizebits argument"<<endl;
 		return 1;
 	}
 
-	Mat in = imread(argv[1],IMREAD_COLOR);
-	Mat q(in.rows,in.cols,in.type());;	
-	Mat q1(in.rows,in.cols,in.type());;	
-	uniform_midrise<uchar>(in,q,atoi(argv[2]));	
-	uniform_midtread<uchar>(in,q1,atoi(argv[2]));	
+	VideoCapture vc(argv[1]);
+	VideoWriter vw(argv[4],vc.get(CAP_PROP_FOURCC),vc.get(CAP_PROP_FPS),Size(vc.get(CAP_PROP_FRAME_WIDTH),vc.get(CAP_PROP_FRAME_HEIGHT)));
+	Mat in;
+	int type;
 
+	if(strcmp(argv[2],"midrise")==0){
+		type=0;	
+		cout<<"MidRise"<<endl;
+	}
+	else if(strcmp(argv[2],"midtread")==0){
+		type=1;
+		cout<<"MidTread"<<endl;
+	}
+	else{
+		type=2;
+		cout<<"Linde-Buzo-Gray"<<endl;
+	}
+	cout<<pow(2,atoi(argv[3])*3)<<" COLOURS MODE"<<endl;
+
+	vc>>in;
+	Mat q(in.rows,in.cols,in.type());	
 	vector<Scalar> codebook;
 	Mat lbg_result;
-	Mat q2(in.rows,in.cols,in.type());	
-	lbg_init<Scalar>(codebook,pow(2,atoi(argv[2])*3));
-	lbg_calculate<Scalar>(in,codebook,lbg_result,20);
-	lbg_apply(lbg_result,codebook,q2);
+	while(!in.empty()){	
 
-	cout<<pow(2,atoi(argv[2])*3)<<" COLOURS MODE"<<endl;
-	imshow("Original",in);
-	imshow("MidRise",q);
-	imshow("MidTread",q1);
-	imshow("Linde-Buzo-Gray",q2);
-	waitKey(0);
+		if(type==0)
+			uniform_midrise<uchar>(in,q,atoi(argv[3]));	
+		else if(type==1)
+			uniform_midtread<uchar>(in,q,atoi(argv[3]));	
+		else{
+			lbg_init<Scalar>(codebook,pow(2,atoi(argv[3])*3));
+			lbg_calculate<Scalar>(in,codebook,lbg_result,20);
+			lbg_apply(lbg_result,codebook,q);
+		}
 
-	imwrite(string(argv[3])+"/midrise.png",q);
-	imwrite(string(argv[3])+"/midtread.png",q1);
-	imwrite(string(argv[3])+"/linde_buzo_gray.png",q2);
+		imshow("Original",in);
+		imshow("Quantized",q);
+		waitKey(1);
 
+		/*
+		imwrite(string(argv[3])+"/midrise.png",q);
+		imwrite(string(argv[3])+"/midtread.png",q1);
+		imwrite(string(argv[3])+"/linde_buzo_gray.png",q2);
+		*/
+		vw<<q;
+		vc>>in;
+	}
+	vc.release();
+	vw.release();
 	return 0;
 }
