@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.10)
 project(ex11)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -13,6 +13,9 @@ include_directories(include)
 add_definitions(${WALL})
 add_definitions(${STD_C11})
 add_definitions(${OPENCV_FLAGS})
+
+link_directories( ${CMAKE_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 add_executable(ex11 main.cpp)
 target_link_libraries(ex11 ${OpenCV_LIBS})

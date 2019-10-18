@@ -145,7 +145,7 @@ double getChannelBlindEntropy(Mat image, int channel)
 
     for(auto it:chnl) {
         prob = it.second / total;
-        entropy_chnl += prob * std::log10(prob);
+        entropy_chnl += prob * std::log2(prob);
     }
     return -entropy_chnl;
 }
@@ -351,5 +351,4 @@ int main(int argc, char** argv) {
 
     cout << "End" << endl;
     return 0;
-
 }
