@@ -94,13 +94,13 @@ int main(int argc, char* argv[]) {
 	buildHistogram(samples, hist_channel0, hist_channel1, hist_mono);
 	
 	// Configure Gnuplot
-	gp.sendLine("binwidth=1");
+	gp.sendLine("binwidth=5");
 	gp.sendLine("set boxwidth binwidth");
 	gp.sendLine("bin(x,width)=width*floor(x/width) + binwidth/2.0");
 
 	// Plot the three histograms
 	showPlot(gp, hist_channel0, std::string(argv[1]) + " - Channel 0", "Channel 0", 0);
-	showPlot(gp, hist_channel1, std::string(argv[1]) + " - Channel 1", "Channel 0", 1);
+	showPlot(gp, hist_channel1, std::string(argv[1]) + " - Channel 1", "Channel 1", 1);
 	showPlot(gp, hist_mono,     std::string(argv[1]) + " - Mono", "Mono", 2);
 
 	return 0;
