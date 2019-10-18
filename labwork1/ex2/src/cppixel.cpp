@@ -12,7 +12,7 @@ template<typename T> void copy_image(Mat& in,Mat& out){
 	out=Mat(in.rows,in.cols,in.type());
 	for(int row=0;row<in.rows;row++)
 		for(int col=0;col<in.cols;col++)
-			out.at<T>(row,col)=in.at<T>(row,col); //How does this work
+			out.at<T>(row,col)=in.at<T>(row,col); 
 }
 
 int main(int argc, char* argv[]){

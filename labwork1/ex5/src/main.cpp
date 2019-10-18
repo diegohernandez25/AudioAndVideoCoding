@@ -56,7 +56,7 @@ int main(int argc, char* argv[]){
 		imshow("B", hout[0]);
 		imshow("G", hout[1]);
 		imshow("R", hout[2]);
-		imshow("Greyscale",grayhist); //FIXME seems wrong?
+		imshow("Greyscale",grayhist); 
 		imshow("Sum",out);
 		
 		if(waitKey(40)=='q')
@@ -66,7 +66,4 @@ int main(int argc, char* argv[]){
 	}
 	waitKey(0);
 	
-    //cv::namedWindow( "1", cv::WINDOW_AUTOSIZE );
-    //cv::destroyWindow( "Display window" );
-
 }
