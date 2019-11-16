@@ -1,3 +1,6 @@
+#ifndef H_BITSTREAM
+#define H_BITSTREAM
+
 #include <iostream>
 #include <fstream>
 #include <bitset>
@@ -18,3 +21,5 @@ class bitstream : public fstream {
         int pointer = 7;
         int byteCount;
 };
+
+#endif

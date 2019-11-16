@@ -1,3 +1,6 @@
+#ifndef H_GOLOMB_BITSTREAM
+#define H_GOLOMB_BITSTREAM
+
 #include <tuple>
 #include <vector>
 #include <cmath>
@@ -24,3 +27,5 @@ class golomb_bitstream{
 		golomb gl;
 		bitstream& bt;
 };
+
+#endif

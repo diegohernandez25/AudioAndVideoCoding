@@ -1,3 +1,6 @@
+#ifndef H_GOLOMB
+#define H_GOLOMB
+
 #include <tuple>
 #include <vector>
 #include <cmath>
@@ -25,3 +28,5 @@ class golomb{
 		void predict_m();
 		void adjust_golomb(uint n);
 };
+
+#endif
