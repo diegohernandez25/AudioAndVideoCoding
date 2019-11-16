@@ -76,7 +76,6 @@ int golomb::signed_decode(uint q,uint r){
 int golomb::get_m(){return m;}
 void golomb::set_m(int new_m){ m=new_m;}
 
-//TODO cena de se o g nao for uma potencia poupar espaco
 int main(int argc,char** argv){
 	golomb genc(20,6,0);
 	golomb gdec(20,6,0);
