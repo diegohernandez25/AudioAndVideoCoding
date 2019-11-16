@@ -2,16 +2,16 @@
 // Created by diego on 16/11/19.
 //
 
-#include "Predictor.h"
+#include "predictor.h"
 using namespace std;
 
-void Predictor::printCircleBuffer(){
+void predictor::printCircleBuffer(){
     cout << "pointer:\t" << cb_ptr << endl;
     cout << "[ " << circularBuffer[0] << ", " << circularBuffer[1] << ", " << circularBuffer[2] << "]" << endl;
     cout << endl;
 }
 
-short Predictor::predict()
+short predictor::predict()
 {   switch(num_inputs) {
         case 0:
             return 0;
@@ -25,19 +25,19 @@ short Predictor::predict()
     }
 }
 
-short Predictor::residual(short sample)
+short predictor::residual(short sample)
 {   short pred_val = predict();
     updateBuffer(sample);
     return (short) (sample - pred_val);
 }
 
-void Predictor::updateBuffer(short sample) {
+void predictor::updateBuffer(short sample) {
     cb_ptr = (short) ((cb_ptr + 1) % 3);
     circularBuffer[cb_ptr] = sample;
     if(num_inputs < 3) num_inputs++;
 }
 
-short Predictor::reconstruct(short residual)
+short predictor::reconstruct(short residual)
 {   auto rec_val = (short) (predict() + residual);
     updateBuffer(rec_val);
     return rec_val;

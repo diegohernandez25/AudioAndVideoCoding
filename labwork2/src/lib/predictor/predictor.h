@@ -8,14 +8,14 @@
 
 using namespace std;
 
-class Predictor {
+class predictor {
 public:
     short predict();
     short residual(short sample);
     void printCircleBuffer();
     short reconstruct(short );
 
-    Predictor()
+    predictor()
     {   num_inputs = 0;
         cb_ptr = 2;
     }
