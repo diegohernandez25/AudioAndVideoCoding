@@ -1,8 +1,8 @@
-#include "Golomb.h"
+#include "golomb.h"
 
-Golomb::Golomb(uint m) : Golomb(m,0,0){}
+golomb::golomb(uint m) : golomb(m,0,0){}
 
-Golomb::Golomb(uint initial_m,uint blk_size,uint calc_interval){
+golomb::golomb(uint initial_m,uint blk_size,uint calc_interval){
 	assert(blk_size==0||calc_interval<blk_size);
 
 	m=initial_m;
@@ -18,20 +18,20 @@ Golomb::Golomb(uint initial_m,uint blk_size,uint calc_interval){
 		block=std::vector<uint>((std::vector<uint>::size_type) blk_size);
 }
 
-inline std::tuple<uint,uint> Golomb::encode(uint n){
+std::tuple<uint,uint> golomb::encode(uint n){
 	uint q=n/m;
 	std::tuple<uint,uint> ret = std::make_tuple(q,n-q*m);
 	adjust_golomb(n);
 	return ret; 
 }
 
-inline uint Golomb::decode(uint q,uint r){
+uint golomb::decode(uint q,uint r){
 	uint n=q*m+r;
 	adjust_golomb(n);
 	return n;
 } 
 
-inline void Golomb::adjust_golomb(uint n){
+void golomb::adjust_golomb(uint n){
 	if(blk_size!=0){
 		block[blk_ptr++]=n;
 		if(!buffer_full&&blk_ptr==blk_size) buffer_full=true;
@@ -44,7 +44,7 @@ inline void Golomb::adjust_golomb(uint n){
 	}
 }
 
-void Golomb::predict_m(){
+void golomb::predict_m(){
 	//Golomb follows a geometric distribution
 	//Geometric distribution mean = (1-p)/p
 	//p = (1-alpha), so mean = alpha/(1-alpha)
@@ -56,26 +56,30 @@ void Golomb::predict_m(){
 	}
 	if(mean==0) return; //This should never happen, but we need to protect against this case
 
-	m=std::ceil(-1/std::log2(mean/(mean+1)));
-	std::cout<<"New m="<<m<<std::endl;
+	m=std::ceil(-1/std::log2(mean/(mean+1.0)));
+	//std::cout<<"New m="<<m<<std::endl;
 }
 
-inline std::tuple<uint,uint> Golomb::signed_encode(int n){
+std::tuple<uint,uint> golomb::signed_encode(int n){
 	//positive (and zero) -> even
 	//negative -> odd 
 	return encode(n>=0?2*n:-2*n-1);
 }
 
-inline int Golomb::signed_decode(uint q,uint r){
+int golomb::signed_decode(uint q,uint r){
 	//odd -> negative 
 	//even -> positive
 	uint res=decode(q,r);
 	return res%2 ? ((int)res+1)/-2 : res/2;
 }
+
+int golomb::get_m(){return m;}
+void golomb::set_m(int new_m){ m=new_m;}
+
 //TODO cena de se o g nao for uma potencia poupar espaco
 int main(int argc,char** argv){
-	Golomb genc(20,6,0);
-	Golomb gdec(20,6,0);
+	golomb genc(20,6,0);
+	golomb gdec(20,6,0);
 	int a=0,q,r;
 	std::tuple<uint,uint> res;
 	while(true){

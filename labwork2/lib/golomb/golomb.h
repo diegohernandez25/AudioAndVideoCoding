@@ -4,14 +4,16 @@
 #include <cassert>
 #include <iostream>
 
-class Golomb{
+class golomb{
 	public:
-		Golomb(uint initial_m,uint blk_size,uint calc_interval);	
-		Golomb(uint m);	
+		golomb(uint m);	
+		golomb(uint initial_m,uint blk_size,uint calc_interval);	
 		std::tuple<uint,uint> encode(uint n);
 		uint decode(uint q,uint r);
 		std::tuple<uint,uint> signed_encode(int n);
 		int signed_decode(uint q,uint r);
+		int get_m();
+		void set_m(int new_m);
 
 	private:
 		uint m;
