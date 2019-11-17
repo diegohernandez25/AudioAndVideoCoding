@@ -66,7 +66,15 @@ void bitstream::readNBits(uint32_t* bits, uint n) {
 	}
 }
 
+void bitstream::addPadding() {
+	std::cout << pointer << std::endl;
+	for (int i = 0; i < 7 - pointer; i++) {
+		writeBit(0);
+	}
+}
+
 bitstream::~bitstream() {
-	// TODO padding
+	if (writeMode)
+		addPadding();
 	close();
 }
