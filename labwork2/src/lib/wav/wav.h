@@ -45,8 +45,6 @@ public:
     //<Methods
     vector<short> getChannelData(int nch);
     void printHeader();
-    void writeFile(FILE* outfile, wav_hdr header, vector<short> data);
-
 
     //<  Setters
     void setSubchunk2Size(uint32_t val);
@@ -96,7 +94,7 @@ public:
     short get(uint32_t n_sample, uint16_t ch);
 
     //Write a file
-    void dump(FILE* outfile);
+    void dump();
 
 private:
 

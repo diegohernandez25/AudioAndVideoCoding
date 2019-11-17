@@ -41,22 +41,15 @@ vector<short> wav::getChannelData(int nch)
     return tmp;
 }
 
-void wav::writeFile(FILE* outfile, wav_hdr header, vector<short> data)
-{   fwrite(&header, 1, (size_t) sizeof(wav_hdr), outfile);
-    char tmp[2] = {0};
-    for(short & it : data)
-    {   tmp[0] = it; tmp[1] = it >> 8;
-        fwrite(tmp, sizeof(char), 2, outfile);
-    }
-}
-
-void wav::dump(FILE* outfile){
+void wav::dump(){
+    FILE* outfile = fopen(fileName.c_str(),"w");
     fwrite(&wavHeader, 1, (size_t) sizeof(wav_hdr), outfile);
     char tmp[2] = {0};
     for(short & it : wavData)
     {   tmp[0] = it; tmp[1] = it >> 8;
         fwrite(tmp, sizeof(char), 2, outfile);
     }
+    fclose(outfile);
 }
 
 void wav::load(){
