@@ -99,8 +99,11 @@ void wav::reserve(uint16_t n_samples, uint32_t n_ch)
 }
 
 void wav::insert(uint32_t n_sample, uint16_t ch, uint32_t value){
-    uint32_t idx = (n_sample) * wavHeader.NumOfChan + ch - 1;
-    wavData[idx] = value;
+    wavData[(n_sample) * wavHeader.NumOfChan + ch - 1] = value;
+}
+
+short wav::get(uint32_t n_sample, uint16_t ch){
+    return wavData[(n_sample) * wavHeader.NumOfChan + ch - 1];
 }
 
 /**

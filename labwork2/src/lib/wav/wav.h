@@ -92,6 +92,9 @@ public:
     //Insert data
     void insert(uint32_t n_sample, uint16_t ch, uint32_t value);
 
+    //Insert data
+    short get(uint32_t n_sample, uint16_t ch);
+
     //Write a file
     void dump(FILE* outfile);
 
