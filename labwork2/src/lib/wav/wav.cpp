@@ -82,17 +82,6 @@ void wav::load(){
     free(ptrData);
 }
 
-void wav::reserve(uint16_t n_samples, uint32_t n_ch)
-{   numSamples = n_samples;
-    wavHeader.NumOfChan = n_ch;
-    totalSamples = n_samples * n_ch;
-
-    wavHeader.Subchunk2Size = totalSamples * 2; //each sample has 2 bytes
-    wavHeader.bitsPerSample = 16;
-
-    vector<short> tmp(totalSamples);
-    wavData = tmp;
-}
 
 void wav::insert(uint32_t n_sample, uint16_t ch, uint32_t value){
     wavData[(n_sample) * wavHeader.NumOfChan + ch - 1] = value;
@@ -102,13 +91,18 @@ short wav::get(uint32_t n_sample, uint16_t ch){
     return wavData[(n_sample) * wavHeader.NumOfChan + ch - 1];
 }
 
-void wav::createHeader(){
+void wav::createStructure(){
+    totalSamples = numSamples * wavHeader.NumOfChan;
+    wavHeader.Subchunk2Size = totalSamples * 2;
     wavHeader.bitsPerSample = 16;
     wavHeader.bytesPerSec = wavHeader.SamplesPerSec * 2;
     wavHeader.blockAlign = 4;
     wavHeader.AudioFormat = 1;
     wavHeader.Subchunk1Size = 16;
     wavHeader.ChunkSize = 4 + (8 + wavHeader.Subchunk1Size) + (8 + wavHeader.Subchunk2Size);
+
+    vector<short> tmp(totalSamples);
+    wavData = tmp;
 }
 
 /**

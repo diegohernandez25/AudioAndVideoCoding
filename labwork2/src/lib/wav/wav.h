@@ -84,9 +84,6 @@ public:
     //< Load file
     void load();
 
-    //<Reserve Data
-    void reserve(uint16_t n_samples, uint32_t n_ch);
-
     //Insert data
     void insert(uint32_t n_sample, uint16_t ch, uint32_t value);
 
@@ -96,7 +93,7 @@ public:
     //Write a file
     void dump();
 
-    void createHeader();
+    void createStructure();
 
 private:
 
