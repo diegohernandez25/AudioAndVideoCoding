@@ -13,9 +13,11 @@ class bitstream : public fstream {
         ~bitstream();
         int writeBit(uint8_t val);
         uint8_t readBit();
-        int writeNBits(uint* val, uint nBits);
-        int readNBits(uint* val,uint nBits);
-        int grantWrite();
+        // uint8_t readBit(uint32_t* val);
+        uint8_t writeNBits(uint32_t* val, int n);
+        uint8_t writeNBits(uint32_t val, int n);
+       // uint32_t readNBits(uint32_t* val, uint n);
+        uint32_t readNBits(uint n);
     private:
         uint8_t byte = 0;
         int pointer = 7;
