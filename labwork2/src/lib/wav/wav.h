@@ -38,11 +38,6 @@ typedef struct  WAV_HEADER
 class wav {
 public:
 
-    //<Attributes
-    wav_hdr wavHeader;
-    int bytesPerSample, numSamples;
-    vector<signed short> wavData;
-
     //<Constructors
     wav(string filename);
 
@@ -50,8 +45,15 @@ public:
     vector<short> getChannelData(int nch);
     void printHeader();
     void writeFile(FILE* outfile, wav_hdr header, vector<short> data);
+    wav_hdr getWavHeader();
+    vector<short> getWavData();
 
 private:
+
+    //<Attributes
+    wav_hdr wavHeader;
+    int bytesPerSample, numSamples;
+    vector<short> wavData;
 
 };
 

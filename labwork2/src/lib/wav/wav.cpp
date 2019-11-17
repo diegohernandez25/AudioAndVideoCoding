@@ -6,9 +6,9 @@
 
 
 wav::wav(string filename)
-{   signed char* ptrData;
+{   char* ptrData;
     int headerSize = sizeof(wav_hdr);
-    ptrData = (signed char*) malloc(wavHeader.Subchunk2Size);
+    ptrData = (char*) malloc(wavHeader.Subchunk2Size);
 
     FILE* inwavfile   = fopen(filename.c_str(),"r");
     fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
@@ -17,13 +17,17 @@ wav::wav(string filename)
 
     bytesPerSample = wavHeader.bitsPerSample/8;
     numSamples = wavHeader.Subchunk2Size/bytesPerSample;
+    vector<short> tmpData(numSamples);
     string tmp;
 
-    for(signed int i = 0; i< wavHeader.Subchunk2Size; i+=bytesPerSample)
-    {   signed char *pchar  = ptrData + i;
+
+    for(signed int i = 0, j = 0; i< wavHeader.Subchunk2Size; i+=bytesPerSample, j++)
+    {   char *pchar  = ptrData + i;
         short samp =  (((short)pchar[1])<<8) | (0x00ff & pchar[0]);
-        wavData.push_back(samp);
+        //wavData.push_back(samp);
+        tmpData[j] = samp;
     }
+    wav::wavData = tmpData;
     free(ptrData);
 }
 
@@ -35,8 +39,9 @@ vector<short> wav::getChannelData(int nch)
         return tmp;
     }
     auto it = wav::wavData.begin() + (nch - 1);
-    for(; it!=wavData.end() - wav::wavHeader.NumOfChan + nch-1; it+= wav::wavHeader.NumOfChan)
+    for(int j=0; it!=wavData.end() - wav::wavHeader.NumOfChan + (nch +1); it+= wav::wavHeader.NumOfChan,j++) {
         tmp.push_back(*it);
+    }
     return tmp;
 }
 
@@ -44,14 +49,20 @@ vector<short> wav::getChannelData(int nch)
 
 void wav::writeFile(FILE* outfile, wav_hdr header, vector<short> data)
 {   fwrite(&header, 1, (size_t) sizeof(wav_hdr), outfile);
-    for(auto it = data.begin(); it!=data.end(); it++)
-    {   char tmp[2] = {0};
-        tmp[0] = *it;
-        tmp[1] = *it >> 8;
+    char tmp[2] = {0};
+    for(short & it : data)
+    {   tmp[0] = it; tmp[1] = it >> 8;
         fwrite(tmp, sizeof(char), 2, outfile);
     }
 }
 
+wav_hdr wav::getWavHeader()
+{   return wavHeader;
+}
+
+vector<short> wav::getWavData(){
+    return wavData;
+}
 
 /**
  * Parses Wav file header information.
