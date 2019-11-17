@@ -21,8 +21,8 @@ wav::wav(string filename)
 
     for(signed int i = 0; i< wavHeader.Subchunk2Size; i+=bytesPerSample)
     {   signed char *pchar  = ptrData + i;
-    short samp =  (((short)pchar[1])<<8) | (0x00ff & pchar[0]);
-    data.push_back(samp);
+        short samp =  (((short)pchar[1])<<8) | (0x00ff & pchar[0]);
+        wavData.push_back(samp);
     }
     free(ptrData);
 }
@@ -34,11 +34,24 @@ vector<short> wav::getChannelData(int nch)
         cout << "Invalid channel selection." << endl;
         return tmp;
     }
-    auto it = wav::data.begin() + (nch - 1);
-    for(; it!=data.end() - wav::wavHeader.NumOfChan + nch-1; it+= wav::wavHeader.NumOfChan)
+    auto it = wav::wavData.begin() + (nch - 1);
+    for(; it!=wavData.end() - wav::wavHeader.NumOfChan + nch-1; it+= wav::wavHeader.NumOfChan)
         tmp.push_back(*it);
     return tmp;
 }
+
+
+
+void wav::writeFile(FILE* outfile, wav_hdr header, vector<short> data)
+{   fwrite(&header, 1, (size_t) sizeof(wav_hdr), outfile);
+    for(auto it = data.begin(); it!=data.end(); it++)
+    {   char tmp[2] = {0};
+        tmp[0] = *it;
+        tmp[1] = *it >> 8;
+        fwrite(tmp, sizeof(char), 2, outfile);
+    }
+}
+
 
 /**
  * Parses Wav file header information.

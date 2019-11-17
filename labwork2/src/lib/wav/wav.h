@@ -41,7 +41,7 @@ public:
     //<Attributes
     wav_hdr wavHeader;
     int bytesPerSample, numSamples;
-    vector<signed short> data;
+    vector<signed short> wavData;
 
     //<Constructors
     wav(string filename);
@@ -49,6 +49,7 @@ public:
     //<Methods
     vector<short> getChannelData(int nch);
     void printHeader();
+    void writeFile(FILE* outfile, wav_hdr header, vector<short> data);
 
 private:
 
