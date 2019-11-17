@@ -10,10 +10,11 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cstring>
+#include <algorithm>
+#include <iterator>
 
 using namespace std;
-
-
 
 typedef struct  WAV_HEADER
 {
@@ -45,16 +46,76 @@ public:
     vector<short> getChannelData(int nch);
     void printHeader();
     void writeFile(FILE* outfile, wav_hdr header, vector<short> data);
+
+
+    //<  Setters
+    void setSubchunk2Size(uint32_t val);
+    void setBytesPerSec(uint32_t val);
+    void setSamplesPerSec(uint32_t val);
+    void setChunkSize(uint32_t val);
+    void setNumOfChannels(uint16_t val);
+    void setBitsPerSample(uint16_t val);
+    void setAudioFormat(uint16_t val);
+    void setBytesPerSample(uint16_t val);
+    void setNumSamples(uint32_t val);
+    void setTotalSamples(uint32_t val);
+
+    void setBlockAlign(uint16_t val);
+    void setWavHeader(wav_hdr header);
+    void setWavData(vector<short> data);
+    void setFile(string name);
+
+    //< Getters
+    uint32_t getSubchunk2Size();
+    uint32_t getBytesPerSec();
+    uint32_t getSamplesPerSec();
+    uint32_t getChunkSize();
+    uint16_t getNumOfChannels();
+    uint16_t getBitsPerSample();
+    uint16_t getAudioFormat();
+    uint16_t getBlockAlign();
+    uint16_t getBytesPerSample();
+    uint32_t getNumSamples();
+    uint32_t getTotalSamples();
+
+
     wav_hdr getWavHeader();
     vector<short> getWavData();
+    string getFile();
+
+    //< Load file
+    void load();
+
+    //<Reserve Data
+    void reserve(uint16_t n_samples, uint32_t n_ch);
+
+    //Insert data
+    void insert(uint32_t n_sample, uint16_t ch, uint32_t value);
+
+    //Write a file
+    void dump(FILE* outfile);
 
 private:
 
     //<Attributes
-    wav_hdr wavHeader;
-    int bytesPerSample, numSamples;
-    vector<short> wavData;
 
+    //<File name
+    string fileName;
+
+    //< Wav Header
+    wav_hdr wavHeader;
+
+    //< Bytes per sample
+    uint16_t bytesPerSample;
+
+    //< Number of Samples Per Channel
+    uint32_t numSamples;
+
+    //< Total number of samples.
+    uint32_t totalSamples;
+
+    //< Wav Data
+    vector<short> wavData;
 };
 
 
