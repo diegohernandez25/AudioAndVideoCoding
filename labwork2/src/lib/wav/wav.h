@@ -38,41 +38,18 @@ typedef struct  WAV_HEADER
 class wav {
 public:
 
+    //<Attributes
     wav_hdr wavHeader;
-
-    int bytesPerSample;
-    int numSamples;
-
-
+    int bytesPerSample, numSamples;
     vector<signed short> data;
 
-    wav(string filename)
-    {   signed char* ptrData;
-        int headerSize = sizeof(wav_hdr);
-        ptrData = (signed char*) malloc(wavHeader.Subchunk2Size);
+    //<Constructors
+    wav(string filename);
 
-        FILE* inwavfile   = fopen(filename.c_str(),"r");
-        fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
-        fread(ptrData, 1, wavHeader.Subchunk2Size, inwavfile);
-        fclose(inwavfile);
-
-        bytesPerSample = wavHeader.bitsPerSample/8;
-        numSamples = wavHeader.Subchunk2Size/bytesPerSample;
-        string tmp;
-        cout << "num samples: "<<numSamples << endl;
-        cout << "num sample per channel:" << numSamples/wavHeader.NumOfChan << endl;
-
-        for(signed int i = 0; i< wavHeader.Subchunk2Size; i+=bytesPerSample)
-        {   signed char *pchar  = ptrData + i;
-            short samp =  (((short)pchar[1])<<8) | (0x00ff & pchar[0]);
-            data.push_back(samp);
-        }
-        cout << "vec size:" << data.size() << endl;
-        free(ptrData);
-    }
-
+    //<Methods
     vector<short> getChannelData(int nch);
     void printHeader();
+
 private:
 
 };

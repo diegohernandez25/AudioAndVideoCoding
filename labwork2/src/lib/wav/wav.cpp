@@ -4,6 +4,30 @@
 
 #include "wav.h"
 
+
+wav::wav(string filename)
+{   signed char* ptrData;
+    int headerSize = sizeof(wav_hdr);
+    ptrData = (signed char*) malloc(wavHeader.Subchunk2Size);
+
+    FILE* inwavfile   = fopen(filename.c_str(),"r");
+    fread(&wavHeader, 1, (size_t) headerSize, inwavfile);
+    fread(ptrData, 1, wavHeader.Subchunk2Size, inwavfile);
+    fclose(inwavfile);
+
+    bytesPerSample = wavHeader.bitsPerSample/8;
+    numSamples = wavHeader.Subchunk2Size/bytesPerSample;
+    string tmp;
+
+    for(signed int i = 0; i< wavHeader.Subchunk2Size; i+=bytesPerSample)
+    {   signed char *pchar  = ptrData + i;
+    short samp =  (((short)pchar[1])<<8) | (0x00ff & pchar[0]);
+    data.push_back(samp);
+    }
+    free(ptrData);
+}
+
+
 vector<short> wav::getChannelData(int nch)
 {   vector<short> tmp;
     if(nch < 1 || nch > wav::wavHeader.NumOfChan) {
