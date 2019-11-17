@@ -15,7 +15,7 @@ void bitstream::writeBit(uint8_t val) {
 void bitstream::writeNBits(uint32_t val, uint n) {
 	uint bit;
 	for (uint i = 0; i < n; i++) {
-        bit = (val >> i%32) & 0x1;
+        bit = (val >> i%32) & 0x01;
     	writeBit(bit);
 	}
 }
@@ -23,7 +23,7 @@ void bitstream::writeNBits(uint32_t val, uint n) {
 void bitstream::writeNBits(uint32_t* val, uint n) {
 	uint bit;
 	for (uint i = 0; i < n; i++) {
-        bit = ((*(val + i/32)) >> i%32) & 0x1;
+        bit = ((*(val + i/32)) >> i%32) & 0x01;
     	writeBit(bit);
 	}
 }
@@ -48,8 +48,8 @@ void bitstream::readBit(uint8_t* bit) {
 	pointer--;
 }
 
-// TODO assert n <= 33
 uint32_t bitstream::readNBits(uint n) {
+	assert(n <= 32);
 	uint32_t value = 0;
 	for (int i = 0; i < n; i++) {
 		value = value << 1 | readBit();

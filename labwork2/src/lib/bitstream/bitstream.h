@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <bitset>
+#include <cassert>
 
 // TODO chars
 
