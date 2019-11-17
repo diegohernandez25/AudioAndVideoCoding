@@ -96,6 +96,8 @@ public:
     //Write a file
     void dump();
 
+    void createHeader();
+
 private:
 
     //<Attributes

@@ -87,6 +87,9 @@ void wav::reserve(uint16_t n_samples, uint32_t n_ch)
     wavHeader.NumOfChan = n_ch;
     totalSamples = n_samples * n_ch;
 
+    wavHeader.Subchunk2Size = totalSamples * 2; //each sample has 2 bytes
+    wavHeader.bitsPerSample = 16;
+
     vector<short> tmp(totalSamples);
     wavData = tmp;
 }
@@ -99,6 +102,15 @@ short wav::get(uint32_t n_sample, uint16_t ch){
     return wavData[(n_sample) * wavHeader.NumOfChan + ch - 1];
 }
 
+void wav::createHeader(){
+    wavHeader.bitsPerSample = 16;
+    wavHeader.bytesPerSec = wavHeader.SamplesPerSec * 2;
+    wavHeader.blockAlign = 4;
+    wavHeader.AudioFormat = 1;
+    wavHeader.Subchunk1Size = 16;
+    wavHeader.ChunkSize = 4 + (8 + wavHeader.Subchunk1Size) + (8 + wavHeader.Subchunk2Size);
+}
+
 /**
  * Parses Wav file header information.
  * Reference: http:///<www.topherlee.com/software/pcm-tut-wavformat.html
@@ -108,7 +120,7 @@ void wav::printHeader()
     cout << "WAVE header                :" << wav::wavHeader.WAVE[0] << wav::wavHeader.WAVE[1] << wav::wavHeader.WAVE[2] << wav::wavHeader.WAVE[3] << endl;
     cout << "FMT                        :" << wav::wavHeader.fmt[0] << wav::wavHeader.fmt[1] << wav::wavHeader.fmt[2] << wav::wavHeader.fmt[3] << endl;
     cout << "Data size                  :" << wav::wavHeader.ChunkSize << endl;
-
+    cout << "Subchunk1Size              :" << wav::wavHeader.Subchunk1Size << endl;
     ///< Display the sampling Rate from the header
     cout << "Sampling Rate              :" << wav::wavHeader.SamplesPerSec << endl;
     cout << "Number of bits used        :" << wav::wavHeader.bitsPerSample << endl;
