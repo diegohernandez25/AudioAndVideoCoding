@@ -14,7 +14,7 @@ void bitstream::writeBit(uint8_t val) {
 
 void bitstream::writeNBits(uint32_t val, uint n) {
 	uint bit;
-	for (uint i = 0; i < n; i++) {
+	for (int i = n-1; i >= 0; i--) {
         bit = (val >> i%32) & 0x01;
     	writeBit(bit);
 	}
@@ -22,7 +22,7 @@ void bitstream::writeNBits(uint32_t val, uint n) {
 
 void bitstream::writeNBits(uint32_t* val, uint n) {
 	uint bit;
-	for (uint i = 0; i < n; i++) {
+	for (int i = n-1; i >= 0; i--) {
         bit = ((*(val + i/32)) >> i%32) & 0x01;
     	writeBit(bit);
 	}
