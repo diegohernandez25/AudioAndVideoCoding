@@ -1,0 +1,39 @@
+//
+// Created by diego on 17/11/19.
+//
+
+#include "wav.h"
+
+vector<short> wav::getChannelData(int nch)
+{   vector<short> tmp;
+    if(nch < 1 || nch > wav::wavHeader.NumOfChan) {
+        cout << "Invalid channel selection." << endl;
+        return tmp;
+    }
+    auto it = wav::data.begin() + (nch - 1);
+    for(; it!=data.end() - wav::wavHeader.NumOfChan + nch-1; it+= wav::wavHeader.NumOfChan)
+        tmp.push_back(*it);
+    return tmp;
+}
+
+/**
+ * Parses Wav file header information.
+ * Reference: http:///<www.topherlee.com/software/pcm-tut-wavformat.html
+ * */
+void wav::printHeader()
+{   cout << "RIFF header                :" << wav::wavHeader.RIFF[0] << wav::wavHeader.RIFF[1] << wav::wavHeader.RIFF[2] << wav::wavHeader.RIFF[3] << endl;
+    cout << "WAVE header                :" << wav::wavHeader.WAVE[0] << wav::wavHeader.WAVE[1] << wav::wavHeader.WAVE[2] << wav::wavHeader.WAVE[3] << endl;
+    cout << "FMT                        :" << wav::wavHeader.fmt[0] << wav::wavHeader.fmt[1] << wav::wavHeader.fmt[2] << wav::wavHeader.fmt[3] << endl;
+    cout << "Data size                  :" << wav::wavHeader.ChunkSize << endl;
+
+    ///< Display the sampling Rate from the header
+    cout << "Sampling Rate              :" << wav::wavHeader.SamplesPerSec << endl;
+    cout << "Number of bits used        :" << wav::wavHeader.bitsPerSample << endl;
+    cout << "Number of channels         :" << wav::wavHeader.NumOfChan << endl;
+    cout << "Number of bytes per second :" << wav::wavHeader.bytesPerSec << endl;
+    cout << "Data length                :" << wav::wavHeader.Subchunk2Size << endl;
+    cout << "Audio Format               :" << wav::wavHeader.AudioFormat << endl;
+    ///< Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM
+    cout << "Block align                :" << wav::wavHeader.blockAlign << endl;
+    cout << "Data string                :" << wav::wavHeader.Subchunk2ID[0] << wav::wavHeader.Subchunk2ID[1] << wav::wavHeader.Subchunk2ID[2] << wav::wavHeader.Subchunk2ID[3] << endl;
+}
