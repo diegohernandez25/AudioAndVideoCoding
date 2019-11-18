@@ -11,9 +11,9 @@ using namespace std;
 class predictor {
 public:
     short predict();
-    short residual(short sample);
-    short reconstruct(short residual);
-    void updateBufferQuant(short sample,short quant);
+    int residual(short sample);
+    short reconstruct(int residual);
+    void updateBufferQuant(short quant);
     void printCircleBuffer();
 
     predictor(bool lossy)

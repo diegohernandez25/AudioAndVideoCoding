@@ -16,22 +16,22 @@ short predictor::predict()
         case 0:
             return 0;
         case 1:
-            return circularBuffer[0];
+            return circularBuffer[cb_ptr];
         case 2:
-            return (short) (2 * ((int) circularBuffer[1]) - ((int) circularBuffer[0]));
+            return (short) (2 * ((int) circularBuffer[cb_ptr]) - ((int) circularBuffer[(cb_ptr-1)%3]));
         default:
             return (short) (3 * ((int) circularBuffer[cb_ptr]) - 3 * ((int) circularBuffer[(cb_ptr - 1) % 3]) +
                             ((int) circularBuffer[(cb_ptr - 2) % 3]));
     }
 }
 
-short predictor::residual(short sample)
+int predictor::residual(short sample)
 {   short pred_val = predict();
     if(!lossy) updateBuffer(sample);
-    return (short) (sample - pred_val);
+    return sample - pred_val;
 }
 
-void predictor::updateBufferQuant(short sample,short quant){
+void predictor::updateBufferQuant(short quant){
     updateBuffer(predict()+quant);
 }
 
@@ -41,7 +41,7 @@ void predictor::updateBuffer(short sample) {
     if(num_inputs < 3) num_inputs++;
 }
 
-short predictor::reconstruct(short residual)
+short predictor::reconstruct(int residual)
 {   auto rec_val = (short) (predict() + residual);
     updateBuffer(rec_val);
     return rec_val;
