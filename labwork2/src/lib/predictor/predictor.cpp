@@ -27,8 +27,12 @@ short predictor::predict()
 
 short predictor::residual(short sample)
 {   short pred_val = predict();
-    updateBuffer(sample);
+    if(!lossy) updateBuffer(sample);
     return (short) (sample - pred_val);
+}
+
+void updateBufferQuant(short sample,short quant){
+    updateBuffer(sample-predict()+quant);
 }
 
 void predictor::updateBuffer(short sample) {

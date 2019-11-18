@@ -12,11 +12,13 @@ class predictor {
 public:
     short predict();
     short residual(short sample);
-    void printCircleBuffer();
     short reconstruct(short residual);
+    void updateBufferQuant(short sample,short quant);
+    void printCircleBuffer();
 
-    predictor()
-    {   num_inputs = 0;
+    predictor(bool lossy)
+    {   this->lossy = lossy;
+	num_inputs = 0;
         cb_ptr = 2;
     }
 
@@ -25,7 +27,7 @@ private:
     int num_inputs;
     short cb_ptr;
     short circularBuffer[3] = {0,0,0};
-
+    bool lossy;
 };
 
 
