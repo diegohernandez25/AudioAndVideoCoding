@@ -4,6 +4,7 @@ golomb::golomb(uint m) : golomb(m,0,0){}
 
 golomb::golomb(uint initial_m,uint blk_size,uint calc_interval){
 	assert(blk_size==0||calc_interval<blk_size);
+	assert(initial_m!=0);
 
 	m=initial_m;
 
