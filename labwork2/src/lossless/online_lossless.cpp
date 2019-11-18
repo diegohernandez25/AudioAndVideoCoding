@@ -161,16 +161,16 @@ int online_lossless::decode(){
         uint8_t rem = (y%2)?1:0;
 
         //resonstruct channels' sample's value.
-        wv.insert(smp_ptr++, 2, (((int) 2*x + rem + y) / 2 ));
-        wv.insert(smp_ptr, 1, (((int) 2*x + rem - y) / 2 ));
+        wv.insert(smp_ptr, 1, (((int) 2*x + rem + y) / 2 ));
+        wv.insert(smp_ptr++, 2, (((int) 2*x + rem - y) / 2 ));
 
         while(smp_ptr<num_samp){
             x = pd.reconstruct(gb.read_signed_val());
             //y = gb_y.read_signed_val();
             y = pd_y.reconstruct(gb_y.read_signed_val());
             rem = (y%2)?1:0;
-            wv.insert(smp_ptr++, 2, (((int) 2*x + rem + y) / 2 ));
-            wv.insert(smp_ptr, 1, (((int) 2*x + rem - y) / 2 ));
+            wv.insert(smp_ptr, 1, (((int) 2*x + rem + y) / 2 ));
+            wv.insert(smp_ptr++, 2, (((int) 2*x + rem - y) / 2 ));
         }
     }
 
