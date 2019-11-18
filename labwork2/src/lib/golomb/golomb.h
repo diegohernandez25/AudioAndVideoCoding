@@ -11,6 +11,7 @@ class golomb{
 	public:
 		golomb(uint m);	
 		golomb(uint initial_m,uint blk_size,uint calc_interval);	
+
 		std::tuple<uint,uint> encode(uint n);
 		uint decode(uint q,uint r);
 		std::tuple<uint,uint> signed_encode(int n);

@@ -13,7 +13,7 @@ public:
     short predict();
     short residual(short sample);
     void printCircleBuffer();
-    short reconstruct(short );
+    short reconstruct(short residual);
 
     predictor()
     {   num_inputs = 0;
