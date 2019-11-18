@@ -12,6 +12,8 @@ class online_lossless{
 		online_lossless(string& in_file,string& out_file);
 		void encode();	
 		int decode();	
+
+		void set_pred_order(uint order);
 		
         void set_window_size(uint ws);
         void set_m_calc_int(uint mci);
@@ -25,6 +27,8 @@ class online_lossless{
 		const char *magic = "CAVN+";
 		string &ins;
 		string &outs;
+
+		uint pred_order;
 
         uint initial_m;
         uint window_size;

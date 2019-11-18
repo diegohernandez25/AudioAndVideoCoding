@@ -6,6 +6,7 @@ online_lossy::online_lossy(string& in_file,string& out_file):
 //HEADER for compressed
 //Magic number (CAVN+)
 //Stereo bool
+//Predictor order
 //Number of samples
 //Sample Frequency				(NOT USED NOW)
 //N Quant
@@ -29,7 +30,7 @@ void online_lossy::encode() {
     bitstream bs(outs.c_str(), std::ios::trunc | std::ios::binary | std::ios::out);
     golomb_bitstream gb(initial_m, window_size, m_calc_int, bs);
     //golomb_bitstream gb(initial_m,bs);
-    predictor pd(true);
+    predictor pd(true,pred_order);
     quant qt;
     int quant_resid;
 
@@ -38,6 +39,9 @@ void online_lossy::encode() {
 
     //Write stereo flag
     bs.writeBit(stereo);
+
+	//Write predictor order
+    bs.writeNBits(pred_order,2);
 
     //Write num of samples
     bs.writeNBits(wv.getNumSamples(), sizeof(uint32_t) * 8);
@@ -74,7 +78,7 @@ void online_lossy::encode() {
 
         }
     } else {
-        predictor pd_y(true);
+        predictor pd_y(true,pred_order);
 
         //Write initial m Y
         bs.writeNBits(y_initial_m,sizeof(uint)*8);
@@ -119,7 +123,6 @@ void online_lossy::encode() {
 int online_lossy::decode(){
 	wav wv(outs);
 	bitstream bs(ins.c_str(),std::ios::binary|std::ios::in);
-	predictor pd(false);
 
 	//Read header
 
@@ -130,6 +133,10 @@ int online_lossy::decode(){
 
     //Read stereo flag
     bool stereo = bs.readBit();
+
+	//Read predictor order
+    pred_order=bs.readNBits(2);
+	predictor pd(false,pred_order);
 
 	//Read num of samples
 	uint num_samp=bs.readNBits(sizeof(uint32_t)*8);
@@ -167,7 +174,7 @@ int online_lossy::decode(){
             wv.insert(smp_ptr++,1,pd.reconstruct(gb.read_signed_val()<<nr_quant));
 
     }else{
-        predictor pd_y(false);
+        predictor pd_y(false,pred_order);
 
         //Read initial m
         y_initial_m=bs.readNBits(sizeof(uint)*8);
@@ -183,20 +190,17 @@ int online_lossy::decode(){
 
         short x = pd.reconstruct(bs.readNBits(sizeof(short)*8+1-nr_quant)<<nr_quant);
         short y = pd_y.reconstruct(bs.readNBits(sizeof(short)*8+1-nr_quant)<<nr_quant);
-        uint8_t rem = (y%2)?1:0;
 
-        //resonstruct channels' sample's value.
-        wv.insert(smp_ptr, 1, (((int) 2*x + rem + y) / 2 ));
-        wv.insert(smp_ptr++, 2, (((int) 2*x + rem - y) / 2 ));
+        //reconstruct channels' sample's value.
+        wv.insert(smp_ptr, 1, (((int) 2*x + y%2 + y) / 2 ));
+        wv.insert(smp_ptr++, 2, (((int) 2*x + y%2 - y) / 2 ));
 
         while(smp_ptr<num_samp){
             x = pd.reconstruct(gb.read_signed_val()<<nr_quant);
             y = pd_y.reconstruct(gb_y.read_signed_val()<<nr_quant);
 
-            rem = (y%2)?1:0;
-
-            wv.insert(smp_ptr, 1, (((int) 2*x + rem + y) / 2 ));
-            wv.insert(smp_ptr++, 2, (((int) 2*x + rem - y) / 2 ));
+            wv.insert(smp_ptr, 1, (((int) 2*x + y%2 + y) / 2 ));
+            wv.insert(smp_ptr++, 2, (((int) 2*x + y%2 - y) / 2 ));
         }
     }
 	//Write to file
@@ -206,6 +210,10 @@ int online_lossy::decode(){
 
 void online_lossy::set_window_size(uint ws){
     window_size=ws;
+}
+
+void online_lossy::set_pred_order(uint order){
+	pred_order=order;
 }
 
 void online_lossy::set_m_calc_int(uint mci){

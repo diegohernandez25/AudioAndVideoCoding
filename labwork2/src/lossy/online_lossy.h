@@ -14,6 +14,7 @@ class online_lossy{
 		int decode();	
 
 		void set_nr_quant(uint nq);
+		void set_pred_order(uint order);
 
         void set_window_size(uint ws);
         void set_m_calc_int(uint mci);
@@ -29,6 +30,7 @@ private:
 		string &outs;
 
 		uint nr_quant;
+		uint pred_order;
 
         uint initial_m;
         uint window_size;

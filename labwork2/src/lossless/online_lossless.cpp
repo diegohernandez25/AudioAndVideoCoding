@@ -6,6 +6,7 @@ online_lossless::online_lossless(string& in_file,string& out_file):
 //HEADER for compressed
 //Magic number (CAVN+)
 //Stereo bool
+//Predictor order
 //Number of samples
 //Sample Frequency				(NOT USED NOW)
 //Initial m
@@ -29,13 +30,16 @@ void online_lossless::encode(){
 
 	golomb_bitstream gb(initial_m,window_size,m_calc_int,bs);
 	//golomb_bitstream gb(initial_m,bs);
-	predictor pd(false);
+	predictor pd(false,pred_order);
 
 	//Write magic
 	bs.writeNChars((char*) magic,strlen(magic));
 
 	//Write stereo flag
 	bs.writeBit(stereo);
+
+    //Write predictor order
+    bs.writeNBits(pred_order,2);
 
 	//Write num of samples
 	bs.writeNBits(wv.getNumSamples(),sizeof(uint32_t)*8);
@@ -63,7 +67,7 @@ void online_lossless::encode(){
             gb.write_signed_val(pd.residual(*it));
 
     } else{
-	    predictor pd_y(false);
+	    predictor pd_y(false,pred_order);
 
         //Write initial m Y
         bs.writeNBits(y_initial_m,sizeof(uint)*8);
@@ -94,7 +98,6 @@ void online_lossless::encode(){
 int online_lossless::decode(){
 	wav wv(outs);
 	bitstream bs(ins.c_str(),std::ios::binary|std::ios::in);
-	predictor pd(false);
 
 	//Read header
 
@@ -105,6 +108,12 @@ int online_lossless::decode(){
 
 	//Read stereo flag
 	bool stereo = bs.readBit();
+
+    //Read predictor order
+    pred_order=bs.readNBits(2);
+
+	//Read predictor order
+	predictor pd(false,pred_order);
 
 	//Read num of samples
 	uint num_samp=bs.readNBits(sizeof(uint32_t)*8);
@@ -140,7 +149,7 @@ int online_lossless::decode(){
 
 
     }else{
-        predictor pd_y(false);
+        predictor pd_y(false,pred_order);
 
         //Read initial m
         y_initial_m=bs.readNBits(sizeof(uint)*8);
@@ -158,19 +167,18 @@ int online_lossless::decode(){
         short x = pd.reconstruct(bs.readNBits(sizeof(short)*8+1));
         //short y = gb_y.read_signed_val();
         short y = pd_y.reconstruct(bs.readNBits(sizeof(short)*8+1));
-        uint8_t rem = (y%2)?1:0;
 
         //resonstruct channels' sample's value.
-        wv.insert(smp_ptr, 1, (((int) 2*x + rem + y) / 2 ));
-        wv.insert(smp_ptr++, 2, (((int) 2*x + rem - y) / 2 ));
+        wv.insert(smp_ptr, 1, (((int) 2*x + y%2 + y) / 2 ));
+        wv.insert(smp_ptr++, 2, (((int) 2*x + y%2 - y) / 2 ));
 
         while(smp_ptr<num_samp){
             x = pd.reconstruct(gb.read_signed_val());
             //y = gb_y.read_signed_val();
             y = pd_y.reconstruct(gb_y.read_signed_val());
-            rem = (y%2)?1:0;
-            wv.insert(smp_ptr, 1, (((int) 2*x + rem + y) / 2 ));
-            wv.insert(smp_ptr++, 2, (((int) 2*x + rem - y) / 2 ));
+
+            wv.insert(smp_ptr, 1, (((int) 2*x + y%2 + y) / 2 ));
+            wv.insert(smp_ptr++, 2, (((int) 2*x + y%2 - y) / 2 ));
         }
     }
 
@@ -201,4 +209,8 @@ void online_lossless::set_y_m_calc_int(uint mci){
 
 void online_lossless::set_y_initial_m(uint m){
     y_initial_m = m;
+}
+
+void online_lossless::set_pred_order(uint order){
+    pred_order = order;
 }
