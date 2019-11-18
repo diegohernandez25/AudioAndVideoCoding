@@ -57,7 +57,7 @@ void golomb::predict_m(){
 	if(mean==0) return; //This should never happen, but we need to protect against this case
 
 	m=std::ceil(-1/std::log2(mean/(mean+1.0)));
-	//std::cout<<"New m="<<m<<std::endl;
+	//std::cout<<m<<std::endl;
 }
 
 std::tuple<uint,uint> golomb::signed_encode(int n){
