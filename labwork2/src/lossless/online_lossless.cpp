@@ -25,7 +25,7 @@ void online_lossless::encode(){
 	predictor pd(false);
 
 	//Write magic
-	bs.writeNChars((char*) magic,sizeof(magic));
+	bs.writeNChars((char*) magic,strlen(magic));
 
 	//Write num of samples
 	bs.writeNBits(wv.getNumSamples(),sizeof(uint32_t)*8);
@@ -45,10 +45,10 @@ void online_lossless::encode(){
 
 	//Sending first sample in natural binary 
 	//Because the predictor cant predict a good first value 
-	bs.writeNBits((uint32_t) pd.residual(*it),sizeof(short)*8); 
+	bs.writeNBits((uint32_t) pd.residual(*it),sizeof(short)*8+1); 
 
 	for(it+=1;it<smp.end();it++)
-		gb.write_signed_val((uint) pd.residual(*it));
+		gb.write_signed_val(pd.residual(*it));
 }
 
 int online_lossless::decode(){
@@ -59,9 +59,9 @@ int online_lossless::decode(){
 	//Read header
 
 	//Check magic
-	char is_magic[sizeof(magic)];
+	char is_magic[strlen(magic)];
 	bs.readNChars(is_magic,sizeof(is_magic)); 
-	if(strncmp(magic,is_magic,sizeof(magic))!=0) return -1;
+	if(strncmp(magic,is_magic,strlen(magic))!=0) return -1;
 
 	//Read num of samples
 	int num_samp=bs.readNBits(sizeof(uint32_t)*8);
@@ -87,7 +87,7 @@ int online_lossless::decode(){
 
 	uint smp_ptr=0;
 	//Read first sample (in natural binary)
-	short sample=pd.reconstruct(bs.readNBits(sizeof(short)*8));
+	short sample=pd.reconstruct(bs.readNBits(sizeof(short)*8+1));
 	wv.insert(smp_ptr++,1,sample);
 
 	//Reconstruct the rest of the samples

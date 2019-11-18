@@ -72,7 +72,7 @@ void wav::load(){
 
     vector<short> tmpData(totalSamples);
 
-    for(signed int i = 0, j = 0; i< wavHeader.Subchunk2Size; i+=bytesPerSample, j++)
+    for(unsigned int i = 0, j = 0; i< wavHeader.Subchunk2Size; i+=bytesPerSample, j++)
     {   char *pchar  = ptrData + i;
         short samp =  (((short)pchar[1])<<8) | (0x00ff & pchar[0]);
         tmpData[j] = samp;

@@ -51,14 +51,14 @@ void bitstream::readBit(uint8_t* bit) {
 uint32_t bitstream::readNBits(uint n) {
 	assert(n <= 32);
 	uint32_t value = 0;
-	for (int i = 0; i < n; i++) {
+	for (uint i = 0; i < n; i++) {
 		value = value << 1 | readBit();
 	}
 	return value;
 }
 
 void bitstream::readNBits(uint32_t* bits, uint n) {
-	uint32_t value = 0;
+	//uint32_t value = 0; FIXME unused
 	uint32_t ref;
 	for (uint i = 0; i < n; i++) {
 		ref = (*(bits + i/32));
@@ -71,7 +71,7 @@ void bitstream::writeChar(char val) {
 }
 
 void bitstream::writeNChars(char* val, uint n) {
-	for (int i = 0; i < n; i++) {
+	for (uint i = 0; i < n; i++) {
 		writeNBits(*(val+i), sizeof(char)*8);
 	}
 }
@@ -85,7 +85,7 @@ void bitstream::readChar(char* c) {
 }
 
 void bitstream::readNChars(char* c, uint n) {
-	for (int i = 0; i < n; i++) {
+	for (uint i = 0; i < n; i++) {
 		*(c+i) = readNBits(sizeof(char)*8);
 	}
 }

@@ -22,7 +22,7 @@ void offline_lossless::encode(){
 	predictor pd(false);
 
 	uint m_list_size=((wv.getNumSamples()-1)-window_size+1)/(m_calc_int+1); //FIXME devia de ter ceil, mas implica ter cenas la em baixo
-	std::cout<<m_list_size<<endl;
+	std::cout<<"!!!!!!!!!!!!!"<<m_list_size<<endl;
 	std::vector<uint> m_list((std::vector<uint>::size_type) m_list_size);
 	std::vector<uint16_t> residual_list((std::vector<int>::size_type) wv.getNumSamples()-1);
 	
@@ -43,8 +43,8 @@ void offline_lossless::encode(){
 		g_m.signed_encode(res);
 		residual_list[res_ptr++]=res;	
 
-		if(!window_full&&window_cnt==window_size-1||
-			window_full&&window_cnt==m_calc_int){
+		if((!window_full&&window_cnt==window_size-1)||
+			(window_full&&window_cnt==m_calc_int)){
 			window_full=true;
 			m_list[m_pointer++]=g_m.get_m();
 			window_cnt=0;
@@ -57,7 +57,7 @@ void offline_lossless::encode(){
 	//------------------------------
 	//Now run golomb on the residuals with the new M
 	//And write to files
-	bs.writeNChars((char*) magic,sizeof(magic));
+	bs.writeNChars((char*) magic,strlen(magic));
 	
 	//Write the nr of samples
 	bs.writeNBits(wv.getNumSamples(),sizeof(uint32_t)*8);
@@ -85,8 +85,8 @@ void offline_lossless::encode(){
 	for(uint16_t& residual : residual_list){
 		gb.write_signed_val((uint) residual);
 
-		if(!window_full&&window_cnt==window_size-1||
-			window_full&&window_cnt==m_calc_int){
+		if((!window_full&&window_cnt==window_size-1)||
+			(window_full&&window_cnt==m_calc_int)){
 			window_full=true;
 			gb.set_m(m_list[m_pointer++]);
 			window_cnt=0;
@@ -104,12 +104,12 @@ int offline_lossless::decode(){
 	predictor pd(false);
 
 	//Check magic
-    char is_magic[sizeof(magic)];
+    char is_magic[strlen(magic)];
     bs.readNChars(is_magic,sizeof(is_magic)); 
-    if(strncmp(magic,is_magic,sizeof(magic))!=0) return -1;
+    if(strncmp(magic,is_magic,strlen(magic))!=0) return -1;
 
 	//Read the nr of samples
-	int num_samp=bs.readNBits(sizeof(uint32_t)*8);
+	uint num_samp=(uint) bs.readNBits(sizeof(uint32_t)*8);
 
 	//Read the window size
 	window_size=bs.readNBits(sizeof(uint32_t)*8);
@@ -144,8 +144,8 @@ int offline_lossless::decode(){
     for(uint i=1;i<num_samp;i++){
         wv.insert(smp_ptr++,1,pd.reconstruct(gb.read_signed_val()));
 
-        if(!window_full&&window_cnt==window_size-1||
-            window_full&&window_cnt==m_calc_int){
+        if((!window_full&&window_cnt==window_size-1)||
+            (window_full&&window_cnt==m_calc_int)){
             window_full=true;
             gb.set_m(m_list[m_pointer++]);
             window_cnt=0;

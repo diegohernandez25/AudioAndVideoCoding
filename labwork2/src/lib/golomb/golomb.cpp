@@ -45,6 +45,7 @@ void golomb::adjust_golomb(uint n){
 }
 
 void golomb::predict_m(){
+	//TODO use already calculated mean
 	//Golomb follows a geometric distribution
 	//Geometric distribution mean = (1-p)/p
 	//p = (1-alpha), so mean = alpha/(1-alpha)

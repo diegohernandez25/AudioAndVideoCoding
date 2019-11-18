@@ -15,7 +15,7 @@ void golomb_bitstream::write_signed_val(int val){
 
 	//Write q
 	//0 is the seperator of the unary code
-	for(int i=0;i<q;i++) bt.writeBit(1);
+	for(uint i=0;i<q;i++) bt.writeBit(1);
 	bt.writeBit(0);
 
 	//Write r
@@ -32,7 +32,7 @@ void golomb_bitstream::write_val(uint val){
 
 	//Write q
 	//0 is the seperator of the unary code
-	for(int i=0;i<q;i++) bt.writeBit(1);
+	for(uint i=0;i<q;i++) bt.writeBit(1);
 	bt.writeBit(0);
 
 	//Write r

@@ -28,7 +28,7 @@ void online_lossy::encode() {
     short quant_resid;
 
     //Write magic
-    bs.writeNChars((char *) magic, sizeof(magic));
+    bs.writeNChars((char *) magic, strlen(magic));
 
     //Write num of samples
     bs.writeNBits(wv.getNumSamples(), sizeof(uint32_t) * 8);
@@ -52,12 +52,12 @@ void online_lossy::encode() {
     //Sending first sample in natural binary
     //Because the predictor cant predict a good first value
     quant_resid = qt.midrise(nr_quant, pd.residual(*it));
-    pd.updateBufferQuant(*it, quant_resid);
+    pd.updateBufferQuant(quant_resid);
     bs.writeNBits((uint32_t) quant_resid >> nr_quant, sizeof(short) * 8 - nr_quant);
 
     for (it += 1; it < smp.end(); it++) {
         quant_resid = qt.midrise(nr_quant, pd.residual(*it));
-        pd.updateBufferQuant(*it, quant_resid);
+        pd.updateBufferQuant(quant_resid);
         gb.write_signed_val((uint) quant_resid >> nr_quant);
 
     }
@@ -71,9 +71,9 @@ int online_lossy::decode(){
 	//Read header
 
 	//Check magic
-	char is_magic[sizeof(magic)];
+	char is_magic[strlen(magic)];
 	bs.readNChars(is_magic,sizeof(is_magic)); 
-	if(strncmp(magic,is_magic,sizeof(magic))!=0) return -1;
+	if(strncmp(magic,is_magic,strlen(magic))!=0) return -1;
 
 	//Read num of samples
 	int num_samp=bs.readNBits(sizeof(uint32_t)*8);
