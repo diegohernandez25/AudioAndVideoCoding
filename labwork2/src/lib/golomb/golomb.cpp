@@ -75,7 +75,7 @@ int golomb::signed_decode(uint q,uint r){
 
 int golomb::get_m(){return m;}
 void golomb::set_m(int new_m){ m=new_m;}
-
+/*
 int main(int argc,char** argv){
 	golomb genc(20,6,0);
 	golomb gdec(20,6,0);
@@ -90,3 +90,4 @@ int main(int argc,char** argv){
 	}
 	return 0;
 }
+*/
