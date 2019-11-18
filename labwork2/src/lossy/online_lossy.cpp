@@ -1,6 +1,6 @@
-#include "online_lossless.h"
+#include "online_lossy.h"
 
-online_lossless::online_lossless(string& in_file,string& out_file):
+online_lossy::online_lossy(string& in_file,string& out_file):
 	ins(in_file),outs(out_file){}
 
 //HEADER for compressed
@@ -15,7 +15,7 @@ online_lossless::online_lossless(string& in_file,string& out_file):
 //First sample in binary code 	
 //Rest of samples in golomb
 
-void online_lossless::encode() {
+void online_lossy::encode() {
 
     wav wv(ins);
     wv.load();
@@ -24,7 +24,7 @@ void online_lossless::encode() {
     golomb_bitstream gb(initial_m, window_size, m_calc_int, bs);
     //golomb_bitstream gb(initial_m,bs);
     predictor pd(true);
-    quant qt();
+    quant qt;
     short quant_resid;
 
     //Write magic
@@ -63,7 +63,7 @@ void online_lossless::encode() {
     }
 }
 
-int online_lossless::decode(){
+int online_lossy::decode(){
 	wav wv(outs);
 	bitstream bs(ins.c_str(),std::ios::binary|std::ios::in);
 	predictor pd(false);
@@ -102,7 +102,7 @@ int online_lossless::decode(){
 
 	uint smp_ptr=0;
 	//Read first sample (in natural binary)
-	short sample=pd.reconstruct(bs.readNBits(sizeof(short)*8)<<nr_quant);
+	short sample=pd.reconstruct(bs.readNBits(sizeof(short)*8-nr_quant)<<nr_quant);
 	wv.insert(smp_ptr++,1,sample);
 
 	//Reconstruct the rest of the samples
@@ -115,18 +115,18 @@ int online_lossless::decode(){
 	return 0;
 }
 
-void online_lossless::set_window_size(uint ws){
+void online_lossy::set_window_size(uint ws){
     window_size=ws;
 }
 
-void online_lossless::set_m_calc_int(uint mci){
+void online_lossy::set_m_calc_int(uint mci){
     m_calc_int=mci;
 }
 
-void online_lossless::set_initial_m(uint m) {
+void online_lossy::set_initial_m(uint m) {
     initial_m = m;
 }
 
-void online_lossless::set_nr_quant(uint nq){
+void online_lossy::set_nr_quant(uint nq){
     nr_quant=nq;
 }

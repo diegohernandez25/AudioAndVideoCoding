@@ -1,5 +1,5 @@
-#ifndef H_ONLINE_LOSSLESS
-#define H_ONLINE_LOSSLESS
+#ifndef H_ONLINE_LOSSY
+#define H_ONLINE_LOSSY
 
 #include "../lib/bitstream/bitstream.h"
 #include "../lib/golomb/golomb_bitstream.h"
@@ -7,9 +7,9 @@
 #include "../lib/wav/wav.h"
 #include "../lib/quantization/quant.h"
 
-class online_lossless{
+class online_lossy{
 	public:
-		online_lossless(string& in_file,string& out_file);
+		online_lossy(string& in_file,string& out_file);
 		void encode();	
 		int decode();	
 

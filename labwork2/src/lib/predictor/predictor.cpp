@@ -31,8 +31,8 @@ short predictor::residual(short sample)
     return (short) (sample - pred_val);
 }
 
-void updateBufferQuant(short sample,short quant){
-    updateBuffer(sample-predict()+quant);
+void predictor::updateBufferQuant(short sample,short quant){
+    updateBuffer(predict()+quant);
 }
 
 void predictor::updateBuffer(short sample) {

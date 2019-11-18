@@ -22,7 +22,7 @@ void online_lossless::encode(){
 	bitstream bs(outs.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
 	golomb_bitstream gb(initial_m,window_size,m_calc_int,bs);
 	//golomb_bitstream gb(initial_m,bs);
-	predictor pd;
+	predictor pd(false);
 
 	//Write magic
 	bs.writeNChars((char*) magic,sizeof(magic));
@@ -54,7 +54,7 @@ void online_lossless::encode(){
 int online_lossless::decode(){
 	wav wv(outs);
 	bitstream bs(ins.c_str(),std::ios::binary|std::ios::in);
-	predictor pd;
+	predictor pd(false);
 
 	//Read header
 
