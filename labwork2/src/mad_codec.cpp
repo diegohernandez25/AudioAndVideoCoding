@@ -3,17 +3,17 @@
 #include "lossy/online_lossy.h"
 #include <iostream>
 
-void online_ly(){
+void online_ly(uint initial_m,uint ws,uint mci,uint nr_quant){
 	string orig("test.wav");
 	string out("out.mad");
 	string back("test_res.wav");
 
 
 	online_lossy enc_ol(orig,out);	
-	enc_ol.set_window_size(40000);
-	enc_ol.set_m_calc_int(20000);
-	enc_ol.set_initial_m(1<<(8*sizeof(short)-1));
-	enc_ol.set_nr_quant(0);
+	enc_ol.set_window_size(ws);
+	enc_ol.set_m_calc_int(mci);
+	enc_ol.set_initial_m(initial_m);
+	enc_ol.set_nr_quant(nr_quant);
 	enc_ol.encode();
 
 	cout<<"Ended encoding"<<endl;

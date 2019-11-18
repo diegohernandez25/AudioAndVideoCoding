@@ -25,8 +25,10 @@ class golomb{
 		uint calc_interval,calc_counter;
 		std::vector<uint> block;
 		bool buffer_full;
+		uint curr_acc;
 
 		void predict_m();
+		void recalc_acc(uint new_n);
 		void adjust_golomb(uint n);
 };
 
