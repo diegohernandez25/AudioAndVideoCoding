@@ -38,7 +38,7 @@ void predictor::updateBufferQuant(short quant){
 void predictor::updateBuffer(short sample) {
     cb_ptr = (short) ((cb_ptr + 1) % 3);
     circularBuffer[cb_ptr] = sample;
-    if(num_inputs < 3) num_inputs++;
+    if(num_inputs < order) num_inputs++;
 }
 
 short predictor::reconstruct(int residual)
