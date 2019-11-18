@@ -25,7 +25,7 @@ void online_lossy::encode() {
     //golomb_bitstream gb(initial_m,bs);
     predictor pd(true);
     quant qt;
-    short quant_resid;
+    int quant_resid;
 
     //Write magic
     bs.writeNChars((char *) magic, strlen(magic));
@@ -53,12 +53,13 @@ void online_lossy::encode() {
     //Because the predictor cant predict a good first value
     quant_resid = qt.midrise(nr_quant, pd.residual(*it));
     pd.updateBufferQuant(quant_resid);
-    bs.writeNBits((uint32_t) quant_resid >> nr_quant, sizeof(short) * 8 - nr_quant);
+    bs.writeNBits(quant_resid >> nr_quant, sizeof(short) * 8 + 1 - nr_quant);
+	//TODO vai rebentar
 
     for (it += 1; it < smp.end(); it++) {
         quant_resid = qt.midrise(nr_quant, pd.residual(*it));
         pd.updateBufferQuant(quant_resid);
-        gb.write_signed_val((uint) quant_resid >> nr_quant);
+        gb.write_signed_val(quant_resid >> nr_quant);
 
     }
 }
@@ -102,7 +103,7 @@ int online_lossy::decode(){
 
 	uint smp_ptr=0;
 	//Read first sample (in natural binary)
-	short sample=pd.reconstruct(bs.readNBits(sizeof(short)*8-nr_quant)<<nr_quant);
+	short sample=pd.reconstruct(bs.readNBits(sizeof(short)*8+1-nr_quant)<<nr_quant);
 	wv.insert(smp_ptr++,1,sample);
 
 	//Reconstruct the rest of the samples
