@@ -7,7 +7,7 @@
 
 short quant::midrise(uint16_t nbits, short value)
 {
-    return (value >> nbits);
+    return value & ~((1 << nbits) - 1);
 }
 
 short quant::midtread(uint16_t nbits, short value)
