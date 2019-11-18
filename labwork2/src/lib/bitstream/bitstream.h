@@ -29,7 +29,13 @@ class bitstream : public fstream {
         void readBit(uint8_t* bit);
         uint32_t readNBits(uint n);
         void readNBits(uint32_t* bits, uint n);
+        void writeChar(char val);
+        void writeNChars(char* val, uint n);
+        char readChar();
+        void readChar(char* c);
+        void readNChars(char* c, uint n);
         void addPadding();
+        
     private:
         uint8_t byte = 0;
         int pointer;

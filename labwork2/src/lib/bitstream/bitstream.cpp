@@ -66,6 +66,30 @@ void bitstream::readNBits(uint32_t* bits, uint n) {
 	}
 }
 
+void bitstream::writeChar(char val) {
+	writeNBits(val, sizeof(char)*8);
+}
+
+void bitstream::writeNChars(char* val, uint n) {
+	for (int i = 0; i < n; i++) {
+		writeNBits(*(val+i), sizeof(char)*8);
+	}
+}
+
+char bitstream::readChar() {
+	return readNBits(sizeof(char)*8);
+}
+
+void bitstream::readChar(char* c) {
+	*c = readNBits(sizeof(char)*8);
+}
+
+void bitstream::readNChars(char* c, uint n) {
+	for (int i = 0; i < n; i++) {
+		*(c+i) = readNBits(sizeof(char)*8);
+	}
+}
+
 void bitstream::addPadding() {
 	for (int i = 0; i < 7 - pointer; i++) {
 		writeBit(0);
