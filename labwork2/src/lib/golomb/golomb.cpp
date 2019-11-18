@@ -76,11 +76,11 @@ void golomb::predict_m(){
 		mean+=(double)*it/blk_size;
 	}
 	*/
-	if(curr_acc==0) return; //This should never happen, but we need to protect against this case
-
 	double mean = curr_acc/blk_size;
+	if(mean==0) return; //This should never happen, but we need to protect against this case
+
 	m=std::ceil(-1/std::log2(mean/(mean+1.0)));
-	//std::cout<<m<<std::endl;
+	//std::cout<<m<<","<<mean<<","<<curr_acc<<std::endl;
 }
 
 std::tuple<uint,uint> golomb::signed_encode(int n){
