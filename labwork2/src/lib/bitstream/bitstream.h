@@ -6,8 +6,6 @@
 #include <bitset>
 #include <cassert>
 
-// TODO chars
-
 using std::fstream;
 
 class bitstream : public fstream {

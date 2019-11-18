@@ -21,10 +21,13 @@ void bitstream::writeNBits(uint32_t val, uint n) {
 }
 
 void bitstream::writeNBits(uint32_t* val, uint n) {
-	uint bit;
-	for (int i = n-1; i >= 0; i--) {
-        bit = ((*(val + i/32)) >> i%32) & 0x01;
-    	writeBit(bit);
+	for (uint i = 0; i < n/32.0; i++) {
+		std::cout << "aa";
+		std::cout << val[i] << std::endl;
+		if (i == n/32)
+			writeNBits(val[i], n%32);
+		else
+			writeNBits(val[i], 32);
 	}
 }
 
@@ -58,11 +61,12 @@ uint32_t bitstream::readNBits(uint n) {
 }
 
 void bitstream::readNBits(uint32_t* bits, uint n) {
-	//uint32_t value = 0; FIXME unused
 	uint32_t ref;
-	for (uint i = 0; i < n; i++) {
-		ref = (*(bits + i/32));
-		ref = ref | readBit();
+	for (uint i = 0; i < n/32.0; i++) {
+		if (i == n/32)
+			bits[i] = readNBits(n%32);
+		else
+			bits[i] = readNBits(32);
 	}
 }
 

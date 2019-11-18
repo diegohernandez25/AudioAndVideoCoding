@@ -23,18 +23,25 @@ void online_ly(uint initial_m,uint ws,uint mci,uint nr_quant){
 		cout<<"Deu merda."<<endl;
 }
 
-void online_less(uint initial_m,uint ws,uint mci){
+void online_less(uint initial_m,uint ws,uint mci,uint y_initial_m,uint y_ws,uint y_mci){
 	string orig("test.wav");
 	string out("out.mad");
 	string back("test_res.wav");
 
 
 	online_lossless enc_ol(orig,out);	
+	
 	enc_ol.set_window_size(ws);
 	enc_ol.set_m_calc_int(mci);
 	enc_ol.set_initial_m(/*1<<(8*sizeof(short)-1)*/initial_m);
-	enc_ol.encode();
 
+	
+	enc_ol.set_y_window_size(y_ws);
+	enc_ol.set_y_m_calc_int(y_mci);
+	enc_ol.set_y_initial_m(/*1<<(8*sizeof(short)-1)*/y_initial_m);
+
+	enc_ol.encode();
+	
 	cout<<"Ended encoding"<<endl;
 
 	online_lossless dec_ol(out,back);	
@@ -61,11 +68,12 @@ void offline_less(){
 }
 
 int main(int argc,char** argv){
-	if(argc<4){
+	if(argc!=7){
 		cout<<"Give args"<<endl;
 		return 1;
 	}
-	//online_ly(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]),atoi(argv[4]));
-	online_less(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
+	//online_ly();
+	online_less(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
+
 	//offline_less();
 }
