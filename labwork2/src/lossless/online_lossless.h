@@ -1,6 +1,7 @@
 #ifndef H_ONLINE_LOSSLESS
 #define H_ONLINE_LOSSLESS
 
+#include <cassert>
 #include "../lib/bitstream/bitstream.h"
 #include "../lib/golomb/golomb_bitstream.h"
 #include "../lib/predictor/predictor.h"
@@ -16,6 +17,10 @@ class online_lossless{
         void set_m_calc_int(uint mci);
         void set_initial_m(uint m);
 
+        void set_y_window_size(uint ws);
+        void set_y_m_calc_int(uint mci);
+        void set_y_initial_m(uint m);
+
 	private:
 		const char *magic = "CAVN+";
 		string &ins;
@@ -25,6 +30,9 @@ class online_lossless{
         uint window_size;
         uint m_calc_int;
 
+        uint y_initial_m;
+        uint y_window_size;
+        uint y_m_calc_int;
 };
 
 #endif
