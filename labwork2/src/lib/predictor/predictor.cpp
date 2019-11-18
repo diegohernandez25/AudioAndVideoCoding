@@ -18,10 +18,10 @@ short predictor::predict()
         case 1:
             return circularBuffer[cb_ptr];
         case 2:
-            return (short) (2 * ((int) circularBuffer[cb_ptr]) - ((int) circularBuffer[(cb_ptr-1)%3]));
+            return (short) (2 * ((int) circularBuffer[cb_ptr]) - ((int) circularBuffer[(cb_ptr+2)%3]));
         default:
-            return (short) (3 * ((int) circularBuffer[cb_ptr]) - 3 * ((int) circularBuffer[(cb_ptr - 1) % 3]) +
-                            ((int) circularBuffer[(cb_ptr - 2) % 3]));
+            return (short) (3 * ((int) circularBuffer[cb_ptr]) - 3 * ((int) circularBuffer[(cb_ptr+2) % 3]) +
+                            ((int) circularBuffer[(cb_ptr+1) % 3]));
     }
 }
 
