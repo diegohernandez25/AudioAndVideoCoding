@@ -23,7 +23,6 @@ void online_lossless::encode(){
 	wv.load();
 
     assert(wv.getNumOfChannels() < 3);
-
     bool stereo = (wv.getNumOfChannels()==2);
 
 	bitstream bs(outs.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
@@ -31,7 +30,6 @@ void online_lossless::encode(){
 	golomb_bitstream gb(initial_m,window_size,m_calc_int,bs);
 	//golomb_bitstream gb(initial_m,bs);
 	predictor pd(false);
-
 
 	//Write magic
 	bs.writeNChars((char*) magic,strlen(magic));
@@ -65,6 +63,8 @@ void online_lossless::encode(){
             gb.write_signed_val(pd.residual(*it));
 
     } else{
+	    predictor pd_y(false);
+
         //Write initial m Y
         bs.writeNBits(y_initial_m,sizeof(uint)*8);
 
@@ -79,13 +79,14 @@ void online_lossless::encode(){
         short samp1 = wv.get(0,1), samp2 = wv.get(0,2);
 
         bs.writeNBits((uint32_t) pd.residual(((int)samp1 + samp2)/2), sizeof(short)*8+1);
-        gb_y.write_signed_val((int)samp1 - samp2);
+        //gb_y.write_signed_val((int)samp1 - samp2);
+        bs.writeNBits((uint32_t) pd_y.residual((int)samp1 - samp2), sizeof(short)*8+1);
 
-        for(unsigned int i = 1; i < wv.getNumSamples(); i++){
+        for(uint i = 1; i < wv.getNumSamples(); i++){
             samp1 = wv.get(i,1);
             samp2 = wv.get(i,2);
             gb.write_signed_val(pd.residual(( (int) samp1 + samp2 ) / 2));
-            gb_y.write_signed_val((int) samp1 - samp2);
+            gb_y.write_signed_val(pd_y.residual((int) samp1 - samp2));
 	    }
 	}
 }
@@ -139,6 +140,8 @@ int online_lossless::decode(){
 
 
     }else{
+        predictor pd_y(false);
+
         //Read initial m
         y_initial_m=bs.readNBits(sizeof(uint)*8);
 
@@ -153,7 +156,8 @@ int online_lossless::decode(){
 
         //Read first x (in natural binary) and y values
         short x = pd.reconstruct(bs.readNBits(sizeof(short)*8+1));
-        short y = gb_y.read_signed_val();
+        //short y = gb_y.read_signed_val();
+        short y = pd_y.reconstruct(bs.readNBits(sizeof(short)*8+1));
         uint8_t rem = (y%2)?1:0;
 
         //resonstruct channels' sample's value.
@@ -162,7 +166,8 @@ int online_lossless::decode(){
 
         while(smp_ptr<num_samp){
             x = pd.reconstruct(gb.read_signed_val());
-            y = gb_y.read_signed_val();
+            //y = gb_y.read_signed_val();
+            y = pd_y.reconstruct(gb_y.read_signed_val());
             rem = (y%2)?1:0;
             wv.insert(smp_ptr, 1, (((int) 2*x + rem - y) / 2 ));      //TODO Arredondamentos.
             wv.insert(smp_ptr++, 2, (((int) 2*x + rem + y) / 2 ));
