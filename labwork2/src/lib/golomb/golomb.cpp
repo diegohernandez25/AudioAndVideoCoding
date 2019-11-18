@@ -33,6 +33,7 @@ uint golomb::decode(uint q,uint r){
 
 void golomb::adjust_golomb(uint n){
 	if(blk_size!=0){
+		recalc_acc(n);
 		block[blk_ptr++]=n;
 		if(!buffer_full&&blk_ptr==blk_size) buffer_full=true;
 		blk_ptr%=blk_size;
@@ -44,19 +45,39 @@ void golomb::adjust_golomb(uint n){
 	}
 }
 
+void golomb::recalc_acc(uint new_n){
+	if(!buffer_full){	
+		if(blk_ptr==0){
+			curr_acc=new_n;	
+			return;
+		}
+		//Renormalize the mean, to insert new value
+		//curr_mean*=(double)blk_ptr/(blk_ptr+1);	
+		//curr_mean+=(double)new_n/(blk_ptr+1);	
+		curr_acc+=new_n;	
+	}
+	else{
+		curr_acc+=new_n-block[blk_ptr];
+		//Remove old value from mean and add new one
+		//curr_mean+=(double)new_n/blk_size-block[blk_ptr]/blk_size;	
+	}
+}
+
 void golomb::predict_m(){
-	//TODO use already calculated mean
 	//Golomb follows a geometric distribution
 	//Geometric distribution mean = (1-p)/p
 	//p = (1-alpha), so mean = alpha/(1-alpha)
 	//Solving for alpha gives: alpha = mean/(mean+1)
 	//Finally m = ceil(-1/log2(alpha))
+	/*
 	double mean=0;
 	for(auto it=block.begin();it!=block.end();it++){
 		mean+=(double)*it/blk_size;
 	}
-	if(mean==0) return; //This should never happen, but we need to protect against this case
+	*/
+	if(curr_acc==0) return; //This should never happen, but we need to protect against this case
 
+	double mean = curr_acc/blk_size;
 	m=std::ceil(-1/std::log2(mean/(mean+1.0)));
 	//std::cout<<m<<std::endl;
 }
