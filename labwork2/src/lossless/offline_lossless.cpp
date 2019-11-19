@@ -22,8 +22,7 @@ void offline_lossless::encode(){
 	bitstream_wrapper bs(bss,true);
 	predictor pd(false,pred_order);
 
-	uint m_list_size=((wv.getNumSamples()-1)-window_size+1)/(m_calc_int+1); //FIXME devia de ter ceil, mas implica ter cenas la em baixo
-	std::cout<<"!!!!!!!!!!!!!"<<m_list_size<<endl;
+	uint m_list_size=((wv.getNumSamples()-1)-window_size+1)/(m_calc_int+1); 
 	std::vector<uint> m_list((std::vector<uint>::size_type) m_list_size);
 	std::vector<uint16_t> residual_list((std::vector<int>::size_type) wv.getNumSamples()-1);
 	
@@ -74,7 +73,7 @@ void offline_lossless::encode(){
 
 	//Write the list of m
 	for(uint& tm : m_list)	
-		bs.writeNBits((uint32_t) tm,sizeof(short)*8); //FIXME maybe uint32?
+		bs.writeNBits((uint32_t) tm,sizeof(short)*8); 
 
 
 	//Sending first sample in natural binary 
@@ -137,7 +136,7 @@ int offline_lossless::decode(){
 
 	//Read the list of m
 	for(uint& tm : m_list)	
-		tm=bs.readNBits(sizeof(short)*8); //FIXME maybe uint32?
+		tm=bs.readNBits(sizeof(short)*8); 
 
 	//Read first sample (in natural binary)
 	uint smp_ptr=0;
