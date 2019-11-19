@@ -65,8 +65,10 @@ public:
 
     static parametizer presets(uint aggressiveness,string& infile);
 
+    uint getInitialM();
     uint getWindowSize();
     uint getWindowSkip();
+    uint getInitialMY();
     uint getWindowSizeY();
     uint getWindowSkipY();
     uint getPredOrder();

@@ -40,6 +40,8 @@ void parametizer::startLosslessEncoder(){
     enc_ol.set_y_m_calc_int(parameters.y_windowSkip);
     enc_ol.set_y_initial_m(parameters.y_m);
 
+    enc_ol.set_initial_m(parameters.m);
+
     uint N = (int) ((maxWindowSize - minWindowSize)/shiftWindowSize);
     cout << "N:\t" << N << endl;
     for(uint i=minWindowSize, k=0;i<maxWindowSize;i+=shiftWindowSize, k++){
@@ -154,9 +156,13 @@ void parametizer::setShiftWindowSkipY(uint shift){y_shiftWindowSkip=shift;}
 
 void parametizer::setInitialMY(uint m){parameters.y_m=m;}
 
+uint parametizer::getInitialM(){ return parameters.m;}
+
 uint parametizer::getWindowSize(){ return parameters.windowSize;}
 
 uint parametizer::getWindowSkip(){ return parameters.windowSkip;}
+
+uint parametizer::getInitialM(){ return parameters.y_m;}
 
 uint parametizer::getWindowSizeY(){ return parameters.y_windowSize;}
 
