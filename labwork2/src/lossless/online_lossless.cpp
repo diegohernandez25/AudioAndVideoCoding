@@ -173,7 +173,7 @@ int online_lossless::decode(){
         //short y = gb_y.read_signed_val();
         short y = pd_y.reconstruct(bs.readNBits(sizeof(short)*8+1));
 
-        //resonstruct channels' sample's value.
+        //reconstruct channels' sample's value.
         wv.insert(smp_ptr, 1, (((int) 2*x + y%2 + y) / 2 ));
         wv.insert(smp_ptr++, 2, (((int) 2*x + y%2 - y) / 2 ));
 
