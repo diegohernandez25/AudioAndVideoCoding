@@ -1,5 +1,6 @@
 #include "lossless/online_lossless.h"
 #include "lossy/online_lossy.h"
+#include "parametizer/parametizer.h"
 #include <iostream>
 
 void decode(string fileIn, string fileOut) {
@@ -12,34 +13,36 @@ void decode(string fileIn, string fileOut) {
 	}
 }
 
-void encodeLossless(string fileIn, string fileOut, uint windowSize, uint skipNSamples, uint predictorOrder, uint windowSizeY, uint skipNSamplesY) {
+void encodeLossless(string fileIn, string fileOut, uint windowSize, uint skipNSamples, uint predictorOrder,
+					uint windowSizeY, uint skipNSamplesY, uint initialM, uint initialMY) {
 	online_lossless encoder(fileIn, fileOut, true);
 
 	encoder.set_pred_order(predictorOrder);
 	encoder.set_window_size(windowSize);
 	encoder.set_m_calc_int(skipNSamples);
-	encoder.set_initial_m(9);
+	encoder.set_initial_m(initialM);
 
 	encoder.set_y_window_size(windowSizeY);
 	encoder.set_y_m_calc_int(skipNSamplesY);
-	encoder.set_y_initial_m(9);
+	encoder.set_y_initial_m(initialMY);
 
 	int writtenBits = encoder.encode();
 
 	cout << "Finished encoding. Written " << writtenBits/8 << " bytes to disk." << endl;
 }
 
-void encodeLossy(string fileIn, string fileOut, uint windowSize, uint skipNSamples, uint quantBits, uint predictorOrder, uint windowSizeY, uint skipNSamplesY) {
+void encodeLossy(string fileIn, string fileOut, uint windowSize, uint skipNSamples, uint quantBits, 
+				 uint predictorOrder, uint windowSizeY, uint skipNSamplesY, uint initialM, uint initialMY) {
 	online_lossy encoder(fileIn, fileOut, true);
 
 	encoder.set_pred_order(predictorOrder);
 	encoder.set_window_size(windowSize);
 	encoder.set_m_calc_int(skipNSamples);
-	encoder.set_initial_m(9);
+	encoder.set_initial_m(initialM);
 
 	encoder.set_y_window_size(windowSizeY);
 	encoder.set_y_m_calc_int(skipNSamplesY);
-	encoder.set_y_initial_m(9);
+	encoder.set_y_initial_m(initialMY);
 
 	encoder.set_nr_quant(quantBits);
 
@@ -198,7 +201,6 @@ int parseArgs(int elem, char** argv, int* encode, int* lossy, string* fileIn, st
 			}
 			// no auto predict
 			if (*autoPredict == -1) {
-				*autoPredict = 0;
 				if (*windowSize == -1) {
 					*windowSize = 2000;
 				}
@@ -213,7 +215,7 @@ int parseArgs(int elem, char** argv, int* encode, int* lossy, string* fileIn, st
 					*skipNSamples = 100;
 				}
 				if (*windowSizeY == -1) {
-					*windowSizeY = 2000;
+					*windowSizeY = 200;
 				}
 				else if (*windowSizeY < 1) {
 					cout << "Error: window size (channel difference) must be greater than zero." << endl;
@@ -334,6 +336,8 @@ int main(int argc,char** argv){
 	int windowSizeY = -1;
 	int skipNSamplesY = -1;
 	int autoPredict = -1;
+	uint initialM = 9;
+	uint initialMY = 9;
 
 	int valid = parseArgs(argc-1, argv+1, &encode, &lossy, &fileIn, &fileOut, &windowSize, &skipNSamples, 
 						 &quantBits, &predictorOrder, &windowSizeY, &skipNSamplesY, &autoPredict);
@@ -342,7 +346,19 @@ int main(int argc,char** argv){
 		return -1;
 	}
 
-	// TODO get values from auto
+
+	if (encode == 1 && autoPredict >= 0) {
+		cout << "Starting auto-parametrization" << endl;
+		parametizer pm = parametizer::presets(autoPredict, fileIn);
+		windowSize = pm.getWindowSize();
+		skipNSamples = pm.getWindowSkip();
+		windowSizeY = pm.getWindowSizeY();
+		skipNSamplesY = pm.getWindowSkipY();
+		predictorOrder = pm.getPredOrder();
+		initialM = pm.getInitialM();
+		initialMY = pm.getInitialMY();
+		cout << endl;
+	}
 
 	if (encode > 0) {
 		cout << "Encoding '" << fileIn << "' to '" << fileOut << "'." << endl;
@@ -362,9 +378,9 @@ int main(int argc,char** argv){
 
 	if (encode == 1) {
 		if (lossy == 1) {
-			encodeLossy(fileIn, fileOut, windowSize, skipNSamples, quantBits, predictorOrder, windowSizeY, skipNSamplesY);
+			encodeLossy(fileIn, fileOut, windowSize, skipNSamples, quantBits, predictorOrder, windowSizeY, skipNSamplesY, initialM, initialMY);
 		} else  {
-			encodeLossless(fileIn, fileOut, windowSize, skipNSamples, predictorOrder, windowSizeY, skipNSamplesY);
+			encodeLossless(fileIn, fileOut, windowSize, skipNSamples, predictorOrder, windowSizeY, skipNSamplesY, initialM, initialMY);
 		}
 	} else {
 		decode(fileIn, fileOut);
