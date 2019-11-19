@@ -60,11 +60,226 @@ void offline_less(){
 		cout<<"Deu merda."<<endl;
 }
 
+int handleFlagParse(int elem, char* next, string shortFlag, string longFlag, string value,
+					string flagMeaning, string placeholder, string description) {
+	if (elem == 0) {
+		cout << "Error: a " << value << " has to be declared after the " 
+				<< flagMeaning << " flag '" << shortFlag << "'.\n	"
+				<< shortFlag << " OR  " << longFlag << " <" << placeholder 
+				<< "> : " << description << endl;
+		return -1;
+	}
+	if (next[0] == '-'){
+		cout << "Error: a " << value << " has to be declared after the " 
+				<< flagMeaning << " flag '" << shortFlag << "'." << endl
+				<< "Another flag '" << next << "' was parsed instead.\n	"
+				<< shortFlag << " OR  " << longFlag << " <" << placeholder 
+				<< "> : " << description << endl;
+		return -1;
+	}
+	return 0;
+}
+
+int parseArgs(int elem, char** argv, int* encode, int* lossy, string* fileIn, string* fileOut,
+			  int* windowSize, int* skipNSamples, int* quantBits, int* predictorOrder) {
+	elem--;
+	int code;
+	if(argv[0] == string("-d") || argv[0] == string("'--decode"))
+		*encode = 0;
+	else if(argv[0] == string("-e") || argv[0] == string("'--encode"))
+		*encode = 1;
+	else if(argv[0] == string("-y") || argv[0] == string("'--lossy"))
+		*lossy = 1;
+	else if(argv[0] == string("-n") || argv[0] == string("'--lossless"))
+		*lossy = 0;
+	else {
+		if(argv[0] == string("-i") || argv[0] == string("'--in")) {
+		// fileIn
+			code = handleFlagParse(elem, argv[1], string("-i"), string("--in"), string("filename"),
+									string("input"), string("input_file"), string ("input file name"));
+			if (code < 0)
+				return -1;
+			*fileIn = argv[1];
+		} else if(argv[0] == string("-o") || argv[0] == string("'--out")) {
+		// fileOut
+			code = handleFlagParse(elem, argv[1], string("-o"), string("--out"), string("filename"),
+									string("input"), string("output_file"), string ("output file name"));
+			if (code < 0)
+				return -1;
+			*fileOut = argv[1];
+		} else if(argv[0] == string("-w") || argv[0] == string("'--window")) {
+		// windowSize
+			code = handleFlagParse(elem, argv[1], string("-w"), string("--window"), string("size"),
+									string("window size"), string("window_size"), string ("'m' calculation window"));
+			if (code < 0)
+				return -1;
+			*windowSize = atoi(argv[1]);
+		} else if(argv[0] == string("-s") || argv[0] == string("'--samples")) {
+		// skipNSamples
+			code = handleFlagParse(elem, argv[1], string("-s"), string("--samples"), string("number of samples"),
+									string("amount of samples to be skipped"), string("number_of_samples"),
+									string ("amount of samples to be skipped before recalculating 'm'"));
+			if (code < 0)
+				return -1;
+			*skipNSamples = atoi(argv[1]);
+		} else if(argv[0] == string("-q") || argv[0] == string("'--quantization")) {
+		// quantBits
+			code = handleFlagParse(elem, argv[1], string("-q"), string("--quantization"), string("quantization value"),
+									string("bits to quantize"), string("number_of_bits"),
+									string ("number of bits to be quantized in the predictor"));
+			if (code < 0)
+				return -1;
+			*quantBits = atoi(argv[1]);
+		} else if(argv[0] == string("-p") || argv[0] == string("'--predictor")) {
+		// predictorOrder
+			code = handleFlagParse(elem, argv[1], string("-p"), string("--predictor"), string("order"),
+									string("predictor order"), string("order_of_predictor"),
+									string ("order of the predictor\n		0 - no prediction\n		1 - linear model\n		2 - linear model\n 		3 - quadratic model"));
+
+			if (code < 0)
+				return -1;
+			*predictorOrder = atoi(argv[1]);
+		} else {
+			cout << "Error: invalid flag '" << argv[0] << endl;
+			return -1;
+		}
+		argv++;
+		elem--;
+	}
+	
+	if (elem == 0) {
+		bool valid = true;
+		if ((*fileIn).empty()) {
+			cout << "Error: missing input file name.\n"
+				<< "	--in OR -i <input_file> : input file name" << endl;
+			valid = false;
+		}
+		if ((*fileOut).empty()) {
+			cout << "Error: missing output file name.\n"
+				<< "	--out OR -o <output_file> : output file name" << endl;
+			valid = false;
+		}
+		if (*encode == -1) {
+			cout << "Error: missing operation type. One of the following flags is required:\n"
+				 << "	--encode OR -e : encoding\n	--decode OR -d : decoding" << endl;
+			valid = false;
+		}
+		// if encoding
+		else if (*encode == 1){
+			if(*lossy == -1) {
+				cout << "Error: missing compression type. One of the following flags is required:\n"
+					<< "	--lossy OR -y : lossy\n	--lossless OR -n : lossless" << endl;
+				valid = false;
+			// if lossy
+			} else if (*lossy == 1) {
+				if (*quantBits > 15) {
+					cout << "Error: number of bits to quantize must be less than 16." << endl;
+					valid = false;
+				} else if (*quantBits == -1) {
+					*quantBits = 6;
+				}
+			// if lossless
+			} else if (*quantBits >= 0) {
+				cout << "Error: number of quantized bits is only valid if the lossy mode is active." << endl;
+				valid = false;
+			}
+			if (*windowSize == 0) {
+				cout << "Error: window size must be greater than zero." << endl;
+				valid = false;
+			} else if (*windowSize < 0) {
+				*windowSize = 2000;
+			}
+			if (*skipNSamples >= *windowSize) {
+				cout << "Error: amount of samples to skip must be less than the window size." << endl;
+				valid = false;
+			} else if (*skipNSamples < 0) {
+				*skipNSamples = 100;
+			}
+			if (*predictorOrder > 3) {
+				cout << "Error: predictor order must be between 0 and 3." << endl
+					<< "	0 - no prediction" << endl << "	1 - linear model" << endl
+					<< "	2 - linear model " << endl << "	3 - quadratic model" << endl;
+				valid = false;
+			} else if (*predictorOrder < 0) {
+				*predictorOrder = 3;
+			}
+		// if decoding
+		} else {
+			if (*lossy >= 0) {
+				cout << "Error: lossy and lossless compression is only available as an encoding argument." << endl;
+				valid = false;
+			}
+			if (*windowSize >= 0) {
+				cout << "Error: window size is only available as an encoding argument." << endl;
+				valid = false;
+			}
+			if (*skipNSamples >= 0) {
+				cout << "Error: amount of samples to skip is only available as an encoding argument." << endl;
+				valid = false;
+			}
+			if (*predictorOrder >= 0) {
+				cout << "Error: predictor order is only available as an encoding argument." << endl;
+				valid = false;
+			}
+		}
+		if (valid) {
+			return 0;
+		}
+		return -1;
+	}
+	return parseArgs(elem, argv+1, encode, lossy, fileIn, fileOut, windowSize, skipNSamples, quantBits, predictorOrder);
+}
+
+void printUsage() {
+	cout << "USAGE:\n	REQUIRED BASE FLAGS:" << endl
+		 << "		--in OR -i <input_file> : input filename from where to read the data" << endl
+		 << "		--out OR -o <output_file> : output filename where to write the data" << endl
+		 << "		One of the following:" << endl
+		 << "		--encode OR -e : encode the input file"	<< endl
+		 << "		--decode OR -d : decode the input file\n" << endl
+		 << "	REQUIRED ENCODING FLAGS:" << endl
+		 << "		One of the following:" << endl
+		 << "		--lossy OR -y : lossy encoding" << endl
+		 << "		--lossless OR -n : lossless encoding\n" << endl
+		 << "	OPTIONAL ENCODING FLAGS:" << endl
+		 << "		--window OR -w : window size for which the m will be calculated" << endl
+		 << "		--samples OR -s : amount of samples to be skipped before calculating a new 'm'\n" << endl
+		 << "	OPTIONAL LOSSY ENCODING FLAGS" << endl
+		 << "		--quantization OR -q : number of bits to be quantized in the predictor" << endl;
+}
+
 int main(int argc,char** argv){
-	if(argc!=4){
-		cout<<"Give args"<<endl;
+	if (argc < 6) {
+		printUsage();
 		return 1;
 	}
+
+	int encode = -1;
+	int lossy = -1;
+	string fileIn;
+	string fileOut;
+	int windowSize = -1;
+	int skipNSamples = -1; 
+	int quantBits = -1;
+	int predictorOrder = -1;
+
+	int valid = parseArgs(argc-1, argv+1, &encode, &lossy, &fileIn, &fileOut, &windowSize, &skipNSamples, &quantBits, &predictorOrder);
+	if (valid < 0) {
+		cout << "EXITING: invalid parameters. Run without arguments to print usage." << endl;
+		return -1;
+	}
+	if (encode > 0) {
+		cout << "Encoding '" << fileIn << "' to '" << fileOut << "'." << endl;
+		if (lossy > 0)
+			cout << "	- Applying lossy compression with a quantization of " << quantBits << " bits;" << endl;
+		else 
+			cout << "	- Applying lossless compression;" << endl;
+		cout << "	- Window size: " << windowSize << ";" << endl;
+		cout << "	- Skip " << skipNSamples << " samples before recalculating m;" << endl;
+		cout << "	- Predictor order: " << predictorOrder << ";" << endl;
+	} else 
+		cout << "Decoding '" << fileIn << "' to '" << fileOut << "'." << endl;
+
 	//online_ly();
 	online_less(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
 	//offline_less();
