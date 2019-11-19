@@ -1,7 +1,10 @@
-#include "wav_utils.h"
+#include <cassert>
+#include <cmath>
+#include "../lib/wav/wav.h"
 
 
-double wav_utils::get_snr(string orig,string out){
+
+double get_snr(string orig,string out){
 	wav wi(orig);
 	wav wo(out);
 
@@ -32,6 +35,6 @@ double wav_utils::get_snr(string orig,string out){
 }
 /*
 int main(int argc,char** argv){
-	std::cout<<wav_utils::get_snr(string(argv[1]),string(argv[2]))<<std::endl;
+	std::cout<<stats_utils::get_snr(string(argv[1]),string(argv[2]))<<std::endl;
 }
 */
