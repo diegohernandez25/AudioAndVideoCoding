@@ -14,12 +14,14 @@ class offline_lossless{
 
 		void set_window_size(uint ws);
 		void set_m_calc_int(uint m);
+		void set_pred_order(uint order);
 
 	private:
 		const char* magic = "CAVF+";
 		string &ins;
 		string &outs;
 
+		uint pred_order;
 		uint window_size;
 		uint m_calc_int;
 		

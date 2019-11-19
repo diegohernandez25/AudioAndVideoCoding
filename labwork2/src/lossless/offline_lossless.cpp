@@ -18,8 +18,9 @@ void offline_lossless::encode(){
 
 	wav wv(ins);
 	wv.load();
-	bitstream bs(outs.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
-	predictor pd(false);
+	bitstream bss(outs.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
+	bitstream_wrapper bs(bss,true);
+	predictor pd(false,pred_order);
 
 	uint m_list_size=((wv.getNumSamples()-1)-window_size+1)/(m_calc_int+1); //FIXME devia de ter ceil, mas implica ter cenas la em baixo
 	std::cout<<"!!!!!!!!!!!!!"<<m_list_size<<endl;
@@ -58,6 +59,9 @@ void offline_lossless::encode(){
 	//Now run golomb on the residuals with the new M
 	//And write to files
 	bs.writeNChars((char*) magic,strlen(magic));
+
+	//Write preditor order
+	bs.writeNBits(pred_order,2);
 	
 	//Write the nr of samples
 	bs.writeNBits(wv.getNumSamples(),sizeof(uint32_t)*8);
@@ -100,13 +104,17 @@ void offline_lossless::encode(){
 
 int offline_lossless::decode(){
 	wav wv(outs);
-	bitstream bs(ins.c_str(),std::ios::binary|std::ios::in);
-	predictor pd(false);
+	bitstream bss(ins.c_str(),std::ios::binary|std::ios::in);
+	bitstream_wrapper bs(bss,true);
 
 	//Check magic
     char is_magic[strlen(magic)];
     bs.readNChars(is_magic,sizeof(is_magic)); 
     if(strncmp(magic,is_magic,strlen(magic))!=0) return -1;
+
+	//Read predictor order
+    pred_order=bs.readNBits(2);
+	predictor pd(false,pred_order);
 
 	//Read the nr of samples
 	uint num_samp=(uint) bs.readNBits(sizeof(uint32_t)*8);
@@ -165,4 +173,8 @@ void offline_lossless::set_window_size(uint ws){
 
 void offline_lossless::set_m_calc_int(uint mci){
 	m_calc_int=mci;
+}
+
+void offline_lossless::set_pred_order(uint order){
+	pred_order=order;
 }

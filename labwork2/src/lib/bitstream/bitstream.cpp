@@ -61,7 +61,6 @@ uint32_t bitstream::readNBits(uint n) {
 }
 
 void bitstream::readNBits(uint32_t* bits, uint n) {
-	uint32_t ref;
 	for (uint i = 0; i < n/32.0; i++) {
 		if (i == n/32)
 			bits[i] = readNBits(n%32);

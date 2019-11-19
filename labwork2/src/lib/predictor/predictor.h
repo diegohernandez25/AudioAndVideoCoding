@@ -16,9 +16,10 @@ public:
     void updateBufferQuant(short quant);
     void printCircleBuffer();
 
-    predictor(bool lossy)
-    {   this->lossy = lossy;
-	num_inputs = 0;
+    predictor(bool lossy,int order){
+		this->order=order;
+		this->lossy = lossy;
+		num_inputs = 0;
         cb_ptr = 2;
     }
 
@@ -28,6 +29,7 @@ private:
     short cb_ptr;
     short circularBuffer[3] = {0,0,0};
     bool lossy;
+	int order;
 };
 
 

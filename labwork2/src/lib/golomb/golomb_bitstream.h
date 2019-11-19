@@ -7,13 +7,13 @@
 #include <cassert>
 #include <iostream>
 
-#include "../bitstream/bitstream.h"
+#include "../bitstream/bitstream_wrapper.h"
 #include "golomb.h"
 
 class golomb_bitstream : public golomb{
 	public:
-		golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream& bt);
-		golomb_bitstream(uint m,bitstream& bt);
+		golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream_wrapper& bt);
+		golomb_bitstream(uint m,bitstream_wrapper& bt);
 
 		void write_signed_val(int val);
 		int read_signed_val();
@@ -23,7 +23,7 @@ class golomb_bitstream : public golomb{
 
 	private:
 		bool signed_vals;
-		bitstream& bt;
+		bitstream_wrapper& bt;
 };
 
 #endif
