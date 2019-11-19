@@ -43,7 +43,7 @@ void parametizer::startLosslessEncoder(){
     enc_ol.set_initial_m(parameters.m);
 
     uint N = (int) ((maxWindowSize - minWindowSize)/shiftWindowSize);
-    cout << "N:\t" << N << endl;
+    //cout << "N:\t" << N << endl;
     for(uint i=minWindowSize, k=0;i<maxWindowSize;i+=shiftWindowSize, k++){
         cout << "\r\e[K(1/3) "<< (int)((100*k/N))<<"%"<<flush;
         enc_ol.set_window_size(i);
@@ -55,7 +55,7 @@ void parametizer::startLosslessEncoder(){
                 parameters.totalBits=nbits;
                 parameters.windowSize=i;
                 parameters.windowSkip=j;
-                cout<<nbits<<","<<i<<","<<j<<endl;
+                //cout<<nbits<<","<<i<<","<<j<<endl;
 
             }
         }
