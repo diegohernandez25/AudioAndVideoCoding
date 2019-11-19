@@ -2,9 +2,9 @@
 
 //TODO cena de se o g nao for uma potencia poupar espaco
 
-golomb_bitstream::golomb_bitstream(uint m,bitstream& bt) : golomb(m),bt(bt){}
+golomb_bitstream::golomb_bitstream(uint m,bitstream_wrapper& bt) : golomb(m),bt(bt){}
 
-golomb_bitstream::golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream& bt) : golomb(initial_m,blk_size,calc_interval),bt(bt) {}
+golomb_bitstream::golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream_wrapper& bt) : golomb(initial_m,blk_size,calc_interval),bt(bt) {}
 
 void golomb_bitstream::write_signed_val(int val){
 	uint sizeof_r=std::ceil(std::log2(get_m()));

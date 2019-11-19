@@ -1,7 +1,9 @@
 #include "online_lossy.h"
 
-online_lossy::online_lossy(string& in_file,string& out_file):
-	ins(in_file),outs(out_file){}
+online_lossy::online_lossy(string& in_file,string& out_file,bool write):
+	ins(in_file),outs(out_file){
+	this->write=write;
+}
 
 //HEADER for compressed
 //Magic number (CAVN+)
@@ -19,7 +21,7 @@ online_lossy::online_lossy(string& in_file,string& out_file):
 //First sample in binary code 	
 //Rest of samples in golomb
 
-void online_lossy::encode() {
+uint online_lossy::encode() {
 
     wav wv(ins);
     wv.load();
@@ -27,7 +29,8 @@ void online_lossy::encode() {
     assert(wv.getNumOfChannels() < 3);
     bool stereo = (wv.getNumOfChannels()==2);
 
-    bitstream bs(outs.c_str(), std::ios::trunc | std::ios::binary | std::ios::out);
+	bitstream bss(outs.c_str(), std::ios::trunc | std::ios::binary | std::ios::out);
+    bitstream_wrapper bs(bss,write);
     golomb_bitstream gb(initial_m, window_size, m_calc_int, bs);
     //golomb_bitstream gb(initial_m,bs);
     predictor pd(true,pred_order);
@@ -117,12 +120,13 @@ void online_lossy::encode() {
             //cout<<i<< endl;
         }
     }
-
+	return bs.getBits();
 }
 
 int online_lossy::decode(){
 	wav wv(outs);
-	bitstream bs(ins.c_str(),std::ios::binary|std::ios::in);
+	bitstream bss(ins.c_str(),std::ios::binary|std::ios::in);
+	bitstream_wrapper bs(bss,true);
 
 	//Read header
 

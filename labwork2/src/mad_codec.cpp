@@ -9,7 +9,7 @@ void online_ly(uint initial_m,uint ws,uint mci,uint y_initial_m,uint y_ws,uint y
 	string back("test_res.wav");
 
 
-	online_lossy enc_ol(orig,out);	
+	online_lossy enc_ol(orig,out,true);	
 	enc_ol.set_pred_order(pred_order);
 
 	enc_ol.set_window_size(ws);
@@ -21,11 +21,10 @@ void online_ly(uint initial_m,uint ws,uint mci,uint y_initial_m,uint y_ws,uint y
 	enc_ol.set_y_initial_m(y_initial_m);
 
 	enc_ol.set_nr_quant(nr_quant);
-	enc_ol.encode();
 
-	cout<<"Ended encoding"<<endl;
+	cout<<"Ended encoding "<<enc_ol.encode()<<endl;
 
-	online_lossy dec_ol(out,back);	
+	online_lossy dec_ol(out,back,true);	
 	if(dec_ol.decode()!=0)
 		cout<<"Deu merda."<<endl;
 }
@@ -36,7 +35,7 @@ void online_less(uint initial_m,uint ws,uint mci,uint y_initial_m,uint y_ws,uint
 	string back("test_res.wav");
 
 
-	online_lossless enc_ol(orig,out);	
+	online_lossless enc_ol(orig,out,true);	
 	enc_ol.set_pred_order(pred_order);
 	
 	enc_ol.set_window_size(ws);
@@ -51,7 +50,7 @@ void online_less(uint initial_m,uint ws,uint mci,uint y_initial_m,uint y_ws,uint
 	
 	cout<<"Ended encoding"<<endl;
 
-	online_lossless dec_ol(out,back);	
+	online_lossless dec_ol(out,back,true);	
 	if(dec_ol.decode()!=0)
 		cout<<"Deu merda."<<endl;
 }

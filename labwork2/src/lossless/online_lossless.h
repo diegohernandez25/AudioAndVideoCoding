@@ -3,14 +3,15 @@
 
 #include <cassert>
 #include "../lib/bitstream/bitstream.h"
+#include "../lib/bitstream/bitstream_wrapper.h"
 #include "../lib/golomb/golomb_bitstream.h"
 #include "../lib/predictor/predictor.h"
 #include "../lib/wav/wav.h"
 
 class online_lossless{
 	public:
-		online_lossless(string& in_file,string& out_file);
-		void encode();	
+		online_lossless(string& in_file,string& out_file,bool write);
+		uint encode();	
 		int decode();	
 
 		void set_pred_order(uint order);
@@ -27,6 +28,7 @@ class online_lossless{
 		const char *magic = "CAVN+";
 		string &ins;
 		string &outs;
+		bool write;
 
 		uint pred_order;
 

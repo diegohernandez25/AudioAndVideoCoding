@@ -18,7 +18,8 @@ void offline_lossless::encode(){
 
 	wav wv(ins);
 	wv.load();
-	bitstream bs(outs.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
+	bitstream bss(outs.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
+	bitstream_wrapper bs(bss,true);
 	predictor pd(false,pred_order);
 
 	uint m_list_size=((wv.getNumSamples()-1)-window_size+1)/(m_calc_int+1); //FIXME devia de ter ceil, mas implica ter cenas la em baixo
@@ -103,7 +104,8 @@ void offline_lossless::encode(){
 
 int offline_lossless::decode(){
 	wav wv(outs);
-	bitstream bs(ins.c_str(),std::ios::binary|std::ios::in);
+	bitstream bss(ins.c_str(),std::ios::binary|std::ios::in);
+	bitstream_wrapper bs(bss,true);
 
 	//Check magic
     char is_magic[strlen(magic)];

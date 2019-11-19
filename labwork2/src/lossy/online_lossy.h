@@ -2,6 +2,7 @@
 #define H_ONLINE_LOSSY
 
 #include "../lib/bitstream/bitstream.h"
+#include "../lib/bitstream/bitstream_wrapper.h"
 #include "../lib/golomb/golomb_bitstream.h"
 #include "../lib/predictor/predictor.h"
 #include "../lib/wav/wav.h"
@@ -9,8 +10,8 @@
 
 class online_lossy{
 	public:
-		online_lossy(string& in_file,string& out_file);
-		void encode();	
+		online_lossy(string& in_file,string& out_file,bool write);
+		uint encode();	
 		int decode();	
 
 		void set_nr_quant(uint nq);
@@ -28,6 +29,7 @@ private:
 		const char *magic = "CAVN+";
 		string &ins;
 		string &outs;
+		bool write;
 
 		uint nr_quant;
 		uint pred_order;
