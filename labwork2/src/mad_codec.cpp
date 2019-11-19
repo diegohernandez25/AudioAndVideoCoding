@@ -261,7 +261,7 @@ int parseArgs(int elem, char** argv, int* encode, int* lossy, string* fileIn, st
 			} else {
 				if (*autoPredict < 0 || *autoPredict > 4) {
 					cout << "Error: auto predict motivation value must be between 0 and 4." << endl
-		 				<< "	0 - fastest" << endl << "	4  - most compressed" << endl;
+		 				<< "	0 - fastest" << endl << "	4 - most compressed" << endl;
 					valid = false;
 				}
 				*windowSize = -1;
@@ -322,24 +322,24 @@ void printUsage() {
 		 << "		--lossless OR -n : lossless encoding\n" << endl
 		 << "	OPTIONAL ENCODING FLAGS:" << endl
 		 << "		--window OR -w : window size for which the m will be calculated in one channel" << endl
-		 << "			RANGE: > 1" << endl
+		 << "			RANGE:  > 1" << endl
 		 << "		--samples OR -s : amount of samples to be skipped before calculating a new 'm' in one channel" << endl
-		 << "			RANGE: 0 <= s < window" << endl
-		 << "		--auto OR -a : automatically calculate an approximation to the 'ideal' values for the window and skip\n" << endl
-		 << "			RANGE: 0 < a <= 4" << endl
-		 << "				0 - fastest" << endl << "				4  - most compressed" << endl
+		 << "			RANGE:  0 <= s < window" << endl
+		 << "		--auto OR -a : automatically calculate an approximation to the 'ideal' values for the window and skip" << endl
+		 << "			RANGE:  0 < a <= 4" << endl
+		 << "				0 - fastest" << endl << "				4 - most compressed" << endl
 		 << "		--predictor OR -p : order of the predictor" << endl
-		 << "			RANGE: 0 <= p <= 3" << endl
+		 << "			RANGE:  0 <= p <= 3" << endl
 		 << "				0 - no prediction" << endl << "				1 - linear model" << endl
-		 << "				2 - linear model " << endl << "				3 - quadratic model" << endl
+		 << "				2 - linear model " << endl << "				3 - quadratic model\n" << endl
 		 << "	OPTIONAL ENCODING FLAGS FOR STEREO ONLY:" << endl
 		 << "		--windowstereo OR -b  : window size for the channel differences" << endl
-		 << "			RANGE: > 1" << endl
+		 << "			RANGE:  > 1" << endl
 		 << "		--samplestereo OR -c : samples to be skipped for the channel differences" << endl
-		 << "			RANGE: 0 <= c < windowstereo" << endl
+		 << "			RANGE:  0 <= c < windowstereo\n" << endl
 		 << "	OPTIONAL LOSSY ENCODING FLAGS" << endl
 		 << "		--quantization OR -q : number of bits to be quantized in the predictor" << endl
-		 << "			RANGE: 0 <= q < 16" << endl;
+		 << "			RANGE:  0 <= q < 16" << endl;
 }
 
 int main(int argc,char** argv){
@@ -376,13 +376,11 @@ int main(int argc,char** argv){
 		else 
 			cout << "	- Applying lossless compression;" << endl;
 		if (autoPredict > 0)
-			cout << "	- Parameters related to 'm' were automatically calculated.";
-		else {
-			cout << "	- Window size: " << windowSize << ";" << endl;
-			cout << "	- Skip " << skipNSamples << " samples before recalculating 'm';" << endl;
-			cout << "	- Channel difference window size: " << windowSizeY << ";" << endl;
-			cout << "	- Channel difference skip " << skipNSamplesY << " samples before recalculating 'm';" << endl;
-		}
+			cout << "	- Parameters related to 'm' were automatically calculated;" << endl;
+		cout << "	- Window size: " << windowSize << ";" << endl;
+		cout << "	- Skip " << skipNSamples << " samples before recalculating 'm';" << endl;
+		cout << "	- Channel difference window size: " << windowSizeY << ";" << endl;
+		cout << "	- Channel difference skip " << skipNSamplesY << " samples before recalculating 'm';" << endl;
 		cout << "	- Predictor order: " << predictorOrder << ";" << endl;
 	} else 
 		cout << "Decoding '" << fileIn << "' to '" << fileOut << "'." << endl;
