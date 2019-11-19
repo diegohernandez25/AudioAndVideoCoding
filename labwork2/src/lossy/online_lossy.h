@@ -26,7 +26,7 @@ class online_lossy{
         void set_y_initial_m(uint m);
 
 private:
-		const char *magic = "CAVN+";
+		const char *magic = "CAVN-";
 		string &ins;
 		string &outs;
 		bool write;
