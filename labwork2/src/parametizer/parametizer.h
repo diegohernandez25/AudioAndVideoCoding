@@ -63,6 +63,8 @@ public:
 
     param getParameters();
 
+    static parametizer presets(uint aggressiveness,string& infile);
+
     uint getWindowSize();
     uint getWindowSkip();
     uint getWindowSizeY();
