@@ -1,76 +1,51 @@
 #include "lossless/online_lossless.h"
-#include "lossless/offline_lossless.h"
 #include "lossy/online_lossy.h"
 #include <iostream>
 
-void online_ly(uint initial_m,uint ws,uint mci,uint y_initial_m,uint y_ws,uint y_mci,uint nr_quant,uint pred_order){
-	string orig("test.wav");
-	string out("out.mad");
-	string back("test_res.wav");
-
-
-	online_lossy enc_ol(orig,out,true);	
-	enc_ol.set_pred_order(pred_order);
-
-	enc_ol.set_window_size(ws);
-	enc_ol.set_m_calc_int(mci);
-	enc_ol.set_initial_m(initial_m);
-
-	enc_ol.set_y_window_size(y_ws);
-	enc_ol.set_y_m_calc_int(y_mci);
-	enc_ol.set_y_initial_m(y_initial_m);
-
-	enc_ol.set_nr_quant(nr_quant);
-
-	cout<<"Ended encoding "<<enc_ol.encode()<<endl;
-
-	online_lossy dec_ol(out,back,true);	
-	if(dec_ol.decode()!=0)
-		cout<<"Deu merda."<<endl;
+void decode(string fileIn, string fileOut) {
+	online_lossless decoder(fileIn, fileOut, true);
+	if (decoder.decode() != 0) {
+		online_lossy deco(fileIn, fileOut, true);
+		if (deco.decode() != 0) {
+			cout << "ERROR: unexpected error during decoding." << endl;
+		}
+	}
 }
 
-void online_less(uint initial_m,uint ws,uint mci,uint y_initial_m,uint y_ws,uint y_mci,uint pred_order){
-	string orig("test.wav");
-	string out("out.mad");
-	string back("test_res.wav");
+void encodeLossless(string fileIn, string fileOut, uint windowSize, uint skipNSamples, uint predictorOrder, uint windowSizeY, uint skipNSamplesY) {
+	online_lossless encoder(fileIn, fileOut, true);
 
+	encoder.set_pred_order(predictorOrder);
+	encoder.set_window_size(windowSize);
+	encoder.set_m_calc_int(skipNSamples);
+	encoder.set_initial_m(9);
 
-	online_lossless enc_ol(orig,out,true);	
-	enc_ol.set_pred_order(pred_order);
-	
-	enc_ol.set_window_size(ws);
-	enc_ol.set_m_calc_int(mci);
-	enc_ol.set_initial_m(initial_m);
+	encoder.set_y_window_size(windowSizeY);
+	encoder.set_y_m_calc_int(skipNSamplesY);
+	encoder.set_y_initial_m(9);
 
-	enc_ol.set_y_window_size(y_ws);
-	enc_ol.set_y_m_calc_int(y_mci);
-	enc_ol.set_y_initial_m(y_initial_m);
+	int writtenBits = encoder.encode();
 
-	enc_ol.encode();
-	
-	cout<<"Ended encoding"<<endl;
-
-	online_lossless dec_ol(out,back,true);	
-	if(dec_ol.decode()!=0)
-		cout<<"Deu merda."<<endl;
+	cout << "Finished encoding. Written " << writtenBits/8 << " bytes to disk." << endl;
 }
 
-void offline_less(){
-	string orig("test.wav");
-	string out("out.mad");
-	string back("test_res.wav");
+void encodeLossy(string fileIn, string fileOut, uint windowSize, uint skipNSamples, uint quantBits, uint predictorOrder, uint windowSizeY, uint skipNSamplesY) {
+	online_lossy encoder(fileIn, fileOut, true);
 
+	encoder.set_pred_order(predictorOrder);
+	encoder.set_window_size(windowSize);
+	encoder.set_m_calc_int(skipNSamples);
+	encoder.set_initial_m(9);
 
-	offline_lossless enc_of(orig,out);	
-	enc_of.set_window_size(44100*7);
-	enc_of.set_m_calc_int(44100*7-1);
-	enc_of.encode();
+	encoder.set_y_window_size(windowSizeY);
+	encoder.set_y_m_calc_int(skipNSamplesY);
+	encoder.set_y_initial_m(9);
 
-	cout<<"Ended encoding"<<endl;
+	encoder.set_nr_quant(quantBits);
 
-	offline_lossless dec_of(out,back);	
-	if(dec_of.decode()!=0)
-		cout<<"Deu merda."<<endl;
+	int writtenBits = encoder.encode();
+
+	cout << "Finished encoding. Written " << writtenBits/8 << " bytes to disk." << endl;
 }
 
 int handleFlagParse(int elem, char* next, string shortFlag, string longFlag, string value,
@@ -385,6 +360,13 @@ int main(int argc,char** argv){
 	} else 
 		cout << "Decoding '" << fileIn << "' to '" << fileOut << "'." << endl;
 
-	//online_less(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]),atoi(argv[7]));
-	//online_ly(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]),atoi(argv[7]),atoi(argv[8]));
+	if (encode == 1) {
+		if (lossy == 1) {
+			encodeLossy(fileIn, fileOut, windowSize, skipNSamples, quantBits, predictorOrder, windowSizeY, skipNSamplesY);
+		} else  {
+			encodeLossless(fileIn, fileOut, windowSize, skipNSamples, predictorOrder, windowSizeY, skipNSamplesY);
+		}
+	} else {
+		decode(fileIn, fileOut);
+	}
 }
