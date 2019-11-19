@@ -162,7 +162,7 @@ uint parametizer::getWindowSize(){ return parameters.windowSize;}
 
 uint parametizer::getWindowSkip(){ return parameters.windowSkip;}
 
-uint parametizer::getInitialM(){ return parameters.y_m;}
+uint parametizer::getInitialMY(){ return parameters.y_m;}
 
 uint parametizer::getWindowSizeY(){ return parameters.y_windowSize;}
 
