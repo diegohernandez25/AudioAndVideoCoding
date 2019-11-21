@@ -95,12 +95,13 @@ void wav::createStructure(){
     totalSamples = numSamples * wavHeader.NumOfChan;
     wavHeader.Subchunk2Size = totalSamples * 2;
     wavHeader.bitsPerSample = 16;
-    wavHeader.bytesPerSec = wavHeader.SamplesPerSec * 2;
-    wavHeader.blockAlign = 4;
+    wavHeader.bytesPerSec = wavHeader.SamplesPerSec * (wavHeader.NumOfChan==2?4:2);
+    //wavHeader.blockAlign = 4;
+    wavHeader.blockAlign = (wavHeader.NumOfChan==2?4:2);
     wavHeader.AudioFormat = 1;
     wavHeader.Subchunk1Size = 16;
-    wavHeader.ChunkSize = 4 + (8 + wavHeader.Subchunk1Size) + (8 + wavHeader.Subchunk2Size);
-
+    //wavHeader.ChunkSize = 4 + (8 + wavHeader.Subchunk1Size) + (8 + wavHeader.Subchunk2Size);
+    wavHeader.ChunkSize = 36 + wavHeader.Subchunk2Size;
     vector<short> tmp(totalSamples);
     wavData = tmp;
 }
