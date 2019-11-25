@@ -72,7 +72,7 @@ bool y4m::load_header(){
 	fps[0]=0; fps[1]=0;
 	interlacing=IL_UNSET;
 	pix_asp[0]=0; pix_asp[1]=0;
-	color_space=CS444;
+	color_space=CS420JPEG;
 
 
 	size_t currptr=header.find(" ")+1;
@@ -326,7 +326,7 @@ bool y4m::next_frame(){
 	return frame_ptr<v_y.size();
 }
 
-
+//FIXME use aspect ratio
 cv::Mat y4m::get_bgr(){
 	cv::Mat adj_u,adj_v;
 	cv::Mat yuv,bgr;
@@ -350,6 +350,7 @@ cv::Mat& y4m::get_y(){ return v_y[frame_ptr]; }
 cv::Mat& y4m::get_u(){ return v_u[frame_ptr]; }
 cv::Mat& y4m::get_v(){ return v_v[frame_ptr]; }
 
+/*
 #include "opencv2/highgui/highgui.hpp" //FIXME temporary
 int main(int argc,char **argv){
 	if(argc!=4) return 1;
@@ -385,3 +386,4 @@ int main(int argc,char **argv){
 	out.save(fff);
 	
 }
+*/
