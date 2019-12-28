@@ -31,6 +31,14 @@ vector<int> rle::rm_fin_zeros(){
 
 }
 
+vector<int> rle::reverse_rle_zeros(int num_zeros){
+
+    vector<int> vect_null(num_zeros, 0);
+    vect.insert( vect.end(), vect_null.begin(), vect_null.end());
+    return vect;
+
+}
+
 
 vector<int> rle::it_zero_rm(vector<int> vec) {
     int idx = -1, count = 0;

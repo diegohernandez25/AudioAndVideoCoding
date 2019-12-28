@@ -25,6 +25,7 @@ public:
 
     vector<int> rm_fin_zeros();
     vector<int> get_vector();
+    vector<int> reverse_rle_zeros(int num_zeros);
     int get_num_zeros();
 
 private:
