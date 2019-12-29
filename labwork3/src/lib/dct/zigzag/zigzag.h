@@ -21,22 +21,22 @@
 
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
 class zigzag {
 public:
-    zigzag(Mat block);
+    zigzag(cv::Mat block);
     zigzag(vector<int> vect);
 
 
     vector<int> load_zigzag();
-    Mat inverse_zigzag();
-    Mat get_mat();
+    cv::Mat inverse_zigzag();
+    cv::Mat get_mat();
     vector<int> get_vect();
 
 
 private:
-    Mat mat;
+    cv::Mat mat;
     vector<int> vect;
 };
 

@@ -4,7 +4,7 @@
 
 #include "zigzag.h"
 
-zigzag::zigzag(Mat mat){
+zigzag::zigzag(cv::Mat mat){
     zigzag::mat = mat;
 }
 
@@ -13,7 +13,7 @@ zigzag::zigzag(vector<int> vect){
 }
 
 
-Mat zigzag::get_mat(){
+cv::Mat zigzag::get_mat(){
     return zigzag::mat;
 }
 
@@ -68,13 +68,13 @@ vector<int> zigzag::load_zigzag() {
     return output;
 }
 
-Mat zigzag::inverse_zigzag(){
+cv::Mat zigzag::inverse_zigzag(){
     int rows = int(sqrt(vect.size()));
     int cols = rows;
 
     int size=rows*cols;
 
-    Mat res = Mat(rows,cols, CV_32SC1);
+    cv::Mat res = cv::Mat(rows,cols, CV_32SC1);
     res = 0;
     
     int r=0, c=0, count=0, transactions=0, n_iter, direction;
