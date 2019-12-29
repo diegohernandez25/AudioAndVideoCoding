@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 
 		// Quit if unable to open capture
 		std::string fl(argv[i]);
-		if(!cap.load(fl)){
+		if(!cap.load(fl,0)){
 			std::cout << "Error opening video file" << std::endl;
 			return -1;
 		}
