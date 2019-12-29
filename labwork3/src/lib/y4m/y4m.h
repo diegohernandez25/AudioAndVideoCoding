@@ -21,8 +21,9 @@ class y4m{
 
 		//IO
 		void print_header();
-		bool load(std::string &y4mfile);
-		void save(std::string &y4mfile);
+		bool load(std::string &y4mfile,uint block_size);
+		void save(std::string &y4mfile,uint block_size);
+		//FIXME need to add way toput sizeon save
 
 		//Creation
 		void init(uint width,uint height,uint8_t color_space);
@@ -38,6 +39,7 @@ class y4m{
 		uint* get_aspect();
 		uint get_width();
 		uint get_height();
+		uint get_block_size();
 		uint8_t get_color_space();
 		bool next_frame();
 		bool seek(uint frame_number);
@@ -66,6 +68,7 @@ class y4m{
 		std::vector<cv::Mat> v_y,v_u,v_v;
 		uint frame_ptr;
 		cv::Size s_y,s_u,s_v;
+		uint block_size;
 		
 		//Support functions
 		void build_structure();

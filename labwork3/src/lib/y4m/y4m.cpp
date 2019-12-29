@@ -51,7 +51,9 @@ void y4m::print_header(){
 			break;
 	}
 }
-bool y4m::load(std::string &y4mfile){
+bool y4m::load(std::string &y4mfile,uint block_size){
+	this->block_size=block_size;
+
 	inf.open(y4mfile,std::fstream::in | std::fstream::binary);
 	if(!load_header()) return false;
 	while(fetch()); //Get all frames
@@ -154,7 +156,7 @@ bool y4m::load_header(){
 	return true;
 }
 
-void y4m::save(std::string &y4mfile){
+void y4m::save(std::string &y4mfile,uint block_size){
 	outf.open(y4mfile,std::fstream::out | std::fstream::binary | std::fstream::trunc);
 	save_header();
 	store_all();
@@ -271,6 +273,19 @@ bool y4m::fetch(){
 	//Read v
 	inf.read((char*) v.ptr(),v.rows*v.cols);	
 
+	//Pad, if needed
+	if(block_size>1){
+		uint scale_u_h=s_y.height/s_u.height;
+		uint scale_u_w=s_y.width/s_u.width;
+		uint scale_v_h=s_y.height/s_v.height;
+		uint scale_v_w=s_y.width/s_v.width;
+
+		cv::copyMakeBorder(y,y,0,height%block_size,0,width%block_size,cv::BORDER_REFLECT);
+		cv::copyMakeBorder(u,u,0,(height%block_size)/scale_u_h,0,(width%block_size)/scale_u_w,cv::BORDER_REFLECT);
+		cv::copyMakeBorder(v,v,0,(height%block_size)/scale_v_h,0,(width%block_size)/scale_v_w,cv::BORDER_REFLECT);
+
+	}
+
 	v_y.push_back(y);
 	v_u.push_back(u);
 	v_v.push_back(v);
@@ -328,16 +343,18 @@ bool y4m::next_frame(){
 
 //FIXME use aspect ratio
 cv::Mat y4m::get_bgr(){
+	cv::Mat fy=v_y[frame_ptr];	
 	cv::Mat adj_u,adj_v;
 	cv::Mat yuv,bgr;
-	cv::resize(v_u[frame_ptr],adj_u,s_y,0,0,cv::INTER_LINEAR);
-	cv::resize(v_v[frame_ptr],adj_v,s_y,0,0,cv::INTER_LINEAR);
-	cv::Mat chan[3]={v_y[frame_ptr],adj_u,adj_v};
+	cv::resize(v_u[frame_ptr],adj_u,fy.size(),0,0,cv::INTER_LINEAR);
+	cv::resize(v_v[frame_ptr],adj_v,fy.size(),0,0,cv::INTER_LINEAR);
+	cv::Mat chan[3]={fy,adj_u,adj_v};
 	cv::merge(chan,3,yuv);	
 	cv::cvtColor(yuv,bgr,cv::COLOR_YUV2BGR);
 	return bgr;
 }
 
+uint y4m::get_block_size(){ return block_size; }
 uint y4m::get_width(){ return width; }
 uint y4m::get_height(){ return height; }
 uint8_t y4m::get_color_space(){ return color_space; }
