@@ -17,5 +17,6 @@ add_definitions(${OPENCV_FLAGS})
 
 include_directories(zigzag)
 include_directories(rle)
-add_executable(dct main.cpp zigzag/zigzag.cpp zigzag/zigzag.h rle/rle.cpp rle/rle.h)
+
+add_executable(dct main.cpp dct.cpp dct.h zigzag/zigzag.cpp zigzag/zigzag.h rle/rle.cpp rle/rle.h)
 target_link_libraries(dct ${OpenCV_LIBS})
