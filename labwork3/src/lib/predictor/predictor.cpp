@@ -25,6 +25,11 @@ short predictor::predict() {
                 return ret; 
             ret = short(mat[ptr - 1]);
             break;
+        case 2:
+            if (ptr < width)
+                return ret; 
+            ret = short(mat[ptr - width]);
+            break;
     }
 
     return ret;
