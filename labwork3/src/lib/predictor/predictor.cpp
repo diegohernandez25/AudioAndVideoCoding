@@ -5,20 +5,20 @@
 
 using namespace std;
 
-predictor::predictor(int mode, int width) {
-    this->mode = mode;
+predictor::predictor(short width, short height) {
     this->width = width;
-    ptr = 0;
+    this->height = height;
 }
 
-void predictor::setMat(uchar* mat) {
-    this->mat = mat;
+void predictor::newFrame(cv::Mat* mat) {
+    origMat = mat;
 }
 
-short predictor::predict() {
+short predictor::predict(short x, short y, uint8_t mode) {
     short ret = 0;
 
-    switch(mode) {
+    // TODO migrate to cvmatrix
+    /*switch(mode) {
         case 1:
             if (ptr == 0)
                 return ret; 
@@ -61,18 +61,14 @@ short predictor::predict() {
             // (A+B)/2
             ret = (short(mat[ptr - 1]) + short(mat[ptr - width]))/2;
             break;
-    }
+    }*/
     return ret;
 }
 
-int predictor::residual() {
-    short pred_val = predict();
-    int res = short(mat[ptr]) - pred_val;
-    ptr++;
-    return res;
+short predictor::calcResidual(short x, short y, uint8_t mode) {
+    return short(origMat->at<uchar>(x, y)) - predict(x, y, mode);
 }
 
-void predictor::reconstruct(short residual) {
-    mat[ptr] = predict() + residual;
-    ptr++;
+void predictor::reconstruct(short x, short y, uint8_t mode, short residual) {
+    origMat->at<uchar>(x,y) = predict(x, y, mode) + residual;
 }
