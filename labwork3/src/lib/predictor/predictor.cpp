@@ -69,6 +69,22 @@ short predictor::calcResidual(short x, short y, uint8_t mode) {
     return short(origMat->at<uchar>(x, y)) - predict(x, y, mode);
 }
 
+void predictor::calcBlockResiduals(short x, short y, uint8_t mode, cv::Mat* resMat) {
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
+            resMat->at<short>(i, j) = calcResidual(x+i, y+j, mode);
+        }
+    }
+}
+
 void predictor::reconstruct(short x, short y, uint8_t mode, short residual) {
     origMat->at<uchar>(x,y) = predict(x, y, mode) + residual;
+}
+
+void predictor::reconstructBlock(short x, short y, uint8_t mode, cv::Mat* resMat) {
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
+            reconstruct(x+i, y+j, mode, resMat->at<short>(i, j));
+        }
+    }
 }
