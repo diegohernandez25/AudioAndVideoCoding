@@ -1,36 +1,25 @@
-//
-// Created by diego on 16/11/19.
-//
-
 #ifndef PREDICTOR_PREDICTOR_H
 #define PREDICTOR_PREDICTOR_H
-#include <iostream>
 
+#include <iostream>
+#include <vector>
+
+typedef unsigned char uchar;
 using namespace std;
 
 class predictor {
 public:
+    predictor(int mode, int width);
+    void setMat(uchar* mat);
     short predict();
-    int residual(short sample);
-    short reconstruct(int residual);
-    void updateBufferQuant(short quant);
-    void printCircleBuffer();
-
-    predictor(bool lossy,int order){
-		this->order=order;
-		this->lossy = lossy;
-		num_inputs = 0;
-        cb_ptr = 2;
-    }
+    int residual();
+    void reconstruct(short residual);
 
 private:
-    void  updateBuffer(short sample);
-    int num_inputs;
-    short cb_ptr;
-    short circularBuffer[3] = {0,0,0};
-    bool lossy;
-	int order;
+    int mode;
+    int width;
+    int ptr;
+    uchar* mat;
 };
-
 
 #endif //PREDICTOR_PREDICTOR_H
