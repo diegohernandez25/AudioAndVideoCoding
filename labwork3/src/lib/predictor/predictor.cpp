@@ -1,48 +1,43 @@
-//
-// Created by diego on 16/11/19.
-//
-
 #include "predictor.h"
+
+#include <numeric>
+#include <math.h>
+
 using namespace std;
 
-void predictor::printCircleBuffer(){
-    cout << "pointer:\t" << cb_ptr << endl;
-    cout << "[ " << circularBuffer[0] << ", " << circularBuffer[1] << ", " << circularBuffer[2] << "]" << endl;
-    cout << endl;
+predictor::predictor(int mode, int width) {
+    this->mode = mode;
+    this->width = width;
+    ptr = 0;
 }
 
-short predictor::predict()
-{   switch(num_inputs) {
-        case 0:
-            return 0;
+void predictor::setMat(uchar* mat) {
+    this->mat = mat;
+}
+
+short predictor::predict() {
+    // TODO start with 0?
+    short ret = 0;
+
+    switch(mode) {
         case 1:
-            return circularBuffer[cb_ptr];
-        case 2:
-            return (short) (2 * ((int) circularBuffer[cb_ptr]) - ((int) circularBuffer[(cb_ptr+2)%3]));
-        default:
-            return (short) (3 * ((int) circularBuffer[cb_ptr]) - 3 * ((int) circularBuffer[(cb_ptr+2) % 3]) +
-                            ((int) circularBuffer[(cb_ptr+1) % 3]));
+            if (ptr == 0)
+                return ret; 
+            ret = short(mat[ptr - 1]);
+            break;
     }
+
+    return ret;
 }
 
-int predictor::residual(short sample)
-{   short pred_val = predict();
-    if(!lossy) updateBuffer(sample);
-    return sample - pred_val;
+int predictor::residual() {
+    short pred_val = predict();
+    int res = short(mat[ptr]) - pred_val;
+    ptr++;
+    return res;
 }
 
-void predictor::updateBufferQuant(short quant){
-    updateBuffer(predict()+quant);
-}
-
-void predictor::updateBuffer(short sample) {
-    cb_ptr = (short) ((cb_ptr + 1) % 3);
-    circularBuffer[cb_ptr] = sample;
-    if(num_inputs < order) num_inputs++;
-}
-
-short predictor::reconstruct(int residual)
-{   auto rec_val = (short) (predict() + residual);
-    updateBuffer(rec_val);
-    return rec_val;
+void predictor::reconstruct(short residual) {
+    mat[ptr] = predict() + residual;
+    ptr++;
 }
