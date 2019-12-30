@@ -3,6 +3,7 @@ PROJECT (vmad_codec)
 
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
+
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -Wall -Wextra")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Ofast -Wall -Wextra")
 
@@ -10,9 +11,9 @@ link_directories( ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 set( PLAYER src/player/player.cpp )
-#set( ENCODER2 src/codec2/encoder.cpp )
 set( ENCODER_1 src/codec1/enc_intra.cpp )
 set( DECODER_1 src/codec1/dec_intra.cpp )
+#set( ENCODER_2 src/codec2/encoder.cpp )
 set( ENCODER_2 src/codec2/enc_hybrid.cpp )
 set( DECODER_2 src/codec2/dec_hybrid.cpp )
 set( ENCODER_3 src/codec3/enc_lossy.cpp )
@@ -23,7 +24,6 @@ AUX_SOURCE_DIRECTORY( src/lib/golomb/ GOLOMB)
 AUX_SOURCE_DIRECTORY( src/lib/predictor/ PREDICTOR)
 AUX_SOURCE_DIRECTORY( src/lib/quantization/ QUANTIZATION)
 AUX_SOURCE_DIRECTORY( src/lib/y4m/ Y4M)
-AUX_SOURCE_DIRECTORY( src/lib/motion_compensator/ COMPENSATOR)
 AUX_SOURCE_DIRECTORY( src/lib/args/ ARGS)
 #AUX_SOURCE_DIRECTORY( src/parametizer/ PARAMETIZER)
 
@@ -33,7 +33,6 @@ add_library( L_GOLOMB STATIC ${GOLOMB})
 add_library( L_PREDICTOR STATIC ${PREDICTOR})
 add_library( L_QUANTIZATION STATIC ${QUANTIZATION})
 add_library( L_Y4M STATIC ${Y4M})
-add_library( L_COMPENSATOR STATIC ${COMPENSATOR})
 
 add_executable( player ${PLAYER} )
 add_executable( cod1 ${ENCODER_1} )
@@ -47,7 +46,7 @@ target_link_libraries(L_Y4M
 					${OpenCV_LIBS}
 					)
 
-target_link_libraries(L_COMPENSATOR
+target_link_libraries(L_PREDICTOR
 					${OpenCV_LIBS}
 					)
 
@@ -73,7 +72,6 @@ target_link_libraries(cod2
 					L_GOLOMB
 					L_PREDICTOR
 					L_QUANTIZATION
-					L_COMPENSATOR
 					L_Y4M
 					)
 

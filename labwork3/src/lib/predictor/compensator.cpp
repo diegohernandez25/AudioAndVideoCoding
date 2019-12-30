@@ -1,6 +1,7 @@
 #include "compensator.h"
 #include <iostream> //FIXME remove
 
+//assumes image comes already padded
 compensator::compensator(uint macroblock_size,uint search_radius,uint lazy_score){
 	this->search_radius=search_radius;
 	this->lazy_score=lazy_score;
@@ -8,10 +9,10 @@ compensator::compensator(uint macroblock_size,uint search_radius,uint lazy_score
 }
 
 
-//assumes image comes already padded
+
+
 cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>& hist){
 	cv::Mat	scores=cv::Mat::ones(curr.rows/macroblock_size,curr.cols/macroblock_size,CV_16UC4)*((1<<16)-1); 
-	
 
 	//TODO check the number of checked candidates
 	cv::Mat block,candidate;
