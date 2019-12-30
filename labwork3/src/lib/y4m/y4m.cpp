@@ -44,10 +44,10 @@ void y4m::print_header(){
 			std::cout<<"4:2:0"<<std::endl;
 			break;
 		case CS420JPEG:
-			std::cout<<"4:4:4 JPEG"<<std::endl;
+			std::cout<<"4:2:0 JPEG"<<std::endl;
 			break;
 		case CS420PALDV:
-			std::cout<<"4:4:4 PALDV"<<std::endl;
+			std::cout<<"4:2:0 PALDV"<<std::endl;
 			break;
 	}
 }
