@@ -9,12 +9,32 @@ compensator::compensator(uint macroblock_size,uint search_radius,uint lazy_score
 }
 
 
+void compensator::apply_block_residual(cv::Mat& block,boost::circular_buffer<cv::Mat>& hist,cv::Vec4w block_meta){
+	uint scalex=macroblock_size/block.cols;
+	uint scaley=macroblock_size/block.rows;
 
+	uint frame=block_meta[1];
+	uint mvecx=block_meta[2];
+	uint mvecy=block_meta[3];
+	cv::Mat candidate=hist[frame](cv::Rect_<uint>(mvecx/scalex,mvecy/scaley,block.cols,block.rows));
+	block-=candidate;
+}
 
+void compensator::restore_block(cv::Mat& block_residual,boost::circular_buffer<cv::Mat>& hist,cv::Vec3w mvec){
+	uint scalex=macroblock_size/block_residual.cols;
+	uint scaley=macroblock_size/block_residual.rows;
+
+	uint frame=mvec[0];
+	uint mvecx=mvec[1];
+	uint mvecy=mvec[2];
+	cv::Mat candidate=hist[frame](cv::Rect_<uint>(mvecx/scalex,mvecy/scaley,block_residual.cols,block_residual.rows));
+	block_residual+=candidate;
+}
 cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>& hist){
 	cv::Mat	scores=cv::Mat::ones(curr.rows/macroblock_size,curr.cols/macroblock_size,CV_16UC4)*((1<<16)-1); 
 
 	//TODO check the number of checked candidates
+	//seems correct
 	cv::Mat block,candidate;
 	for(uint bx=0;bx<curr.cols;bx+=macroblock_size){
 		for(uint by=0;by<curr.rows;by+=macroblock_size){
@@ -46,7 +66,7 @@ cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>&
 					}
 				}
 			}
-block_iter: continue; //FIXME
+block_iter: ;
 		}
 	}
 	return scores;
