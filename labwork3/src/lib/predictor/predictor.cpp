@@ -84,12 +84,13 @@ void predictor::calcBlockResiduals(ushort x, ushort y, uint8_t mode, cv::Mat* re
 // mode, score
 tuple<uint8_t, uint> predictor::calcBestResiduals(ushort x, ushort y, cv::Mat* resMat) {
     uint8_t mode = 0;
-    *resMat = (*origMat)(cv::Rect_<uint>(x, y, width, height));
+    cv::Mat tmp(width, height, CV_16S);
+    tmp = (*origMat)(cv::Rect_<uint>(x, y, width, height));
+    tmp.convertTo(*resMat, CV_16S);
     uint8_t score = cv::sum(cv::abs(*resMat))[0];
     uint8_t tmpScore = 0;
 
     for (int i = 1; i < 8; i++) {
-        cv::Mat tmp(width, height, CV_16S);
         calcBlockResiduals(x, y, i, &tmp);
         tmpScore = cv::sum(tmp)[0];
         if (tmpScore < score) {
