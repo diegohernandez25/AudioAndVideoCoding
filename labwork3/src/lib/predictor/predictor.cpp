@@ -19,8 +19,9 @@ short predictor::predict(ushort x, ushort y, uint8_t mode) {
 
     switch(mode) {
         case 1:
-            if (x == 0)
+            if (x == 0) {
                 return ret; 
+            }
             // A
             ret = short(origMat->at<uchar>(y,x-1));
             break;
@@ -63,6 +64,8 @@ short predictor::predict(ushort x, ushort y, uint8_t mode) {
     }
     if (ret < 0)
         ret = 0;
+    if (ret > 255)
+        ret = 255;
     return ret;
 }
 
@@ -73,7 +76,7 @@ short predictor::calcResidual(ushort x, ushort y, uint8_t mode) {
 void predictor::calcBlockResiduals(ushort x, ushort y, uint8_t mode, cv::Mat* resMat) {
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
-            resMat->at<short>(i, j) = calcResidual(x+i, y+j, mode);
+            resMat->at<short>(j, i) = calcResidual(x+i, y+j, mode);
         }
     }
 }
@@ -86,7 +89,7 @@ tuple<uint8_t, uint> predictor::calcBestResiduals(ushort x, ushort y, cv::Mat* r
     uint8_t tmpScore = 0;
 
     for (int i = 1; i < 8; i++) {
-        cv::Mat tmp(width, height, CV_8U);
+        cv::Mat tmp(width, height, CV_16S);
         calcBlockResiduals(x, y, i, &tmp);
         tmpScore = cv::sum(tmp)[0];
         if (tmpScore < score) {
@@ -105,7 +108,7 @@ void predictor::reconstruct(ushort x, ushort y, uint8_t mode, short residual) {
 void predictor::reconstructBlock(ushort x, ushort y, uint8_t mode, cv::Mat* resMat) {
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
-            reconstruct(x+i, y+j, mode, resMat->at<short>(i, j));
+            reconstruct(x+i, y+j, mode, resMat->at<short>(j, i));
         }
     }
 }
