@@ -12,9 +12,10 @@ class args {
 		string fileIn;
         string fileOut;
         int jpegPredictor;
+        int blockSize;
         int windowSize;
         int skipNPixels; 
-        int blockSize;
+        int macroSize;
         int searchArea;
         int keyPeriodicity;
         int quantY;

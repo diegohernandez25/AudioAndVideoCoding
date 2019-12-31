@@ -15,9 +15,10 @@ args::args(int argc, char** argv, int mode) {
 	}
 
 	jpegPredictor = -1;
+	blockSize = -1;
 	windowSize = -1;
 	skipNPixels = -1; 
-	blockSize = -1;
+	macroSize = -1;
 	searchArea = -1;
 	keyPeriodicity = -1;
 	quantY = -1;
@@ -35,13 +36,23 @@ args::args(int argc, char** argv, int mode) {
 
 	cout << (mode == 0 ? "Decoding '" : "Encoding '") << fileIn << "' to '" << fileOut << "'." << endl;
 	if (mode > 0) {
-		cout << "	- Predictor mode: " << jpegPredictor << endl
-		 << "	- Window size: " << windowSize << endl
-		 << "	- Skip " << skipNPixels << " pixels before recalculating 'm'" << endl;
+		cout << "	- Predictor mode: ";
+		if (jpegPredictor == 0) 
+			cout << "off" << endl;
+		else if (jpegPredictor < 8)
+			cout << "JPEG linear predictor type " << jpegPredictor << endl;
+		else if (jpegPredictor == 8)
+			cout << "JPEG-LS" << endl;
+		else
+			cout << "Auto linear JPEG per block" << endl;
+		if (blockSize > -1)
+			cout << "	- Block size: " << blockSize << "x" << blockSize << " pixels" << endl;
+		cout << "	- Window size: " << windowSize << endl
+			 << "	- Skip " << skipNPixels << " pixels before recalculating 'm'" << endl;
 	}
 	if (mode > 1) {
-		cout << "	- Block size: " << blockSize << endl
-		 << "	- Search area: " << searchArea << endl
+		cout << "	- Macroblock size: " << macroSize << "x" << macroSize << " blocks" << endl
+		 << "	- Search area: " << searchArea << " pixels" << endl
 		 << "	- Periodicity of key frames: " << keyPeriodicity << endl;
 	}
 	if (mode == 3) {
@@ -59,22 +70,25 @@ void args::printUsage() {
 	if (mode > 0) {
 		cout << "	OPTIONAL FLAGS:" << endl
 		 << "		--predictor OR -p : predictor mode" << endl
-		 << "			RANGE:  0 <= p <= 8" << endl
+		 << "			RANGE:  0 <= p <= 9" << endl
 		 << "				0 - no prediction" << endl
 		 << "				1-7 - JPEG linear predictors" << endl
 		 << "				8 - non-linear predictor JPEG-LS" << endl
+		 << "				9 - auto-find best JPEG linear predictor for each block " << endl
+		 << "		--blocksize OR -b : block size for inter-frame coding" << endl
+		 << "			RANGE: > 0" << endl
 		 << "		--window OR -w : window size for which the m will be calculated" << endl
 		 << "			RANGE:  > 1" << endl
 		 << "		--pixels OR -x : amount of pixels to be skipped before calculating a new 'm'" << endl
 		 << "			RANGE:  0 <= x < window" << endl;
 	}
 	if (mode > 1) {
-		cout << "		--blocksize OR -b : block size for inter-frame coding" << endl
-		 << "			RANGE: " << endl //TODO
+		cout << "		--macrosize OR -b : macro size for inter-frame coding" << endl
+		 << "			RANGE: > 0" << endl //TODO >0 , def 2
 		 << "		--searcharea OR -s : search area for inter-frame coding" << endl
-		 << "			RANGE: " << endl //TODO
+		 << "			RANGE: > 0" << endl //TODO >0 , def 4
 		 << "		--keyperiodicity OR -k : periodicity of the key frames" << endl
-		 << "			RANGE: > 1" << endl;
+		 << "			RANGE: > 0" << endl;
 	}
 	if (mode == 3) {
 		cout << "		--quantY OR -y : quantization steps for the prediction residuals of Y" << endl
@@ -114,6 +128,14 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			jpegPredictor = atoi(argv[1]);
+		} else if(argv[0] == string("-b") || argv[0] == string("'--blocksize")) {
+		// blockSize
+			code = handleFlagParse(elem, argv[1], string("-b"), string("--blocksize"), string("block size"),
+									string("width of block in pixels"), string("block_size"),
+									string ("block size"));
+			if (code < 0)
+				return -1;
+			blockSize = atoi(argv[1]);
 		} else if(argv[0] == string("-w") || argv[0] == string("'--window")) {
 		// windowSize
 			code = handleFlagParse(elem, argv[1], string("-w"), string("--window"), string("size"),
@@ -129,11 +151,11 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			skipNPixels = atoi(argv[1]);
-		} else if(argv[0] == string("-b") || argv[0] == string("'--blocksize")) {
-		// blockSize
-			code = handleFlagParse(elem, argv[1], string("-b"), string("--blocksize"), string("block size"),
-									string("size of block for inter-frame prediction"), string("block_size"),
-									string ("block size"));
+		} else if(argv[0] == string("-m") || argv[0] == string("'--macrosize")) {
+		// macroSize
+			code = handleFlagParse(elem, argv[1], string("-m"), string("--macrosize"), string("macroblock size"),
+									string("width of macroblock in block for inter-frame prediction"), string("macroblock_size"),
+									string ("macroblock size"));
 			if (code < 0)
 				return -1;
 			blockSize = atoi(argv[1]);
@@ -205,7 +227,7 @@ int args::validateArgs() {
 	}
 
 	if (mode < 1) {
-		if (jpegPredictor >= 0) {
+		if (jpegPredictor >= 0 || blockSize >= 0) {
 			cout << "Error: predictor mode is only available as an encoding argument." << endl;
 			valid = false;
 		}
@@ -219,17 +241,34 @@ int args::validateArgs() {
 		}
 	} else {
 		// Predictor
-		if (jpegPredictor > 8) {
-			cout << "Error: predictor order must be between 0 and 8." << endl
+		if (jpegPredictor > 9) {
+			cout << "Error: predictor order must be between 0 and 9." << endl
 				<< "				0 - no prediction" << endl
 				<< "				1-7 - JPEG linear predictors" << endl
-				<< "				8 - non-linear predictor JPEG-LS" << endl;
+				<< "				8 - non-linear predictor JPEG-LS" << endl
+		 		<< "				9 - auto-find best JPEG linear predictor for each block " << endl;
 			valid = false;
 		} else if (jpegPredictor < 0) {
-			jpegPredictor = 1;
+			jpegPredictor = 9;
 		}
 
-		// TODO replace values
+		// Block size
+		if (mode < 2) {
+			if (jpegPredictor < 9 && blockSize > -1) {
+				cout << "Error: block size can only be set in auto JPEG mode." << endl;
+				valid = false;
+			} else if (jpegPredictor == 9 && blockSize == -1)
+				blockSize = 8;
+		} else {
+			if (blockSize == -1)
+				blockSize = 8;
+			if (blockSize < 1) {
+				cout << "Error: block size must be greater than zero." << endl;
+				valid = false;
+			}
+		}
+
+		// TODO replace values, see if necessary
 		// Window
 		if (windowSize == -1) {
 			windowSize = 128;
@@ -249,21 +288,19 @@ int args::validateArgs() {
 	}
 
 	if (mode < 2) {
-		if (blockSize + searchArea + keyPeriodicity != -3) {
-			cout << "Error: block size, search area and key frame periodicity are only available on inter-frame encoder." << endl;
+		if (macroSize + searchArea + keyPeriodicity != -3) {
+			cout << "Error: macroblock size, search area and key frame periodicity are only available on inter-frame encoder." << endl;
 			valid = false;
 		}
 	} else {
-		// TODO replace values
-		// Block size
-		if (blockSize == -1)
-			blockSize = 16;
-		if (blockSize < 1) {
-			cout << "Error: block size must be greater than zero." << endl;
+		// Macro block size
+		if (macroSize == -1)
+			macroSize = 2;
+		if (macroSize < 1) {
+			cout << "Error: macroblock size must be greater than zero." << endl;
 			valid = false;
 		}
 
-		// TODO replace values
 		// Search area
 		if (searchArea == -1)
 			searchArea = 4;
@@ -287,28 +324,31 @@ int args::validateArgs() {
 			valid = false;
 		}
 	} else {
-		// TODO allow either quant or dct?
 		// Quantization
-		if (quantY > 7 || quantY < -1) {
-			cout << "Error: number of bits to quantize must be less than 8." << endl;
+		if (quantY + quantU + quantV != -3 && dct) {
+			cout << "Error: choose either the quantization steps or the DCT." << endl;
 			valid = false;
-		} else if (quantY == -1) {
-			quantY = 3;
-		}
-		if (quantU > 7 || quantU < -1) {
-			cout << "Error: number of bits to quantize must be less than 8." << endl;
-			valid = false;
-		} else if (quantU == -1) {
-			quantU = 3;
-		}
-		if (quantV > 7 || quantV < -1) {
-			cout << "Error: number of bits to quantize must be less than 8." << endl;
-			valid = false;
-		} else if (quantV == -1) {
-			quantV = 3;
+		} else {
+			if (quantY > 7 || quantY < -1) {
+				cout << "Error: number of bits to quantize must be less than 8." << endl;
+				valid = false;
+			} else if (quantY == -1) {
+				quantY = 3;
+			}
+			if (quantU > 7 || quantU < -1) {
+				cout << "Error: number of bits to quantize must be less than 8." << endl;
+				valid = false;
+			} else if (quantU == -1) {
+				quantU = 3;
+			}
+			if (quantV > 7 || quantV < -1) {
+				cout << "Error: number of bits to quantize must be less than 8." << endl;
+				valid = false;
+			} else if (quantV == -1) {
+				quantV = 3;
+			}
 		}
 	}
-
 	
 	if (valid) {
 		return 0;
