@@ -14,13 +14,10 @@ uint golomb_initial_m=5;
 uint golomb_blk_size=128;
 uint golomb_calc_interval=16;
 
-uint predBlockSize=16;
-
-char pred_mode=5; //(0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
 
 void encode(args& cfg){
 	y4m in;
-	in.load(cfg.fileIn,pred_mode==9?predBlockSize:0);
+	in.load(cfg.fileIn,cfg.jpegPredictor==9?cfg.blockSize:0);
 	in.print_header();
 
 	bitstream bss(cfg.fileOut.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);	
@@ -33,9 +30,9 @@ void encode(args& cfg){
 	uint scalex=in.get_y().cols/in.get_u().cols;
 	uint scaley=in.get_y().rows/in.get_u().rows;
 	uint actual_block_size_x,actual_block_size_y;
-	if(pred_mode==9){
-		actual_block_size_x=predBlockSize;
-		actual_block_size_y=predBlockSize;
+	if(cfg.jpegPredictor==9){
+		actual_block_size_x=cfg.blockSize;
+		actual_block_size_y=cfg.blockSize;
 	}
 	else{
 		actual_block_size_x=in.get_width();
@@ -65,7 +62,7 @@ void encode(args& cfg){
 	bs.writeNBits(in.get_aspect()[1],sizeof(uint)*8);
 
 	//Write Forced Prediction
-	bs.writeNBits(pred_mode,sizeof(uint8_t)*8);
+	bs.writeNBits(cfg.jpegPredictor,sizeof(uint8_t)*8);
 
 
 
@@ -85,12 +82,12 @@ void encode(args& cfg){
 		pd_u.newFrame(&u);
 		pd_v.newFrame(&v);
 
-		if(pred_mode==9){
-			for(uint by=0;by<y.rows;by+=predBlockSize){
-				for(uint bx=0;bx<y.cols;bx+=predBlockSize){
-					cv::Mat blk_y = res_y(cv::Rect_<uint>(bx,by,predBlockSize,predBlockSize));
-					cv::Mat blk_u = res_u(cv::Rect_<uint>(bx/scalex,by/scaley,predBlockSize/scalex,predBlockSize/scaley));
-					cv::Mat blk_v = res_v(cv::Rect_<uint>(bx/scalex,by/scaley,predBlockSize/scalex,predBlockSize/scaley));
+		if(cfg.jpegPredictor==9){
+			for(uint by=0;by<y.rows;by+=cfg.blockSize){
+				for(uint bx=0;bx<y.cols;bx+=cfg.blockSize){
+					cv::Mat blk_y = res_y(cv::Rect_<uint>(bx,by,cfg.blockSize,cfg.blockSize));
+					cv::Mat blk_u = res_u(cv::Rect_<uint>(bx/scalex,by/scaley,cfg.blockSize/scalex,cfg.blockSize/scaley));
+					cv::Mat blk_v = res_v(cv::Rect_<uint>(bx/scalex,by/scaley,cfg.blockSize/scalex,cfg.blockSize/scaley));
 
 					uint8_t best_pred=std::get<0>(pd_y.calcBestResiduals(bx,by,&blk_y));
 					pd_u.calcBlockResiduals(bx/scalex,by/scaley,best_pred,&blk_u);
@@ -105,9 +102,9 @@ void encode(args& cfg){
 		}
 		else{
 			//Forced mode
-			pd_y.calcBlockResiduals(0,0,pred_mode,&res_y);
-			pd_u.calcBlockResiduals(0,0,pred_mode,&res_u);
-			pd_v.calcBlockResiduals(0,0,pred_mode,&res_v);
+			pd_y.calcBlockResiduals(0,0,cfg.jpegPredictor,&res_y);
+			pd_u.calcBlockResiduals(0,0,cfg.jpegPredictor,&res_u);
+			pd_v.calcBlockResiduals(0,0,cfg.jpegPredictor,&res_v);
 
 			gb_y.write_mat(res_y,true);	
 			gb_u.write_mat(res_u,true);	
