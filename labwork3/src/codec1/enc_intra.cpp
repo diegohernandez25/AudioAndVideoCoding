@@ -16,7 +16,7 @@ uint golomb_calc_interval=16;
 
 uint predBlockSize=16;
 
-char pred_mode=5; //(0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
+char pred_mode=4; //(0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
 
 void encode(args& cfg){
 	y4m in;
@@ -64,6 +64,9 @@ void encode(args& cfg){
 	bs.writeNBits(in.get_aspect()[0],sizeof(uint)*8);
 	bs.writeNBits(in.get_aspect()[1],sizeof(uint)*8);
 
+	//Write Number of Frames
+	bs.writeNBits(in.get_num_frames(),sizeof(uint)*8);
+
 	//Write Forced Prediction
 	bs.writeNBits(pred_mode,sizeof(uint8_t)*8);
 
@@ -74,12 +77,9 @@ void encode(args& cfg){
 	cv::Mat res_v(in.get_v().size(),CV_16S);
 	//Add Data
 	do{
-		cv::Mat y;
-		cv::Mat u;
-		cv::Mat v;
-		in.get_y().convertTo(y,CV_16S); //FIXME needed?
-		in.get_u().convertTo(u,CV_16S); //FIXME needed?
-		in.get_v().convertTo(v,CV_16S); //FIXME needed?
+		cv::Mat y=in.get_y().clone();
+		cv::Mat u=in.get_u().clone();
+		cv::Mat v=in.get_v().clone();
 
 		pd_y.newFrame(&y);
 		pd_u.newFrame(&u);
@@ -104,6 +104,7 @@ void encode(args& cfg){
 			}		
 		}
 		else{
+
 			//Forced mode
 			pd_y.calcBlockResiduals(0,0,pred_mode,&res_y);
 			pd_u.calcBlockResiduals(0,0,pred_mode,&res_u);
