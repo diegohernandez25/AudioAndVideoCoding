@@ -1,0 +1,37 @@
+Intra Lossless:
+
+(5B) Magic number: "VMAD0"
+(4B) Width
+(4B) Height
+(1B) Color Space (Value returned by y4m)
+(1B) Interlaced (Value returned by y4m)
+(4+4B) Frame Rate
+(4B+4B) Aspect Ratio
+(1B) Forced Prediction? (0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
+
+
+IF Forced Prediction:
+
+	FRAME0:
+		() Y Residual Data		
+		() U Residual Data		
+		() V Residual Data		
+
+	FRAME1:
+		....
+
+
+ELSE:
+
+	(4bits) Block Size
+	FRAME0:
+		BLOCK0:
+			() Predictor Used
+			() Y Residual Data		
+			() U Residual Data		
+			() V Residual Data		
+		BLOCK1:
+			...
+	FRAME1:
+		...
+
