@@ -366,6 +366,9 @@ uint y4m::get_num_frames(){ return v_y.size(); }
 cv::Mat& y4m::get_y(){ return v_y[frame_ptr]; }
 cv::Mat& y4m::get_u(){ return v_u[frame_ptr]; }
 cv::Mat& y4m::get_v(){ return v_v[frame_ptr]; }
+cv::Size y4m::get_y_size(){ return s_y; }
+cv::Size y4m::get_u_size(){ return s_u; }
+cv::Size y4m::get_v_size(){ return s_v; }
 
 /*
 #include "opencv2/highgui/highgui.hpp" //FIXME temporary

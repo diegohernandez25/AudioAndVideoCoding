@@ -48,6 +48,10 @@ class y4m{
 		cv::Mat& get_y();
 		cv::Mat& get_u();
 		cv::Mat& get_v();
+		cv::Size get_y_size();
+		cv::Size get_u_size();
+		cv::Size get_v_size();
+
 
 	private:
 		//Magic numbers
