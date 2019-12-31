@@ -46,6 +46,10 @@ target_link_libraries(L_Y4M
 					${OpenCV_LIBS}
 					)
 
+target_link_libraries(L_GOLOMB
+					${OpenCV_LIBS}
+					)
+
 target_link_libraries(L_PREDICTOR
 					${OpenCV_LIBS}
 					)
