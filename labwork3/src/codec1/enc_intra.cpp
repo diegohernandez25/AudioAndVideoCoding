@@ -68,7 +68,9 @@ void encode(args& cfg){
 	//Write Forced Prediction
 	bs.writeNBits(cfg.jpegPredictor,sizeof(uint8_t)*8);
 
-
+	//Write block size, if needed
+	if(cfg.jpegPredictor==9)
+		bs.writeNBits(cfg.blockSize,sizeof(uint)*8);
 
 	cv::Mat res_y(in.get_y().size(),CV_16S);
 	cv::Mat res_u(in.get_u().size(),CV_16S);

@@ -24,7 +24,7 @@ IF Forced Prediction:
 
 ELSE:
 
-	(4bits) Block Size
+	(4B) Block Size
 	FRAME0:
 		BLOCK0:
 			() Predictor Used
