@@ -49,9 +49,9 @@ public:
     cv::Mat get_rcvrd_image();
 
     void dct_quant_rle_frame();
-    void reverse_dct_quant_rle_frame(vector< tuple<vector<int>, int>>rle_vctrs);
+    cv::Mat reverse_dct_quant_rle_frame(vector<vector<tuple<int,int>>> rle_vctrs);
 
-    vector< tuple<vector<int>, int>> get_vect();
+    vector<vector<tuple<int,int>>> get_vect();
 
 
 
@@ -81,7 +81,7 @@ private:
     cv::Mat padded_image;
     cv::Mat rcvrd_image;
 
-    vector< tuple<vector<int>, int>> vect;
+    vector<vector<tuple<int,int>>> vect;
 };
 
 

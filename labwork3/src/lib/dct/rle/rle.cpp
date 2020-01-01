@@ -3,10 +3,15 @@
 //
 
 #include <numeric>
+#include <tuple>
 #include "rle.h"
 
 rle::rle(vector<int> vect){
     rle::vect = vect;
+}
+
+rle::rle(vector<tuple<int, int>> vect){
+    rle::vect_rle = vect;
 }
 
 vector<int> rle::rm_fin_zeros(){
@@ -50,7 +55,6 @@ vector<int> rle::it_zero_rm(vector<int> vec) {
     }
     vector<int> res(vec.begin(), vec.begin()+idx);
     return res;
-
 }
 
 
@@ -70,13 +74,54 @@ vector<int> rle::rec_zero_rm(vector<int> tmp_vec){
     return rle::it_zero_rm(tmp_vec);
 }
 
+vector<tuple<int, int>> rle::get_rle(){
+    vector<tuple<int, int>> tmp(vect.size()+1,std::make_tuple(0,0));
+    int current_val = vect[0];
+    int count_current_val = 1;
+    int idx = 0;
+    auto it = vect.begin();
+    advance(it,1);
+    while(it != vect.end()){
+        if(*it!=current_val){
+            tmp[idx++] = make_tuple(current_val,count_current_val);
+            current_val = *it;
+            count_current_val = 1;
+        }else{
+            count_current_val++;
+        }
+        ++it;
+    }
+
+    tmp[idx++] = make_tuple(current_val, count_current_val);
+    tmp[idx++] = make_tuple(0,0);
+    tmp.erase (tmp.begin()+idx,tmp.end());
+    return tmp;
+}
+
+int rle::get_vector_size() {
+    int count=0;
+    for(tuple<int,int>t:vect_rle)
+        count+=std::get<1>(t);
+    return count;
+}
+
+vector<int> rle::load_rle(){
+    vector<int> res(get_vector_size(),0);
+    int idx=0;
+    for(tuple<int,int>t:vect_rle){
+        for(int i=0; i< std::get<1>(t); i++)
+            res[idx++] = std::get<0>(t);
+    }
+    return res;
+}
 
 int rle::get_num_zeros(){
     if(rle::num_zeros==-1) rm_fin_zeros();
     return rle::num_zeros;
 }
 
-vector<int> rle::get_vector(){
-    return vect;
-}
+vector<int> rle::get_vector(){return vect;}
+
+vector<tuple<int, int>> rle::get_vector_rle(){return vect_rle;}
+
 
