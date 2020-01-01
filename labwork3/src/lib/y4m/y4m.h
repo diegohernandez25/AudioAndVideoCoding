@@ -4,6 +4,9 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc.hpp"
 
+//TODO test with odd width and height
+//FIXME BLOCK SIZE ONLY WORKS FOR POWERS OF 2 
+
 class y4m{
 	public:
 		//Constant values
@@ -22,11 +25,11 @@ class y4m{
 		//IO
 		void print_header();
 		bool load(std::string &y4mfile,uint block_size=0);
-		void save(std::string &y4mfile,uint block_size=0);
+		void save(std::string &y4mfile);
 		//FIXME need to add way toput sizeon save
 
 		//Creation
-		void init(uint width,uint height,uint8_t color_space);
+		void init(uint width,uint height,uint8_t color_space,uint block_size=0);
 		void set_framerate(uint d,uint n);	
 		void set_aspect(uint d,uint n);	
 		void set_interlace(uint8_t intr);	
@@ -39,7 +42,6 @@ class y4m{
 		uint* get_aspect();
 		uint get_width();
 		uint get_height();
-		uint get_block_size();
 		uint8_t get_color_space();
 		bool next_frame();
 		bool seek(uint frame_number);
@@ -48,10 +50,12 @@ class y4m{
 		cv::Mat& get_y();
 		cv::Mat& get_u();
 		cv::Mat& get_v();
+		cv::Size get_bsize_y();
+		cv::Size get_bsize_uv();
 		cv::Size get_y_size();
-		cv::Size get_u_size();
-		cv::Size get_v_size();
-
+		cv::Size get_uv_size();
+		cv::Size get_pady_size();
+		cv::Size get_paduv_size();
 
 	private:
 		//Magic numbers
@@ -67,12 +71,13 @@ class y4m{
 		uint8_t interlacing;
 		uint pix_asp[2];
 		uint8_t color_space;	
-		uint block_size;
 		
 		//Frames
 		std::vector<cv::Mat> v_y,v_u,v_v;
 		uint frame_ptr;
-		cv::Size s_y,s_u,s_v;
+		cv::Size s_y,s_uv;
+		cv::Size s_y_pad,s_uv_pad;
+		cv::Size block_y,block_uv;
 		
 		//Support functions
 		void build_structure();
