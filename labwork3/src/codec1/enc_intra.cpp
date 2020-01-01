@@ -70,20 +70,14 @@ void encode(args& cfg){
 	if(cfg.jpegPredictor==9)
 		bs.writeNBits(cfg.blockSize,sizeof(uint)*8);
 
-	cv::Mat res_y(in.get_pady_size(),CV_16S);
-	cv::Mat res_u(in.get_paduv_size(),CV_16S);
-	cv::Mat res_v(in.get_paduv_size(),CV_16S);
-/*
 	cv::Mat res_y(block_size_y,CV_16S);
 	cv::Mat res_u(block_size_uv,CV_16S);
 	cv::Mat res_v(block_size_uv,CV_16S);
-	TODO TROCAR POR ISTO impleica alteracoes no do while
-*/
 	//Add Data
 	do{
-		cv::Mat y=in.get_y().clone(); //TODO needs clone?
-		cv::Mat u=in.get_u().clone();
-		cv::Mat v=in.get_v().clone();
+		cv::Mat y=in.get_y(); 
+		cv::Mat u=in.get_u();
+		cv::Mat v=in.get_v();
 
 		pd_y.newFrame(&y);
 		pd_u.newFrame(&u);
@@ -97,18 +91,14 @@ void encode(args& cfg){
 					uint bw_uv=in.get_bsize_uv().width;
 					uint bh_uv=in.get_bsize_uv().height;
 
-					cv::Mat blk_y = res_y(cv::Rect_<uint>(bx*bw_y,by*bh_y,bw_y,bh_y));
-					cv::Mat blk_u = res_u(cv::Rect_<uint>(bx*bw_uv,by*bh_uv,bw_uv,bh_uv));
-					cv::Mat blk_v = res_v(cv::Rect_<uint>(bx*bw_uv,by*bh_uv,bw_uv,bh_uv));
-
-					uint8_t best_pred=std::get<0>(pd_y.calcBestResiduals(bx*bw_y,by*bh_y,&blk_y));
-					pd_u.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&blk_u);
-					pd_v.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&blk_v);
+					uint8_t best_pred=std::get<0>(pd_y.calcBestResiduals(bx*bw_y,by*bh_y,&res_y));
+					pd_u.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_u);
+					pd_v.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_v);
 
 					bs.writeNBits(best_pred,4);	
-					gb_y.write_mat(blk_y,true);	
-					gb_u.write_mat(blk_u,true);	
-					gb_v.write_mat(blk_v,true);	
+					gb_y.write_mat(res_y,true);	
+					gb_u.write_mat(res_u,true);	
+					gb_v.write_mat(res_v,true);	
 				}		
 			}		
 		}
