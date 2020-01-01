@@ -22,10 +22,17 @@ using namespace std;
 class rle {
 public:
     rle(vector<int> vect);
+    rle(vector<tuple<int, int>> vect);
 
     vector<int> rm_fin_zeros();
     vector<int> get_vector();
+    vector<tuple<int, int>> get_vector_rle();
     vector<int> reverse_rle_zeros(int num_zeros);
+
+    vector<tuple<int, int>> get_rle();
+    vector<int> load_rle();
+
+
     int get_num_zeros();
 
 private:
@@ -33,7 +40,9 @@ private:
     vector<int> it_zero_rm(vector<int> vec);
     vector<int> rec_zero_rm(vector<int> vec);
     vector<int> vect;
+    vector<tuple<int, int>> vect_rle;
 
+    int get_vector_size();
     int num_zeros   = -1;
 };
 
