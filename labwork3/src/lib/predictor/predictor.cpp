@@ -61,6 +61,32 @@ short predictor::predict(ushort x, ushort y, uint8_t mode) {
             // (A+B)/2
             ret = (short(origMat->at<uchar>(y,x-1)) + short(origMat->at<uchar>(y-1,x)))/2;
             break;
+        case 8:
+            if (x == 0 || y == 0)
+                return ret; 
+            
+            // LOCO-I
+            short a = short(origMat->at<uchar>(y,x-1));
+            short b = short(origMat->at<uchar>(y-1,x));
+            short c = short(origMat->at<uchar>(y-1,x-1));
+            short d = short(origMat->at<uchar>(y-1,x+1));
+            short minAB, maxAB;
+
+            if (b < a) {
+                minAB = b;
+                maxAB = a;
+            } else {
+                minAB = a;
+                maxAB = b;
+            }
+
+            if (c >= maxAB)
+                ret = minAB;
+            else if (c <= minAB)
+                ret = maxAB;
+            else
+                ret = a + b - c;
+            break;
     }
     if (ret < 0)
         ret = 0;
@@ -90,7 +116,8 @@ tuple<uint8_t, uint> predictor::calcBestResiduals(ushort x, ushort y, cv::Mat* r
     int score = cv::sum(cv::abs(*resMat))[0];
     int tmpScore = 0;
 
-    for (int i = 1; i < 8; i++) {
+    int numPreds = width > 16 ? 9 : 8;
+    for (int i = 1; i < numPreds; i++) {
         calcBlockResiduals(x, y, i, &tmp);
         tmpScore = cv::sum(cv::abs(tmp))[0];
         if (tmpScore < score) {

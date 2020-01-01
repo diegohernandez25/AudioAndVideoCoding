@@ -71,7 +71,6 @@ vector<int> zigzag::load_zigzag() {
 cv::Mat zigzag::inverse_zigzag(){
     int rows = int(sqrt(vect.size()));
     int cols = rows;
-
     int size=rows*cols;
 
     cv::Mat res = cv::Mat(rows,cols, CV_32SC1);
