@@ -40,7 +40,7 @@ vector<tuple<int,int>> dct::dct_quant_rle_blck(cv::Mat blck) {
     vector<int> tmp = z.load_zigzag();
     rle r = rle(tmp);
 
-    return r.get_rle();
+    return r.get_variant_rle();
 }
 
 cv::Mat dct::reverse_dct_quant_rle_blck(vector<tuple<int, int>> rle_vct){
@@ -48,7 +48,7 @@ cv::Mat dct::reverse_dct_quant_rle_blck(vector<tuple<int, int>> rle_vct){
     vector<int> tmp_vct;
 
     rle r_tmp = rle(rle_vct);
-    vector<int>  zigzag_vct = r_tmp.load_rle();
+    vector<int>  zigzag_vct = r_tmp.load_variant_rle(BLOCK_SIZE*BLOCK_SIZE);
     zigzag z_tmp = zigzag(zigzag_vct);
     quant_block  = z_tmp.inverse_zigzag();
     cv::multiply(quant_block,quant_mat,dct_block);
