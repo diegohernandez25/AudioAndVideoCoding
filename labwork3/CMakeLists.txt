@@ -24,6 +24,9 @@ AUX_SOURCE_DIRECTORY( src/lib/golomb/ GOLOMB)
 AUX_SOURCE_DIRECTORY( src/lib/predictor/ PREDICTOR)
 AUX_SOURCE_DIRECTORY( src/lib/quantization/ QUANTIZATION)
 AUX_SOURCE_DIRECTORY( src/lib/y4m/ Y4M)
+AUX_SOURCE_DIRECTORY( src/lib/dct/rle/ RLE)
+AUX_SOURCE_DIRECTORY( src/lib/dct/zigzag/ ZZ)
+AUX_SOURCE_DIRECTORY( src/lib/dct/ DCT)
 AUX_SOURCE_DIRECTORY( src/lib/args/ ARGS)
 #AUX_SOURCE_DIRECTORY( src/parametizer/ PARAMETIZER)
 
@@ -33,6 +36,9 @@ add_library( L_GOLOMB STATIC ${GOLOMB})
 add_library( L_PREDICTOR STATIC ${PREDICTOR})
 add_library( L_QUANTIZATION STATIC ${QUANTIZATION})
 add_library( L_Y4M STATIC ${Y4M})
+add_library( L_RLE STATIC ${RLE})
+add_library( L_ZZ STATIC ${ZZ})
+add_library( L_DCT STATIC ${DCT})
 
 add_executable( player ${PLAYER} )
 add_executable( cod1 ${ENCODER_1} )
@@ -52,6 +58,15 @@ target_link_libraries(L_GOLOMB
 
 target_link_libraries(L_PREDICTOR
 					${OpenCV_LIBS}
+					)
+target_link_libraries(L_ZZ
+					${OpenCV_LIBS}
+					)
+
+target_link_libraries(L_DCT
+					${OpenCV_LIBS}
+					L_RLE
+					L_ZZ
 					)
 
 target_link_libraries(player
@@ -87,6 +102,7 @@ target_link_libraries(cod3
 					L_PREDICTOR
 					L_QUANTIZATION
 					L_Y4M
+					L_DCT
 					)
 
 target_link_libraries(dec1
@@ -117,4 +133,5 @@ target_link_libraries(dec3
 					L_PREDICTOR
 					L_QUANTIZATION
 					L_Y4M
+					L_DCT
 					)
