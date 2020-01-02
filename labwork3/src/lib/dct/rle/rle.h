@@ -30,7 +30,10 @@ public:
     vector<int> reverse_rle_zeros(int num_zeros);
 
     vector<tuple<int, int>> get_rle();
+    vector<tuple<int, int>> get_variant_rle();
+
     vector<int> load_rle();
+    vector<int> load_variant_rle(int n);
 
 
     int get_num_zeros();
@@ -43,6 +46,8 @@ private:
     vector<tuple<int, int>> vect_rle;
 
     int get_vector_size();
+    int get_variant_vector_size();
+
     int num_zeros   = -1;
 };
 

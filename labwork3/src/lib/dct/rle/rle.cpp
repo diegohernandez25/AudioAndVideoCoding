@@ -98,11 +98,37 @@ vector<tuple<int, int>> rle::get_rle(){
     return tmp;
 }
 
+vector<tuple<int, int>> rle::get_variant_rle(){
+    vector<tuple<int, int>> tmp(vect.size()+1,std::make_tuple(0,0));
+    int count_zeros = 0;
+    int idx = 0;
+    auto it = vect.begin();
+    while(it != vect.end()){
+        if(*it!=0){
+            tmp[idx++] = make_tuple(count_zeros,*it);
+            count_zeros = 0;
+        }else{
+            count_zeros++;
+        }
+        ++it;
+    }
+    tmp[idx++] = make_tuple(0,0);
+    tmp.erase (tmp.begin()+idx,tmp.end());
+    return tmp;
+}
+
 int rle::get_vector_size() {
     int count=0;
     for(tuple<int,int>t:vect_rle)
         count+=std::get<1>(t);
     return count;
+}
+
+int rle::get_variant_vector_size() {
+    int count=0;
+    for(tuple<int,int>t:vect_rle)
+        count+=std::get<0>(t) + 1;
+    return count -1;
 }
 
 vector<int> rle::load_rle(){
@@ -111,6 +137,17 @@ vector<int> rle::load_rle(){
     for(tuple<int,int>t:vect_rle){
         for(int i=0; i< std::get<1>(t); i++)
             res[idx++] = std::get<0>(t);
+    }
+    return res;
+}
+
+vector<int> rle::load_variant_rle(int n){
+    assert(n>=get_variant_vector_size());
+    vector<int> res(n,0);
+    int idx=0;
+    for(tuple<int,int>t:vect_rle){
+        for(int i=0; i< std::get<0>(t); i++) res[idx++] = 0;
+        res[idx++] = std::get<1>(t);
     }
     return res;
 }
