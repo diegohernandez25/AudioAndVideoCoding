@@ -49,7 +49,12 @@ public:
     cv::Mat get_rcvrd_image();
 
     void dct_quant_rle_frame();
+    vector<tuple<int,int>> dct_quant_rle_blck(cv::Mat blck);
+
     cv::Mat reverse_dct_quant_rle_frame(vector<vector<tuple<int,int>>> rle_vctrs);
+    cv::Mat reverse_dct_quant_rle_blck(vector<tuple<int, int>> rle_vctr);
+
+    bool upload_coded_blck(vector<tuple<int, int>> rle_vct);
 
     vector<vector<tuple<int,int>>> get_vect();
 
@@ -65,7 +70,7 @@ private:
 
     int rstr_scnr_blk_ptr;
 
-    int quant_array[64]={ 16, 11, 10, 16, 24, 40, 51, 61,
+    int quant_array[64]={   16, 11, 10, 16, 24, 40, 51, 61,
                             12, 12, 14, 19, 26, 58, 60, 55,
                             14, 13, 16, 24, 40, 57, 69, 56,
                             14, 17, 22, 29, 51, 87, 80, 62,
@@ -80,6 +85,7 @@ private:
     cv::Mat image;
     cv::Mat padded_image;
     cv::Mat rcvrd_image;
+
 
     vector<vector<tuple<int,int>>> vect;
 };
