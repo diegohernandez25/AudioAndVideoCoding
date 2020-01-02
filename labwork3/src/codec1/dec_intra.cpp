@@ -50,13 +50,13 @@ int decode(args& cfg){
 	uint pred_mode=bs.readNBits(sizeof(uint8_t)*8);
 
 	//Read block size, if present
-	uint predBlockSize;
+	uint predBlockSize=0;
 	if(pred_mode==9)
 		predBlockSize=bs.readNBits(sizeof(uint)*8);
 
 	//Create new video
 	y4m out;
-	out.init(width,height,color_space);
+	out.init(width,height,color_space,predBlockSize);
 	out.set_framerate(framerate[0],framerate[1]);
 	out.set_aspect(aspect[0],aspect[1]);
 	out.set_interlace(interlace);
@@ -66,41 +66,40 @@ int decode(args& cfg){
 	mat_golomb_bitstream gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 	mat_golomb_bitstream gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
-	uint scalex=out.get_y_size().width/out.get_u_size().width;
-	uint scaley=out.get_y_size().height/out.get_u_size().height;
-	uint actual_block_size_x,actual_block_size_y;
+	cv::Size block_size_y,block_size_uv;
 	if(pred_mode==9){
-		actual_block_size_x=predBlockSize;
-		actual_block_size_y=predBlockSize;
+		block_size_y=out.get_bsize_y();
+		block_size_uv=out.get_bsize_uv();
 	}
 	else{
-		actual_block_size_x=out.get_width();
-		actual_block_size_y=out.get_height();
+		block_size_y=out.get_y_size();
+		block_size_uv=out.get_uv_size();
 	}
-	predictor pd_y(actual_block_size_x,actual_block_size_y);
-	predictor pd_u(actual_block_size_x/scalex,actual_block_size_y/scaley);
-	predictor pd_v(actual_block_size_x/scalex,actual_block_size_y/scaley);
-	
-	//TODO ISSUE HERE
-	//TODO METER O BLOCKSIZE NO ENCODERRRRRR
 
-	cv::Mat res_y(actual_block_size_y,actual_block_size_x,CV_16S);
-	cv::Mat res_u(actual_block_size_y/scaley,actual_block_size_x/scalex,CV_16S);
-	cv::Mat res_v(actual_block_size_y/scaley,actual_block_size_x/scalex,CV_16S);
+	predictor pd_y(block_size_y.width,block_size_y.height);
+	predictor pd_u(block_size_uv.width,block_size_uv.height);
+	predictor pd_v(block_size_uv.width,block_size_uv.height);
+
+	cv::Mat res_y(block_size_y,CV_16S);
+	cv::Mat res_u(block_size_uv,CV_16S);
+	cv::Mat res_v(block_size_uv,CV_16S);
 
 	//Get Data
 	for(uint f=0;f<num_frames;f++){
-		cv::Mat y(out.get_y_size(),CV_8U);
-		cv::Mat u(out.get_u_size(),CV_8U);
-		cv::Mat v(out.get_v_size(),CV_8U);
+		cv::Mat y(out.get_pady_size(),CV_8U);
+		cv::Mat u(out.get_paduv_size(),CV_8U);
+		cv::Mat v(out.get_paduv_size(),CV_8U);
 
 		pd_y.newFrame(&y);
 		pd_u.newFrame(&u);
 		pd_v.newFrame(&v);
-
 		if(pred_mode==9){
-			for(uint by=0;by<y.rows;by+=predBlockSize){
-				for(uint bx=0;bx<y.cols;bx+=predBlockSize){
+			for(uint by=0;by*predBlockSize<y.rows;by++){
+				for(uint bx=0;bx*predBlockSize<y.cols;bx++){
+					uint bw_y=out.get_bsize_y().width;
+					uint bh_y=out.get_bsize_y().height;
+					uint bw_uv=out.get_bsize_uv().width;
+					uint bh_uv=out.get_bsize_uv().height;
 
 					//Get pred used
 					uint8_t best_pred=bs.readNBits(4);
@@ -111,9 +110,9 @@ int decode(args& cfg){
 					gb_v.read_mat(res_v,true);
 
 					//Reconstruct
-					pd_y.reconstructBlock(bx,by,best_pred,&res_y);
-					pd_u.reconstructBlock(bx/scalex,by/scaley,best_pred,&res_u);
-					pd_v.reconstructBlock(bx/scalex,by/scaley,best_pred,&res_v);
+					pd_y.reconstructBlock(bx*bw_y,by*bh_y,best_pred,&res_y);
+					pd_u.reconstructBlock(bx*bw_uv,by*bh_uv,best_pred,&res_u);
+					pd_v.reconstructBlock(bx*bw_uv,by*bh_uv,best_pred,&res_v);
 
 				}
 			}

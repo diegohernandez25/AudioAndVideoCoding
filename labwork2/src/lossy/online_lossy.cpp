@@ -196,15 +196,15 @@ int online_lossy::decode(){
         short y = pd_y.reconstruct(bs.readNBits(sizeof(short)*8+1-nr_quant)<<nr_quant);
 
         //reconstruct channels' sample's value.
-        wv.insert(smp_ptr, 1, (((int) 2*x + y%2 + y) / 2 ));
-        wv.insert(smp_ptr++, 2, (((int) 2*x + y%2 - y) / 2 ));
+        wv.insert(smp_ptr, 1, (((int) 2*x + (x>0?1:x==0?0:-1)*(std::abs(y)%2) + y) / 2 ));
+        wv.insert(smp_ptr++, 2, (((int) 2*x + (x>0?1:x==0?0:-1)*(std::abs(y)%2) - y) / 2 ));
 
         while(smp_ptr<num_samp){
             x = pd.reconstruct(gb.read_signed_val()<<nr_quant);
             y = pd_y.reconstruct(gb_y.read_signed_val()<<nr_quant);
 
-            wv.insert(smp_ptr, 1, (((int) 2*x + y%2 + y) / 2 ));
-            wv.insert(smp_ptr++, 2, (((int) 2*x + y%2 - y) / 2 ));
+            wv.insert(smp_ptr, 1, (((int) 2*x + (x>0?1:x==0?0:-1)*(std::abs(y)%2) + y) / 2 ));
+            wv.insert(smp_ptr++, 2, (((int) 2*x + (x>0?1:x==0?0:-1)*(std::abs(y)%2) - y) / 2 ));
         }
     }
 	//Write to file

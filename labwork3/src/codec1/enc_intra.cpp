@@ -28,20 +28,18 @@ void encode(args& cfg){
 	mat_golomb_bitstream gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 	mat_golomb_bitstream gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
-	uint scalex=in.get_y().cols/in.get_u().cols;
-	uint scaley=in.get_y().rows/in.get_u().rows;
-	uint actual_block_size_x,actual_block_size_y;
+	cv::Size block_size_y,block_size_uv;
 	if(cfg.jpegPredictor==9){
-		actual_block_size_x=cfg.blockSize;
-		actual_block_size_y=cfg.blockSize;
+		block_size_y=in.get_bsize_y();
+		block_size_uv=in.get_bsize_uv();
 	}
 	else{
-		actual_block_size_x=in.get_width();
-		actual_block_size_y=in.get_height();
+		block_size_y=in.get_y_size();
+		block_size_uv=in.get_uv_size();
 	}
-	predictor pd_y(actual_block_size_x,actual_block_size_y);
-	predictor pd_u(actual_block_size_x/scalex,actual_block_size_y/scaley);
-	predictor pd_v(actual_block_size_x/scalex,actual_block_size_y/scaley);
+	predictor pd_y(block_size_y.width,block_size_y.height);
+	predictor pd_u(block_size_uv.width,block_size_uv.height);
+	predictor pd_v(block_size_uv.width,block_size_uv.height);
 	
 	//Write magic
     bs.writeNChars((char*) magic,strlen(magic));
@@ -72,34 +70,35 @@ void encode(args& cfg){
 	if(cfg.jpegPredictor==9)
 		bs.writeNBits(cfg.blockSize,sizeof(uint)*8);
 
-	cv::Mat res_y(in.get_y().size(),CV_16S);
-	cv::Mat res_u(in.get_u().size(),CV_16S);
-	cv::Mat res_v(in.get_v().size(),CV_16S);
+	cv::Mat res_y(block_size_y,CV_16S);
+	cv::Mat res_u(block_size_uv,CV_16S);
+	cv::Mat res_v(block_size_uv,CV_16S);
 	//Add Data
 	do{
-		cv::Mat y=in.get_y().clone();
-		cv::Mat u=in.get_u().clone();
-		cv::Mat v=in.get_v().clone();
+		cv::Mat y=in.get_y(); 
+		cv::Mat u=in.get_u();
+		cv::Mat v=in.get_v();
 
 		pd_y.newFrame(&y);
 		pd_u.newFrame(&u);
 		pd_v.newFrame(&v);
 
 		if(cfg.jpegPredictor==9){
-			for(uint by=0;by<y.rows;by+=cfg.blockSize){
-				for(uint bx=0;bx<y.cols;bx+=cfg.blockSize){
-					cv::Mat blk_y = res_y(cv::Rect_<uint>(bx,by,cfg.blockSize,cfg.blockSize));
-					cv::Mat blk_u = res_u(cv::Rect_<uint>(bx/scalex,by/scaley,cfg.blockSize/scalex,cfg.blockSize/scaley));
-					cv::Mat blk_v = res_v(cv::Rect_<uint>(bx/scalex,by/scaley,cfg.blockSize/scalex,cfg.blockSize/scaley));
+			for(uint by=0;by*cfg.blockSize<y.rows;by++){
+				for(uint bx=0;bx*cfg.blockSize<y.cols;bx++){
+					uint bw_y=in.get_bsize_y().width;
+					uint bh_y=in.get_bsize_y().height;
+					uint bw_uv=in.get_bsize_uv().width;
+					uint bh_uv=in.get_bsize_uv().height;
 
-					uint8_t best_pred=std::get<0>(pd_y.calcBestResiduals(bx,by,&blk_y));
-					pd_u.calcBlockResiduals(bx/scalex,by/scaley,best_pred,&blk_u);
-					pd_v.calcBlockResiduals(bx/scalex,by/scaley,best_pred,&blk_v);
+					uint8_t best_pred=std::get<0>(pd_y.calcBestResiduals(bx*bw_y,by*bh_y,&res_y));
+					pd_u.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_u);
+					pd_v.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_v);
 
 					bs.writeNBits(best_pred,4);	
-					gb_y.write_mat(blk_y,true);	
-					gb_u.write_mat(blk_u,true);	
-					gb_v.write_mat(blk_v,true);	
+					gb_y.write_mat(res_y,true);	
+					gb_u.write_mat(res_u,true);	
+					gb_v.write_mat(res_v,true);	
 				}		
 			}		
 		}

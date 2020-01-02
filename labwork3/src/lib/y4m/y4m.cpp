@@ -52,7 +52,7 @@ void y4m::print_header(){
 	}
 }
 bool y4m::load(std::string &y4mfile,uint block_size){
-	this->block_size=block_size;
+	this->block_y=cv::Size(block_size,block_size);
 
 	inf.open(y4mfile,std::fstream::in | std::fstream::binary);
 	if(!load_header()) return false;
@@ -156,7 +156,7 @@ bool y4m::load_header(){
 	return true;
 }
 
-void y4m::save(std::string &y4mfile,uint block_size){
+void y4m::save(std::string &y4mfile){
 	outf.open(y4mfile,std::fstream::out | std::fstream::binary | std::fstream::trunc);
 	save_header();
 	store_all();
@@ -199,36 +199,44 @@ void y4m::store_all(){
 	for(uint i=0;i<v_y.size();i++){
 		//Magic
 		outf<<frame_start;
-		//TODO frame specific values	
 		outf<<std::endl;
+		//TODO WHATTTTT
 
 		//Store y
 		outf.write((char*) v_y[i].ptr(),s_y.height*s_y.width);
 
 		//Store u
-		outf.write((char*) v_u[i].ptr(),s_u.height*s_u.width);
+		outf.write((char*) v_u[i].ptr(),s_uv.height*s_uv.width);
 
 		//Store v
-		outf.write((char*) v_v[i].ptr(),s_v.height*s_v.width);
+		outf.write((char*) v_v[i].ptr(),s_uv.height*s_uv.width);
 	}
 }
 
 void y4m::build_structure(){
 	s_y=cv::Size(width,height);	
+	if(block_y.width>0)
+		s_y_pad=cv::Size(width+width%block_y.width,height+height%block_y.height);	
+	else
+		s_y_pad=s_y;
+
 	switch(color_space){
 		case CS444:
-			s_u=cv::Size(width,height);
-			s_v=cv::Size(width,height);
+			s_uv=s_y;
+			block_uv=block_y;
+			s_uv_pad=s_y_pad;
 			break;
 		case CS422:
-			s_u=cv::Size((width+1)/2,height);
-			s_v=cv::Size((width+1)/2,height);
+			s_uv=cv::Size((width+1)/2,height);
+			block_uv=cv::Size(block_y.width/2,block_y.height);
+			s_uv_pad=cv::Size(s_y_pad.width/2,s_y_pad.height);
 			break;
 		case CS420:
 		case CS420JPEG:
 		case CS420PALDV:
-			s_u=cv::Size((width+1)/2,(height+1)/2);
-			s_v=cv::Size((width+1)/2,(height+1)/2);
+			s_uv=cv::Size((width+1)/2,(height+1)/2);
+			block_uv=cv::Size(block_y.width/2,block_y.height/2);
+			s_uv_pad=cv::Size(s_y_pad.width/2,s_y_pad.height/2);
 			break;
 	}
 }
@@ -236,8 +244,8 @@ void y4m::build_structure(){
 
 bool y4m::fetch(){
 	cv::Mat y(s_y,CV_8U);
-	cv::Mat u(s_u,CV_8U);
-	cv::Mat v(s_v,CV_8U);
+	cv::Mat u(s_uv,CV_8U);
+	cv::Mat v(s_uv,CV_8U);
 
 	std::string frame_header;
 	std::getline(inf,frame_header);
@@ -274,16 +282,15 @@ bool y4m::fetch(){
 	inf.read((char*) v.ptr(),v.rows*v.cols);	
 
 	//Pad, if needed
-	if(block_size>1){
-		uint scale_u_h=s_y.height/s_u.height;
-		uint scale_u_w=s_y.width/s_u.width;
-		uint scale_v_h=s_y.height/s_v.height;
-		uint scale_v_w=s_y.width/s_v.width;
+	if(block_y.width>1){
+		uint pad_w_y=s_y_pad.width-s_y.width;
+		uint pad_h_y=s_y_pad.height-s_y.height;
+		uint pad_w_uv=s_uv_pad.width-s_uv.width;
+		uint pad_h_uv=s_uv_pad.height-s_uv.height;
 
-		cv::copyMakeBorder(y,y,0,height%block_size,0,width%block_size,cv::BORDER_REFLECT);
-		cv::copyMakeBorder(u,u,0,(height%block_size)/scale_u_h,0,(width%block_size)/scale_u_w,cv::BORDER_REFLECT);
-		cv::copyMakeBorder(v,v,0,(height%block_size)/scale_v_h,0,(width%block_size)/scale_v_w,cv::BORDER_REFLECT);
-
+		cv::copyMakeBorder(y,y,0,pad_w_y,0,pad_h_y,cv::BORDER_REFLECT);
+		cv::copyMakeBorder(u,u,0,pad_w_uv,0,pad_h_uv,cv::BORDER_REFLECT);
+		cv::copyMakeBorder(v,v,0,pad_w_uv,0,pad_h_uv,cv::BORDER_REFLECT);
 	}
 
 	v_y.push_back(y);
@@ -293,7 +300,8 @@ bool y4m::fetch(){
 	return true;
 }
 
-void y4m::init(uint width,uint height,uint8_t color_space){
+void y4m::init(uint width,uint height,uint8_t color_space,uint block_size){
+    this->block_y=cv::Size(block_size,block_size);
 	this->width=width;
 	this->height=height;
 	this->color_space=color_space;
@@ -321,9 +329,9 @@ void y4m::set_aspect(uint d,uint n){
 void y4m::set_interlace(uint8_t intr){ interlacing=intr; }
 
 bool y4m::push_frame(cv::Mat &y,cv::Mat &u,cv::Mat &v){
-	if(y.rows!=s_y.height||y.cols!=s_y.width||	
-	   u.rows!=s_u.height||u.cols!=s_u.width||	
-	   v.rows!=s_v.height||v.cols!=s_v.width)
+	if(y.rows!=s_y_pad.height||y.cols!=s_y_pad.width||	
+	   u.rows!=s_uv_pad.height||u.cols!=s_uv_pad.width||	
+	   v.rows!=s_uv_pad.height||v.cols!=s_uv_pad.width)
 		return false;	
 
 	v_y.push_back(y);
@@ -354,7 +362,6 @@ cv::Mat y4m::get_bgr(){
 	return bgr;
 }
 
-uint y4m::get_block_size(){ return block_size; }
 uint y4m::get_width(){ return width; }
 uint y4m::get_height(){ return height; }
 uint8_t y4m::get_color_space(){ return color_space; }
@@ -366,9 +373,12 @@ uint y4m::get_num_frames(){ return v_y.size(); }
 cv::Mat& y4m::get_y(){ return v_y[frame_ptr]; }
 cv::Mat& y4m::get_u(){ return v_u[frame_ptr]; }
 cv::Mat& y4m::get_v(){ return v_v[frame_ptr]; }
+cv::Size y4m::get_bsize_y(){ return block_y; }
+cv::Size y4m::get_bsize_uv(){ return block_uv; }
 cv::Size y4m::get_y_size(){ return s_y; }
-cv::Size y4m::get_u_size(){ return s_u; }
-cv::Size y4m::get_v_size(){ return s_v; }
+cv::Size y4m::get_uv_size(){ return s_uv; }
+cv::Size y4m::get_pady_size(){ return s_y_pad; }
+cv::Size y4m::get_paduv_size(){ return s_uv_pad; }
 
 /*
 #include "opencv2/highgui/highgui.hpp" //FIXME temporary
