@@ -83,7 +83,7 @@ void args::printUsage() {
 		 << "			RANGE:  0 <= x < window" << endl;
 	}
 	if (mode > 1) {
-		cout << "		--macrosize OR -b : macro size for inter-frame coding" << endl
+		cout << "		--macrosize OR -m : macro size for inter-frame coding" << endl
 		 << "			RANGE: > 0" << endl //TODO >0 , def 2
 		 << "		--searcharea OR -s : search area for inter-frame coding" << endl
 		 << "			RANGE: > 0" << endl //TODO >0 , def 4
@@ -158,7 +158,7 @@ int args::parseArgs(int elem, char** argv) {
 									string ("macroblock size"));
 			if (code < 0)
 				return -1;
-			blockSize = atoi(argv[1]);
+			macroSize = atoi(argv[1]);
 		} else if(argv[0] == string("-s") || argv[0] == string("'--searcharea")) {
 		// searchArea
 			code = handleFlagParse(elem, argv[1], string("-s"), string("--searcharea"), string("search area"),
@@ -198,7 +198,7 @@ int args::parseArgs(int elem, char** argv) {
 									string ("number of bits to be quantized in V residuals"));
 			if (code < 0)
 				return -1;
-			quantY = atoi(argv[1]);
+			quantV = atoi(argv[1]);
 		} else {
 			cout << "Error: invalid flag '" << argv[0] << "'" << endl;
 			return -1;
@@ -333,19 +333,19 @@ int args::validateArgs() {
 				cout << "Error: number of bits to quantize must be less than 8." << endl;
 				valid = false;
 			} else if (quantY == -1) {
-				quantY = 3;
+				quantY = 2;
 			}
 			if (quantU > 7 || quantU < -1) {
 				cout << "Error: number of bits to quantize must be less than 8." << endl;
 				valid = false;
 			} else if (quantU == -1) {
-				quantU = 3;
+				quantU = 2;
 			}
 			if (quantV > 7 || quantV < -1) {
 				cout << "Error: number of bits to quantize must be less than 8." << endl;
 				valid = false;
 			} else if (quantV == -1) {
-				quantV = 3;
+				quantV = 2;
 			}
 		}
 	}
