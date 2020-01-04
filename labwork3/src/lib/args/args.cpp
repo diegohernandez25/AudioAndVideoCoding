@@ -174,7 +174,7 @@ int args::parseArgs(int elem, char** argv) {
 									string ("periodicity of key frames for inter-frame prediction"));
 			if (code < 0)
 				return -1;
-			searchArea = atoi(argv[1]);
+			keyPeriodicity = atoi(argv[1]);
 		} else if(argv[0] == string("-y") || argv[0] == string("'--quantY")) {
 		// quantY
 			code = handleFlagParse(elem, argv[1], string("-y"), string("--quantY"), string("quantization value for Y"),

@@ -62,6 +62,7 @@ void enc_hybrid::encode(){
 	res_v=cv::Mat(in.get_bsize_uv(),CV_16S);
 
 	bool first_frame=true;
+	uint i_frame_count=0;
 	//Add Data
 	do{
 		cv::Mat y=in.get_y(); 
@@ -72,12 +73,14 @@ void enc_hybrid::encode(){
 		pd_u.newFrame(&u);
 		pd_v.newFrame(&v);
 
-		if(first_frame){
+		if(first_frame||(i_frame_count==(uint)cfg.keyPeriodicity&&cfg.keyPeriodicity!=0)){
 			i_frame();
 			first_frame=false;
+			i_frame_count=0;
 		}
 		else{
 			p_frame(y,u,v);
+			i_frame_count++;
 		}
 
 		hist_y.push_back(y);
