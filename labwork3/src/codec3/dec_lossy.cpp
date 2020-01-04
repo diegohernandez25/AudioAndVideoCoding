@@ -58,7 +58,6 @@ int dec_lossy::decode(){
 		quantU = bs.readNBits(3);
 		quantV = bs.readNBits(3);
 	}
-	std::cout << int(quantY) << int(quantU) << int(quantV) << std::endl;
 
 	//Create new video
 	out.init(width,height,color_space,predBlockSize);
