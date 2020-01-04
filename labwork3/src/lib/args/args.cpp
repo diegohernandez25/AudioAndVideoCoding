@@ -346,16 +346,13 @@ int args::validateArgs() {
 	}
 
 	if (mode < 3) {
-		if (quantY + quantU + quantV != -3 || dct) {
+		if (quantY + quantU + quantV != -3 || !dct) {
 			cout << "Error: quantization and DCT are only available on lossy encoder." << endl;
 			valid = false;
 		}
 	} else {
 		// Quantization
-		if (quantY + quantU + quantV != -3 && dct) {
-			cout << "Error: choose either the quantization steps or the DCT." << endl;
-			valid = false;
-		} else {
+		if (!dct) {
 			if (quantY > 8 || quantY < -1) {
 				cout << "Error: number of bits to quantize must be less or equal to 8." << endl;
 				valid = false;
