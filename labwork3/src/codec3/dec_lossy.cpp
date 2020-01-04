@@ -140,8 +140,8 @@ void dec_lossy::p_frame(cv::Mat& y,cv::Mat& u,cv::Mat& v){
 
 void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat& v){
 	uint framenr=bs.readNBits(sizeof(ushort)*8); //Frame Nr
-	uint vecx=bs.readNBits(sizeof(uint)*8); //VecX
-	uint vecy=bs.readNBits(sizeof(uint)*8); //VecY
+	uint vecx=bs.readNBits(sizeof(ushort)*8); //VecX
+	uint vecy=bs.readNBits(sizeof(ushort)*8); //VecY
 	cv::Vec3w mvec(framenr,vecx,vecy);
 
     uint mbw_y=out.get_bsize_y().width*macroSize;

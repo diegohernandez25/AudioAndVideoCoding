@@ -147,8 +147,8 @@ void enc_hybrid::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv
 	v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y)).convertTo(res_macro_v,CV_16S);
 
 	bs.writeNBits(mvec[1],sizeof(ushort)*8); //Frame Nr
-	bs.writeNBits(mvec[2],sizeof(uint)*8); //VecX
-	bs.writeNBits(mvec[3],sizeof(uint)*8); //VecY
+	bs.writeNBits(mvec[2],sizeof(ushort)*8); //VecX
+	bs.writeNBits(mvec[3],sizeof(ushort)*8); //VecY
 
 	cp.apply_block_residual(res_macro_y,hist_y,mvec);
 
