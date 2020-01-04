@@ -191,16 +191,16 @@ void enc_lossy::write_block(uint bx,uint by){
 		best_pred=cfg.jpegPredictor;
 	}
 
-	for (int j = by*bh_y; j < by*bh_y+bh_y; j++) {
-		for (int i = bx*bw_y; i < bx*bw_y+bw_y; i++) {
+	for (uint j = by*bh_y; j < by*bh_y+bh_y; j++) {
+		for (uint i = bx*bw_y; i < bx*bw_y+bw_y; i++) {
 			quant_res = q.midrise(cfg.quantY, pd_y.calcResidual(i, j, best_pred));
 			pd_y.reconstruct(i, j, best_pred, quant_res);
 			res_y.at<short>(j-by*bh_y, i-bx*bw_y) = (quant_res >> cfg.quantY);
 		}
 	}
 
-	for (int j = by*bh_uv; j < by*bh_uv+bh_uv; j++) {
-		for (int i = bx*bw_uv; i < bx*bw_uv+bw_uv; i++) {
+	for (uint j = by*bh_uv; j < by*bh_uv+bh_uv; j++) {
+		for (uint i = bx*bw_uv; i < bx*bw_uv+bw_uv; i++) {
 			quant_res = q.midrise(cfg.quantU, pd_u.calcResidual(i, j, best_pred));
 			pd_u.reconstruct(i, j, best_pred, quant_res);
 			res_u.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantU);
