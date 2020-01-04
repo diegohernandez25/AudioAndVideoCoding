@@ -1,6 +1,8 @@
 #include "compensator.h"
 #include <iostream> //FIXME remove
 
+//TODO logarithmic motion tracker
+
 //assumes image comes already padded
 compensator::compensator(uint macroblock_size,uint search_radius,uint lazy_score){
 	this->search_radius=search_radius;
@@ -10,43 +12,46 @@ compensator::compensator(uint macroblock_size,uint search_radius,uint lazy_score
 
 
 void compensator::apply_block_residual(cv::Mat& block,boost::circular_buffer<cv::Mat>& hist,cv::Vec4w block_meta){
-	uint scalex=macroblock_size/block.cols;
-	uint scaley=macroblock_size/block.rows;
-
 	uint frame=block_meta[1];
 	uint mvecx=block_meta[2];
 	uint mvecy=block_meta[3];
-	cv::Mat candidate=hist[frame](cv::Rect_<uint>(mvecx/scalex,mvecy/scaley,block.cols,block.rows));
-	block-=candidate;
+	cv::Mat candidate=hist[frame](cv::Rect_<uint>(mvecx,mvecy,block.cols,block.rows));
+	//block-=candidate;
+	cv::subtract(block,candidate,block,cv::noArray(),CV_16S);
 }
 
-void compensator::restore_block(cv::Mat& block_residual,boost::circular_buffer<cv::Mat>& hist,cv::Vec3w mvec){
-	uint scalex=macroblock_size/block_residual.cols;
-	uint scaley=macroblock_size/block_residual.rows;
-
+void compensator::restore_block(cv::Mat& block,cv::Mat& block_residual,boost::circular_buffer<cv::Mat>& hist,cv::Vec3w mvec){
 	uint frame=mvec[0];
 	uint mvecx=mvec[1];
 	uint mvecy=mvec[2];
-	cv::Mat candidate=hist[frame](cv::Rect_<uint>(mvecx/scalex,mvecy/scaley,block_residual.cols,block_residual.rows));
-	block_residual+=candidate;
+	cv::Mat candidate=hist[frame](cv::Rect_<uint>(mvecx,mvecy,block_residual.cols,block_residual.rows));
+	//block_residual+=candidate;
+	cv::add(block_residual,candidate,block,cv::noArray(),CV_8U);
 }
 cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>& hist){
 	cv::Mat	scores=cv::Mat::ones(curr.rows/macroblock_size,curr.cols/macroblock_size,CV_16UC4)*((1<<16)-1); 
 
-	//TODO check the number of checked candidates
-	//seems correct
+	//FIXME problema de macrobloco de 3x3 blocos 
 	cv::Mat block,candidate;
-	for(uint bx=0;bx<curr.cols;bx+=macroblock_size){
-		for(uint by=0;by<curr.rows;by+=macroblock_size){
-			block=curr(cv::Rect_<uint>(bx,by,macroblock_size,macroblock_size));
+	for(uint by=0;by<(uint)curr.rows;by+=macroblock_size){
+		for(uint bx=0;bx<(uint)curr.cols;bx+=macroblock_size){
+			uint macrox=macroblock_size;
+			uint macroy=macroblock_size;
+			if(bx+macroblock_size>(uint)curr.cols){//last macro blocks blocks might not be complete
+				macrox=curr.cols-bx;
+			}
+			if(by+macroblock_size>(uint)curr.rows){//last macro blocks blocks might not be complete
+				macroy=curr.rows-bx;
+			}
+
+			block=curr(cv::Rect_<uint>(bx,by,macrox,macroy));
 			for(uint fr=0;fr<hist.size();fr++){
 				cv::Mat frame=hist[fr];
-				uint cx=(bx<search_radius)?0:bx-search_radius;
-				for(;cx<=bx+search_radius&&cx+macroblock_size<curr.cols;cx++){
-					uint cy=(by<search_radius)?0:by-search_radius;
-					for(;cy<=by+search_radius&&cy+macroblock_size<curr.rows;cy++){
-						//std::cout<<cx<<","<<cy<<","<<cx+macroblock_size<<","<<cy+macroblock_size<<std::endl;
-						candidate=frame(cv::Rect_<uint>(cx,cy,macroblock_size,macroblock_size));
+				uint cy=(by<search_radius)?0:by-search_radius;
+				for(;cy<=by+search_radius&&cy+macroy<(uint)curr.rows;cy++){
+					uint cx=(bx<search_radius)?0:bx-search_radius;
+					for(;cx<=bx+search_radius&&cx+macrox<(uint)curr.cols;cx++){
+						candidate=frame(cv::Rect_<uint>(cx,cy,macrox,macroy));
 
 						cv::Mat df; 
 						cv::absdiff(block,candidate,df);							
