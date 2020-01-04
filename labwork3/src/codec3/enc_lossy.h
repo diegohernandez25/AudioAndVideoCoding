@@ -21,7 +21,6 @@ class enc_lossy{
 		uint golomb_blk_size=128;
 		uint golomb_calc_interval=16;
 
-		uint compensator_depth=4;
 		uint compensator_lazy_score=0;
 
 		uint macroblock_threshold=1000;//FIXME

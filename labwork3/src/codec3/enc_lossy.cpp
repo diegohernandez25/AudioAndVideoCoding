@@ -19,9 +19,9 @@ void enc_lossy::encode(){
 	pd_v=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 
 	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); //TODO add to ARGS search_depth and lazy_score
-	hist_y=boost::circular_buffer<cv::Mat>(compensator_depth);
-	hist_u=boost::circular_buffer<cv::Mat>(compensator_depth);
-	hist_v=boost::circular_buffer<cv::Mat>(compensator_depth);
+	hist_y=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
+	hist_u=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
+	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	
 	//Write magic
     bs.writeNChars((char*) magic,strlen(magic));
@@ -55,7 +55,7 @@ void enc_lossy::encode(){
 	bs.writeNBits(cfg.macroSize,sizeof(uint)*8);
 
 	//Write search depth
-	bs.writeNBits(compensator_depth,sizeof(uint16_t)*8);
+	bs.writeNBits(cfg.searchDepth,sizeof(uint16_t)*8);
 
 	//Write lossy mode
 	bs.writeBit(cfg.dct?0b1:0b0);
