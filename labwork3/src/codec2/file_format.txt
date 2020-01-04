@@ -1,0 +1,55 @@
+Hybrid Lossless:
+
+(5B) Magic number: "VMAD1"
+(4B) Width
+(4B) Height
+(1B) Color Space (Value returned by y4m)
+(1B) Interlaced (Value returned by y4m)
+(4B+4B) Frame Rate
+(4B+4B) Aspect Ratio
+(4B) Num of Frames
+(1B) Forced Prediction? (0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
+(4B) Block Size
+(4B) MacroBlock Size
+(2B) Search depth
+
+FRAME0:
+	(1bit) I-Frame flag
+	IF I-Frame:
+		BLOCK0
+		BLOCK1
+		...
+	ELSE:
+		MACROBLOCK0
+		MACROBLOCK1
+		...
+
+FRAME1
+	...
+
+
+=========
+
+MACROBLOCK:
+	(1bit) I-Block flag
+	IF I-Block:
+		BLOCK0 \ as many as needed to complete the macroblock
+		BLOCK1 /
+
+	ELSE:
+		(2B) Frame nr
+		(4B) VecX
+		(4B) VecY
+		
+		() Y Residual Macro Block Data		
+		() U Residual Macro Block Data		
+		() V Residual Macro Block Data		
+
+BLOCK:
+
+	IFNOT Forced Prediction:
+		(4bits) Predictor Used
+
+	() Y Residual Block Data		
+	() U Residual Block Data		
+	() V Residual Block Data		
