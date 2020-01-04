@@ -144,12 +144,10 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	uint macrouv_x=mbw_uv;
 	uint macrouv_y=mbh_uv;
 	if(mbx*mbw_y+mbw_y>(uint)y.cols){
-		std::cout<<"hey"<<std::endl;
 		macroy_x=y.cols-mbx*mbw_y;
 		macrouv_x=u.cols-mbx*mbw_uv;
 	}
 	if(mby*mbh_y+mbh_y>(uint)y.rows){
-		std::cout<<"ho"<<std::endl;
 		macroy_y=y.rows-mby*mbh_y;
 		macrouv_y=u.rows-mby*mbh_uv;
 	}
@@ -181,7 +179,6 @@ void enc_lossy::write_block(uint bx,uint by){
 	uint bh_y=in.get_bsize_y().height;
 	uint bw_uv=in.get_bsize_uv().width;
 	uint bh_uv=in.get_bsize_uv().height;
-	quant q;
 	short quant_res;
 	
 	uint8_t best_pred;
@@ -196,7 +193,7 @@ void enc_lossy::write_block(uint bx,uint by){
 
 	for (uint j = by*bh_y; j < by*bh_y+bh_y; j++) {
 		for (uint i = bx*bw_y; i < bx*bw_y+bw_y; i++) {
-			quant_res = q.midrise(cfg.quantY, pd_y.calcResidual(i, j, best_pred));
+			quant_res = (int)(pd_y.calcResidual(i, j, best_pred) / pow(2, cfg.quantY)) << cfg.quantY;
 			pd_y.reconstruct(i, j, best_pred, quant_res);
 			res_y.at<short>(j-by*bh_y, i-bx*bw_y) = (quant_res >> cfg.quantY);
 		}
@@ -204,10 +201,10 @@ void enc_lossy::write_block(uint bx,uint by){
 
 	for (uint j = by*bh_uv; j < by*bh_uv+bh_uv; j++) {
 		for (uint i = bx*bw_uv; i < bx*bw_uv+bw_uv; i++) {
-			quant_res = q.midrise(cfg.quantU, pd_u.calcResidual(i, j, best_pred));
+			quant_res = (int)(pd_u.calcResidual(i, j, best_pred) / pow(2, cfg.quantU)) << cfg.quantU;
 			pd_u.reconstruct(i, j, best_pred, quant_res);
 			res_u.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantU);
-			quant_res = q.midrise(cfg.quantV, pd_v.calcResidual(i, j, best_pred));
+			quant_res = (int)(pd_v.calcResidual(i, j, best_pred) / pow(2, cfg.quantV)) << cfg.quantV;
 			pd_v.reconstruct(i, j, best_pred, quant_res);
 			res_v.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantV);
 		}

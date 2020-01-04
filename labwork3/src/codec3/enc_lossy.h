@@ -4,7 +4,6 @@
 #include "../lib/predictor/predictor.h"
 #include "../lib/predictor/compensator.h"
 #include "../lib/golomb/mat_golomb_bitstream.h"
-#include "../lib/quantization/quant.h"
 #include "../lib/y4m/y4m.h"
 
 class enc_lossy{
