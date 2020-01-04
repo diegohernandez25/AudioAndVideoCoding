@@ -4,12 +4,20 @@
 
 #include "dct.h"
 
-dct::dct(int height, int width){
-    height_blk = ceil((float) height/BLOCK_SIZE);
-    width_blk = ceil((float) width/BLOCK_SIZE);
+dct::dct(int height, int width, int block_size){
+    //assert(block_size<=BLOCK_SIZE && block_size>0);
 
-    height_padded = height_blk * BLOCK_SIZE;
-    width_padded = width_blk * BLOCK_SIZE;
+    this->block_size=block_size;
+
+    if(block_size!=BLOCK_SIZE_DEFAULT)
+        change_quant_mats();
+
+    height_blk = ceil((float) height/block_size);
+    width_blk = ceil((float) width/block_size);
+
+
+    height_padded = height_blk * block_size;
+    width_padded = width_blk * block_size;
     total_blk = height_blk * width_blk;
     rstr_scnr_blk_ptr = 0;
 
@@ -23,7 +31,7 @@ dct::dct(int height, int width){
     padded_image.create(height_padded, width_padded, 0);
 }
 
-dct::dct(cv::Mat image) : dct(image.rows, image.cols) {
+dct::dct(cv::Mat image, int block_size) : dct(image.rows, image.cols, block_size) {
     this->image = image;
     image.copyTo(padded_image(cv::Rect(0,0,image.cols, image.rows)));
     padded_image.convertTo(padded_image, CV_8UC1);
@@ -46,7 +54,7 @@ vector<tuple<short,short>> dct::dct_quant_rle_blck(cv::Mat blck, bool mask) {
 cv::Mat dct::reverse_dct_quant_rle_blck(vector<tuple<short , short>> rle_vct, bool mask){
     cv::Mat res, dct_block, quant_block, zz_block;
     rle r_tmp=rle(rle_vct);
-    vector<short>  zigzag_vct=r_tmp.load_variant_rle(BLOCK_SIZE*BLOCK_SIZE);
+    vector<short>  zigzag_vct=r_tmp.load_variant_rle((int)pow(block_size,2));
     zigzag z=zigzag(zigzag_vct);
     zz_block=z.inverse_zigzag();
     if(!mask) cv::multiply(zz_block,quant_mat,quant_block);
@@ -64,7 +72,7 @@ void dct::dct_quant_rle_frame(bool mask){
 
     for(int i = 0; i < height_blk; i++){
         for(int j = 0; j< width_blk; j++){
-            tmp_block = padded_image(cv::Rect(j*BLOCK_SIZE,i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE));
+            tmp_block = padded_image(cv::Rect(j*block_size,i*block_size, block_size, block_size));
             tmp_vct_rle = dct_quant_rle_blck(tmp_block, mask);
             dct::vect.push_back(tmp_vct_rle);
         }
@@ -79,7 +87,7 @@ cv::Mat dct::reverse_dct_quant_rle_frame(vector<vector<tuple<short,short>>> rle_
 
     for(vector<tuple<short,short>> x: rle_vctrs){
         tmp_block = dct::reverse_dct_quant_rle_blck(x, mask);
-        tmp_block.copyTo(final(cv::Rect(col_blk*BLOCK_SIZE, row_blk*BLOCK_SIZE,BLOCK_SIZE, BLOCK_SIZE)));
+        tmp_block.copyTo(final(cv::Rect(col_blk*block_size, row_blk*block_size,block_size, block_size)));
         col_blk = (col_blk +1) % dct::width_blk;
         if(col_blk==0) row_blk++;
     }
@@ -94,9 +102,30 @@ bool dct::upload_coded_blck(vector<tuple<short, short>> rle_vct, bool mask){
     tmp_block = reverse_dct_quant_rle_blck(std::move(rle_vct), mask);
     row_blk = (int) rstr_scnr_blk_ptr/width_blk;
     col_blk = (int) rstr_scnr_blk_ptr%width_blk;
-    tmp_block.copyTo(rcvrd_image(cv::Rect(col_blk*BLOCK_SIZE, row_blk*BLOCK_SIZE,BLOCK_SIZE, BLOCK_SIZE)));
+    tmp_block.copyTo(rcvrd_image(cv::Rect(col_blk*block_size, row_blk*block_size,block_size, block_size)));
     rstr_scnr_blk_ptr = (rstr_scnr_blk_ptr + 1)%total_blk;
     return  rstr_scnr_blk_ptr==0;
+}
+
+void dct::change_quant_mats() {
+
+    int size = (int)pow(double(block_size),2);
+    vector<short> quant_vect;
+    quant_vect.reserve(size);
+    int limit = block_size;
+    for (int j = limit; j >=1; j--){
+        vector<short> v_ones(j,1);
+        vector<short> v_zeros(block_size-j,0);
+        v_ones.insert(v_ones.end(),v_zeros.begin(),v_zeros.end());
+        quant_vect.insert(quant_vect.end(),v_ones.begin(), v_ones.end());
+    }
+    short r[size];
+    std::copy(quant_vect.begin(),quant_vect.end(),r);
+    this->quant_mat_mask = cv::Mat(block_size, block_size, CV_16S, r);
+    if(block_size<=BLOCK_SIZE_DEFAULT)
+        this->quant_mat = quant_mat(cv::Rect(0,0,block_size,block_size));
+    else
+        this->quant_mat = this->quant_mat_mask.clone();
 }
 
 int dct::get_height_blk() {return height_blk;}
@@ -118,6 +147,8 @@ cv::Mat dct::get_padded_image(){return padded_image;}
 cv::Mat dct::get_rcvrd_image(){return rcvrd_image;}
 
 vector<vector<tuple<short,short>>> dct::get_vect(){ return dct::vect;}
+
+int dct::get_block_size(){ return block_size;}
 
 
 

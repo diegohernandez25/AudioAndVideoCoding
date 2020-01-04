@@ -25,14 +25,14 @@
 #include "zigzag/zigzag.h"
 #include "rle/rle.h"
 
-#define BLOCK_SIZE 8
+#define BLOCK_SIZE_DEFAULT 8
 
 using namespace std;
 
 class dct{
 public:
-    dct(int height, int width);
-    dct(cv::Mat image);
+    dct(int height, int width, int block_size=BLOCK_SIZE_DEFAULT);
+    dct(cv::Mat image, int block_size=BLOCK_SIZE_DEFAULT);
 
     int get_height_blk();
     int get_width_blk();
@@ -57,10 +57,19 @@ public:
 
     vector<vector<tuple<short,short>>> get_vect();
 
+    int get_block_size();
+
 private:
+    cv::Mat image;
+    cv::Mat padded_image;
+    cv::Mat rcvrd_image;
+
+    vector<vector<tuple<short,short>>> vect;
+
     int height_blk;
     int width_blk;
     int total_blk;
+    int block_size=BLOCK_SIZE_DEFAULT;
 
     int height_padded;
     int width_padded;
@@ -87,12 +96,9 @@ private:
 
     cv::Mat quant_mat = cv::Mat(8, 8, CV_16S, quant_array);
     cv::Mat quant_mat_mask = cv::Mat(8, 8, CV_16S, quant_array_mask);
+    void change_quant_mats();
 
-    cv::Mat image;
-    cv::Mat padded_image;
-    cv::Mat rcvrd_image;
 
-    vector<vector<tuple<short,short>>> vect;
 };
 
 #endif //DCT_DCT_H
