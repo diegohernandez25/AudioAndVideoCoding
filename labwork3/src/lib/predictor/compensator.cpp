@@ -41,7 +41,7 @@ cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>&
 				macrox=curr.cols-bx;
 			}
 			if(by+macroblock_size>(uint)curr.rows){//last macro blocks blocks might not be complete
-				macroy=curr.rows-bx;
+				macroy=curr.rows-by;
 			}
 
 			block=curr(cv::Rect_<uint>(bx,by,macrox,macroy));
