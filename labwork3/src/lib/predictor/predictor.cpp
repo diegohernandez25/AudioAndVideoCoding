@@ -69,7 +69,6 @@ short predictor::predict(ushort x, ushort y, uint8_t mode) {
             short a = short(origMat->at<uchar>(y,x-1));
             short b = short(origMat->at<uchar>(y-1,x));
             short c = short(origMat->at<uchar>(y-1,x-1));
-            short d = short(origMat->at<uchar>(y-1,x+1));
             short minAB, maxAB;
 
             if (b < a) {
