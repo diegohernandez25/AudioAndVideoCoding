@@ -9,6 +9,7 @@
 
 class golomb{
 	public:
+		golomb(){}	
 		golomb(uint m);	
 		golomb(uint initial_m,uint blk_size,uint calc_interval);	
 
