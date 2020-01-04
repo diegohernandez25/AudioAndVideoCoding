@@ -51,6 +51,14 @@ int dec_lossy::decode(){
 
 	//Read lossy mode
 	useDct = bs.readBit();
+	if (useDct) {
+		// TODO dct params?
+	} else {
+		quantY = bs.readNBits(3);
+		quantU = bs.readNBits(3);
+		quantV = bs.readNBits(3);
+	}
+	std::cout << int(quantY) << int(quantU) << int(quantV) << std::endl;
 
 	//Create new video
 	out.init(width,height,color_space,predBlockSize);
@@ -191,9 +199,18 @@ void dec_lossy::read_block(uint bx,uint by){
 	else{
 		best_pred=pred_mode;
 	}
+
 	gb_y.read_mat(res_y,true);
 	gb_u.read_mat(res_u,true);
 	gb_v.read_mat(res_v,true);
+
+	if(useDct) {
+		//TODO
+	} else {
+		res_y *= pow(2, quantY);
+		res_u *= pow(2, quantU);
+		res_v *= pow(2, quantV);
+	}
 
 	pd_y.reconstructBlock(bx*bw_y,by*bh_y,best_pred,&res_y);
 	pd_u.reconstructBlock(bx*bw_uv,by*bh_uv,best_pred,&res_u);

@@ -59,6 +59,14 @@ void enc_lossy::encode(){
 
 	//Write lossy mode
 	bs.writeBit(cfg.dct?0b1:0b0);
+	if(cfg.dct) {
+		// TODO dct params?
+	} else {
+		//Write quant bits for each channel
+		bs.writeNBits(cfg.quantY, 3);
+		bs.writeNBits(cfg.quantU, 3);
+		bs.writeNBits(cfg.quantV, 3);
+	}
 
 	res_y=cv::Mat(in.get_bsize_y(),CV_16S);
 	res_u=cv::Mat(in.get_bsize_uv(),CV_16S);
@@ -170,6 +178,8 @@ void enc_lossy::write_block(uint bx,uint by){
 	uint bh_y=in.get_bsize_y().height;
 	uint bw_uv=in.get_bsize_uv().width;
 	uint bh_uv=in.get_bsize_uv().height;
+	quant q;
+	short quant_res;
 	
 	uint8_t best_pred;
 	if(cfg.jpegPredictor==9){ //NOT forced mode
@@ -179,11 +189,26 @@ void enc_lossy::write_block(uint bx,uint by){
 	}
 	else{
 		best_pred=cfg.jpegPredictor;
-		pd_y.calcBlockResiduals(bx*bw_y,by*bh_y,best_pred,&res_y);
 	}
 
-	pd_u.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_u);
-	pd_v.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_v);
+	for (int j = by*bh_y; j < by*bh_y+bh_y; j++) {
+		for (int i = bx*bw_y; i < bx*bw_y+bw_y; i++) {
+			quant_res = q.midrise(cfg.quantY, pd_y.calcResidual(i, j, best_pred));
+			pd_y.reconstruct(i, j, best_pred, quant_res);
+			res_y.at<short>(j-by*bh_y, i-bx*bw_y) = (quant_res >> cfg.quantY);
+		}
+	}
+
+	for (int j = by*bh_uv; j < by*bh_uv+bh_uv; j++) {
+		for (int i = bx*bw_uv; i < bx*bw_uv+bw_uv; i++) {
+			quant_res = q.midrise(cfg.quantU, pd_u.calcResidual(i, j, best_pred));
+			pd_u.reconstruct(i, j, best_pred, quant_res);
+			res_u.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantU);
+			quant_res = q.midrise(cfg.quantV, pd_v.calcResidual(i, j, best_pred));
+			pd_v.reconstruct(i, j, best_pred, quant_res);
+			res_v.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantV);
+		}
+	}
 
 	gb_y.write_mat(res_y,true);
 	gb_u.write_mat(res_u,true);
