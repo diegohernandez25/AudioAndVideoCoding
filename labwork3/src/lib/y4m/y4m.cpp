@@ -1,5 +1,6 @@
 #include "y4m.h"
 
+
 //Documentation about the Y4M (YUV4MPEG) format
 //can be found on:
 //https://wiki.multimedia.cx/index.php?title=YUV4MPEG2
@@ -14,20 +15,20 @@ void y4m::print_header(){
 	std::cout<<"Interlacing: ";
 	switch(interlacing){
 		case IL_PROGRESSIVE:
-			std::cout<<"PROGRESSIVE"<<std::endl;	
+			std::cout<<"PROGRESSIVE"<<std::endl;
 			break;
 		case IL_TOP_FIELD_FIRST:
-			std::cout<<"TOP FIELD FIRST"<<std::endl;	
+			std::cout<<"TOP FIELD FIRST"<<std::endl;
 			break;
 		case IL_BOT_FIELD_FIRST:
-			std::cout<<"BOTTON FIELD FIRST"<<std::endl;	
+			std::cout<<"BOTTON FIELD FIRST"<<std::endl;
 			break;
 		case IL_MIXED:
-			std::cout<<"MIXED"<<std::endl;	
+			std::cout<<"MIXED"<<std::endl;
 			break;
 		default:
 		case IL_UNSET:
-			std::cout<<"UNSET"<<std::endl;	
+			std::cout<<"UNSET"<<std::endl;
 			break;
 	}
 	std::cout<<"Pixel aspect ratio: "<<pix_asp[0]<<":"<<pix_asp[1]<<std::endl;
@@ -59,14 +60,14 @@ bool y4m::load(std::string &y4mfile,uint block_size){
 	while(fetch()); //Get all frames
 	inf.close();
 	return true;
-}	
+}
 bool y4m::load_header(){
 
 	std::string header;
 	std::getline(inf,header);
 
 	if(magic.compare(header.substr(0,magic.size()))!=0){
-		return false;	
+		return false;
 	}
 
 	//Reset values
@@ -82,12 +83,12 @@ bool y4m::load_header(){
 	std::string val;
 	while(true){
 		nextptr=header.find(" ",currptr);
-		if(nextptr==std::string::npos) 
+		if(nextptr==std::string::npos)
 			val=header.substr(currptr+1,nextptr);
 		else
 			val=header.substr(currptr+1,nextptr-currptr+1);
 
-		size_t sep; 
+		size_t sep;
 		switch(header[currptr]){
 			case 'W': //Width
 				width=stoi(val);
@@ -181,13 +182,13 @@ void y4m::save_header(){
 		outf<<"?";
 
 	outf<<" C";
-	if(color_space==CS444)	
+	if(color_space==CS444)
 		outf<<"444";
-	else if(color_space==CS422)	
+	else if(color_space==CS422)
 		outf<<"422";
-	else if(color_space==CS420)	
+	else if(color_space==CS420)
 		outf<<"420";
-	else if(color_space==CS420JPEG)	
+	else if(color_space==CS420JPEG)
 		outf<<"420jpeg";
 	else /*if(color_space==CS420PALDV)*/
 		outf<<"420paldv";
@@ -200,23 +201,29 @@ void y4m::store_all(){
 		//Magic
 		outf<<frame_start;
 		outf<<std::endl;
-		//TODO WHATTTTT
+
+		//Crop Padding
+		cv::Mat y_clone=v_y[i](cv::Rect(0,0,s_y.width,s_y.height)).clone();
+		cv::Mat u_clone=v_u[i](cv::Rect(0,0,s_uv.width,s_uv.height)).clone();
+		cv::Mat v_clone=v_v[i](cv::Rect(0,0,s_uv.width,s_uv.height)).clone();
 
 		//Store y
-		outf.write((char*) v_y[i].ptr(),s_y.height*s_y.width);
+		outf.write((char*) y_clone.ptr(),s_y.height*s_y.width);
 
 		//Store u
-		outf.write((char*) v_u[i].ptr(),s_uv.height*s_uv.width);
+		outf.write((char*) u_clone.ptr(),s_uv.height*s_uv.width);
 
 		//Store v
-		outf.write((char*) v_v[i].ptr(),s_uv.height*s_uv.width);
+		outf.write((char*) v_clone.ptr(),s_uv.height*s_uv.width);
 	}
 }
 
 void y4m::build_structure(){
-	s_y=cv::Size(width,height);	
-	if(block_y.width>0)
-		s_y_pad=cv::Size(width+width%block_y.width,height+height%block_y.height);	
+	s_y=cv::Size(width,height);
+
+	if(block_y.width>0){
+		s_y_pad=cv::Size(block_y.width*ceil((float)width/block_y.width),block_y.height*ceil((float)height/block_y.height));
+	}
 	else
 		s_y_pad=s_y;
 
@@ -251,7 +258,7 @@ bool y4m::fetch(){
 	std::getline(inf,frame_header);
 
 	if(frame_start.compare(frame_header.substr(0,frame_start.size()))!=0){
-		return false;	
+		return false;
 	}
 
 	size_t currptr=frame_header.find(" ");
@@ -260,7 +267,7 @@ bool y4m::fetch(){
 	while(currptr!=std::string::npos){
 		currptr++;
 		nextptr=frame_header.find(" ",currptr);
-		if(nextptr==std::string::npos) 
+		if(nextptr==std::string::npos)
 			val=frame_header.substr(currptr+1,nextptr);
 		else
 			val=frame_header.substr(currptr+1,nextptr-currptr+1);
@@ -273,13 +280,13 @@ bool y4m::fetch(){
 	//This means one can store and read directly using pointer arithmetic
 
 	//Read y
-	inf.read((char*) y.ptr(),y.rows*y.cols);	
+	inf.read((char*) y.ptr(),y.rows*y.cols);
 
 	//Read u
-	inf.read((char*) u.ptr(),u.rows*u.cols);	
+	inf.read((char*) u.ptr(),u.rows*u.cols);
 
 	//Read v
-	inf.read((char*) v.ptr(),v.rows*v.cols);	
+	inf.read((char*) v.ptr(),v.rows*v.cols);
 
 	//Pad, if needed
 	if(block_y.width>1){
@@ -288,9 +295,9 @@ bool y4m::fetch(){
 		uint pad_w_uv=s_uv_pad.width-s_uv.width;
 		uint pad_h_uv=s_uv_pad.height-s_uv.height;
 
-		cv::copyMakeBorder(y,y,0,pad_w_y,0,pad_h_y,cv::BORDER_REFLECT);
-		cv::copyMakeBorder(u,u,0,pad_w_uv,0,pad_h_uv,cv::BORDER_REFLECT);
-		cv::copyMakeBorder(v,v,0,pad_w_uv,0,pad_h_uv,cv::BORDER_REFLECT);
+		cv::copyMakeBorder(y,y,0,pad_h_y,0,pad_w_y,cv::BORDER_REFLECT);
+		cv::copyMakeBorder(u,u,0,pad_h_uv,0,pad_w_uv,cv::BORDER_REFLECT);
+		cv::copyMakeBorder(v,v,0,pad_h_uv,0,pad_w_uv,cv::BORDER_REFLECT);
 	}
 
 	v_y.push_back(y);
@@ -309,9 +316,9 @@ void y4m::init(uint width,uint height,uint8_t color_space,uint block_size){
     interlacing=IL_UNSET;
     pix_asp[0]=0; pix_asp[1]=0;
 
-	v_y.clear();	
-	v_u.clear();	
-	v_v.clear();	
+	v_y.clear();
+	v_u.clear();
+	v_v.clear();
 	frame_ptr=0;
 	build_structure();
 }
@@ -329,10 +336,10 @@ void y4m::set_aspect(uint d,uint n){
 void y4m::set_interlace(uint8_t intr){ interlacing=intr; }
 
 bool y4m::push_frame(cv::Mat &y,cv::Mat &u,cv::Mat &v){
-	if(y.rows!=s_y_pad.height||y.cols!=s_y_pad.width||	
-	   u.rows!=s_uv_pad.height||u.cols!=s_uv_pad.width||	
+	if(y.rows!=s_y_pad.height||y.cols!=s_y_pad.width||
+	   u.rows!=s_uv_pad.height||u.cols!=s_uv_pad.width||
 	   v.rows!=s_uv_pad.height||v.cols!=s_uv_pad.width)
-		return false;	
+		return false;
 
 	v_y.push_back(y);
 	v_u.push_back(u);
@@ -351,13 +358,13 @@ bool y4m::next_frame(){
 
 //FIXME use aspect ratio
 cv::Mat y4m::get_bgr(){
-	cv::Mat fy=v_y[frame_ptr];	
+	cv::Mat fy=v_y[frame_ptr];
 	cv::Mat adj_u,adj_v;
 	cv::Mat yuv,bgr;
 	cv::resize(v_u[frame_ptr],adj_u,fy.size(),0,0,cv::INTER_LINEAR);
 	cv::resize(v_v[frame_ptr],adj_v,fy.size(),0,0,cv::INTER_LINEAR);
 	cv::Mat chan[3]={fy,adj_u,adj_v};
-	cv::merge(chan,3,yuv);	
+	cv::merge(chan,3,yuv);
 	cv::cvtColor(yuv,bgr,cv::COLOR_YUV2BGR);
 	return bgr;
 }
@@ -379,41 +386,3 @@ cv::Size y4m::get_y_size(){ return s_y; }
 cv::Size y4m::get_uv_size(){ return s_uv; }
 cv::Size y4m::get_pady_size(){ return s_y_pad; }
 cv::Size y4m::get_paduv_size(){ return s_uv_pad; }
-
-/*
-#include "opencv2/highgui/highgui.hpp" //FIXME temporary
-int main(int argc,char **argv){
-	if(argc!=4) return 1;
-	y4m in,out;
-	std::string f(argv[1]),ff(argv[2]),fff(argv[3]);
-	in.load(f);
-	in.print_header();
-
-	do{
-		cv::imshow("BGR",in.get_bgr());
-		cv::imshow("Y",in.get_y());
-		cv::imshow("U",in.get_u());
-		cv::imshow("V",in.get_v());
-		cv::waitKey(1);
-	} while(in.next_frame());
-
-	in.seek(0);
-	out.init(in.get_width(),in.get_height(),in.get_color_space());	
-	//out.set_framerate((int) in.get_fps(),1);
-	out.set_framerate(in.get_framerate()[0],in.get_framerate()[1]);
-	out.set_aspect(in.get_aspect()[0],in.get_aspect()[1]);
-	out.set_interlace(in.get_interlace());
-
-	do{
-		out.push_frame(in.get_y(),in.get_u(),in.get_v());
-		cv::imshow("BGR",in.get_bgr());
-		cv::imshow("Y",in.get_y());
-		cv::imshow("U",in.get_u());
-		cv::imshow("V",in.get_v());
-		cv::waitKey(1);
-	} while(in.next_frame());
-	in.save(ff);
-	out.save(fff);
-	
-}
-*/
