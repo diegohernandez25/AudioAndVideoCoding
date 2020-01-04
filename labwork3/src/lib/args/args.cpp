@@ -24,7 +24,7 @@ args::args(int argc, char** argv, int mode) {
 	quantY = -1;
 	quantU = -1;
 	quantV = -1;
-	dct = false;
+	dct = true;
 
 	int valid = parseArgs(argc-1, argv+1);
 	if (valid >= 0)
@@ -91,20 +91,20 @@ void args::printUsage() {
 		 << "			RANGE: >= 0" << endl;
 	}
 	if (mode == 3) {
-		cout << "		--quantY OR -y : quantization steps for the prediction residuals of Y" << endl
+		cout <<  "		--quant OR -q : simple quantization instead of using DCT" << endl
+		 <<"		--quantY OR -y : quantization steps for the prediction residuals of Y" << endl
 		 << "		--quantU OR -u : quantization steps for the prediction residuals of U" << endl
 		 << "		--quantV OR -v : quantization steps for the prediction residuals of V" << endl
-		 << "			RANGE:  0 <= q < 8" << endl
-		 << "		--dct OR -d : transform code the residuals instead of quantizing" << endl;
+		 << "			RANGE:  0 <= q < 8" << endl;
 	}
 }
 
 int args::parseArgs(int elem, char** argv) {
 	elem--;
 	int code;
-	if(argv[0] == string("-d") || argv[0] == string("'--dct")) {
+	if(argv[0] == string("-q") || argv[0] == string("'--quant")) {
 	// dct
-		dct = true;
+		dct = false;
 	} else {
 		if(argv[0] == string("-i") || argv[0] == string("'--in")) {
 		// fileIn
@@ -183,6 +183,7 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			quantY = atoi(argv[1]);
+			dct = false;
 		} else if(argv[0] == string("-u") || argv[0] == string("'--quantU")) {
 		// quantU
 			code = handleFlagParse(elem, argv[1], string("-u"), string("--quantU"), string("quantization value for U"),
@@ -191,6 +192,7 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			quantU = atoi(argv[1]);
+			dct = false;
 		} else if(argv[0] == string("-v") || argv[0] == string("'--quantV")) {
 		// quantV
 			code = handleFlagParse(elem, argv[1], string("-v"), string("--quantV"), string("quantization value for V"),
@@ -199,6 +201,7 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			quantV = atoi(argv[1]);
+			dct = false;
 		} else {
 			cout << "Error: invalid flag '" << argv[0] << "'" << endl;
 			return -1;
