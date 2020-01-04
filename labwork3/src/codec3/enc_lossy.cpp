@@ -84,7 +84,7 @@ void enc_lossy::encode(){
 		pd_u.newFrame(&u);
 		pd_v.newFrame(&v);
 
-		if(first_frame||(i_frame_count==(uint)cfg.keyPeriodicity&&cfg.keyPeriodicity!=0){
+		if(first_frame||(i_frame_count==(uint)cfg.keyPeriodicity&&cfg.keyPeriodicity!=0)){
 			i_frame();
 			first_frame=false;
 			i_frame_count=0;
