@@ -8,27 +8,26 @@ zigzag::zigzag(cv::Mat mat){
     zigzag::mat = mat;
 }
 
-zigzag::zigzag(vector<int> vect){
+zigzag::zigzag(vector<short> vect){
     zigzag::vect = vect;
 }
-
 
 cv::Mat zigzag::get_mat(){
     return zigzag::mat;
 }
 
-vector<int> zigzag::get_vect(){
+vector<short> zigzag::get_vect(){
     return zigzag::vect;
 }
 
-vector<int> zigzag::load_zigzag() {
+vector<short> zigzag::load_zigzag() {
     int rows=mat.rows;
     int cols=mat.cols;
 
     assert(rows==cols);
 
     int size=rows*cols;
-    vector<int> output(size, 0);
+    vector<short> output(size, 0);
 
     int r=0, c=0, count=0, transactions=0, n_iter, direction;
     while(count < size){
@@ -40,7 +39,7 @@ vector<int> zigzag::load_zigzag() {
                     r = r - direction;
                     c = c + direction;
                 }
-                output[count++] = mat.at<int>(r,c);
+                output[count++] = mat.at<short>(r,c);
             }
 
             transactions++;
@@ -58,7 +57,7 @@ vector<int> zigzag::load_zigzag() {
                     r = r + direction;
                     c = c - direction;
                 }
-                output[count++] = mat.at<int>(r,c);
+                output[count++] = mat.at<short>(r,c);
             }
             transactions++;
             (transactions%2==0)? c++:r++;
@@ -73,7 +72,7 @@ cv::Mat zigzag::inverse_zigzag(){
     int cols = rows;
     int size=rows*cols;
 
-    cv::Mat res = cv::Mat(rows,cols, CV_32SC1);
+    cv::Mat res = cv::Mat(rows,cols, CV_16S);
     res = 0;
     
     int r=0, c=0, count=0, transactions=0, n_iter, direction;
@@ -86,7 +85,7 @@ cv::Mat zigzag::inverse_zigzag(){
                     r = r - direction;
                     c = c + direction;
                 }
-                res.at<int>(r,c) = zigzag::vect.at(count++);
+                res.at<short>(r,c) = zigzag::vect.at(count++);
             }
 
             transactions++;
@@ -103,7 +102,7 @@ cv::Mat zigzag::inverse_zigzag(){
                     r = r + direction;
                     c = c - direction;
                 }
-                res.at<int>(r,c) = zigzag::vect.at(count++);
+                res.at<short>(r,c) = zigzag::vect.at(count++);
             }
             transactions++;
             (transactions%2==0)? c++:r++;
