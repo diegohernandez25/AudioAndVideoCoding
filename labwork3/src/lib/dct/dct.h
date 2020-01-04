@@ -29,7 +29,6 @@
 
 using namespace std;
 
-
 class dct{
 public:
     dct(int height, int width);
@@ -48,19 +47,15 @@ public:
     cv::Mat get_padded_image();
     cv::Mat get_rcvrd_image();
 
-    void dct_quant_rle_frame();
-    vector<tuple<int,int>> dct_quant_rle_blck(cv::Mat blck);
 
-    cv::Mat reverse_dct_quant_rle_frame(vector<vector<tuple<int,int>>> rle_vctrs);
-    cv::Mat reverse_dct_quant_rle_blck(vector<tuple<int, int>> rle_vctr);
+    vector<tuple<short,short>> dct_quant_rle_blck(cv::Mat blck, bool mask=false);
+    cv::Mat reverse_dct_quant_rle_blck(vector<tuple<short, short>> rle_vctr, bool mask=false);
 
-    bool upload_coded_blck(vector<tuple<int, int>> rle_vct);
+    cv::Mat reverse_dct_quant_rle_frame(vector<vector<tuple<short,short>>> rle_vctrs, bool mask=false);
+    void dct_quant_rle_frame(bool mask=false);
+    bool upload_coded_blck(vector<tuple<short, short>> rle_vct, bool mask=false);
 
-    vector<vector<tuple<int,int>>> get_vect();
-
-
-
-
+    vector<vector<tuple<short,short>>> get_vect();
 
 private:
     int height_blk;
@@ -72,7 +67,7 @@ private:
 
     int rstr_scnr_blk_ptr;
 
-    int quant_array[64]={   16, 11, 10, 16, 24, 40, 51, 61,
+    short quant_array[64]={   16, 11, 10, 16, 24, 40, 51, 61,
                             12, 12, 14, 19, 26, 58, 60, 55,
                             14, 13, 16, 24, 40, 57, 69, 56,
                             14, 17, 22, 29, 51, 87, 80, 62,
@@ -81,16 +76,23 @@ private:
                             49, 64, 78, 87, 103, 121, 129, 101,
                             72, 92, 95, 98, 112, 100, 103, 99};
 
-    cv::Mat quant_mat = cv::Mat(8, 8, CV_32S, quant_array);
+    int quant_array_mask[64] = {1, 1, 1, 1, 1, 1, 1, 1,
+                                1, 1, 1, 1, 1, 1, 1, 0,
+                                1, 1, 1, 1, 1, 1, 0, 0,
+                                1, 1, 1, 1, 1, 0, 0, 0,
+                                1, 1, 1, 1, 0, 0, 0, 0,
+                                1, 1, 1, 0, 0, 0, 0, 0,
+                                1, 1, 0, 0, 0, 0, 0, 0,
+                                1, 0, 0, 0, 0, 0, 0, 0,};
 
+    cv::Mat quant_mat = cv::Mat(8, 8, CV_16S, quant_array);
+    cv::Mat quant_mat_mask = cv::Mat(8, 8, CV_16S, quant_array_mask);
 
     cv::Mat image;
     cv::Mat padded_image;
     cv::Mat rcvrd_image;
 
-
-    vector<vector<tuple<int,int>>> vect;
+    vector<vector<tuple<short,short>>> vect;
 };
-
 
 #endif //DCT_DCT_H

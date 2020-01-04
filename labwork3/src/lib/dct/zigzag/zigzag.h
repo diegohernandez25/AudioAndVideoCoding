@@ -26,18 +26,18 @@ using namespace std;
 class zigzag {
 public:
     zigzag(cv::Mat block);
-    zigzag(vector<int> vect);
+    zigzag(vector<short> vect);
 
 
-    vector<int> load_zigzag();
+    vector<short> load_zigzag();
     cv::Mat inverse_zigzag();
     cv::Mat get_mat();
-    vector<int> get_vect();
+    vector<short> get_vect();
 
 
 private:
     cv::Mat mat;
-    vector<int> vect;
+    vector<short> vect;
 };
 
 
