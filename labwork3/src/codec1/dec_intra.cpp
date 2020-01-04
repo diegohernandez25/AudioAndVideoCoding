@@ -94,8 +94,8 @@ int decode(args& cfg){
 		pd_u.newFrame(&u);
 		pd_v.newFrame(&v);
 		if(pred_mode==9){
-			for(uint by=0;by*predBlockSize<y.rows;by++){
-				for(uint bx=0;bx*predBlockSize<y.cols;bx++){
+			for(uint by=0;by*predBlockSize<(uint)y.rows;by++){
+				for(uint bx=0;bx*predBlockSize<(uint)y.cols;bx++){
 					uint bw_y=out.get_bsize_y().width;
 					uint bh_y=out.get_bsize_y().height;
 					uint bw_uv=out.get_bsize_uv().width;

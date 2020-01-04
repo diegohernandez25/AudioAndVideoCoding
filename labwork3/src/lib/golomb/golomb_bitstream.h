@@ -12,8 +12,9 @@
 
 class golomb_bitstream : public golomb{
 	public:
-		golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream_wrapper& bt);
+		golomb_bitstream():bt(def_readonly){}
 		golomb_bitstream(uint m,bitstream_wrapper& bt);
+		golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream_wrapper& bt);
 
 		void write_signed_val(int val);
 		int read_signed_val();
@@ -22,6 +23,8 @@ class golomb_bitstream : public golomb{
 		uint read_val();
 
 	private:
+		bitstream_wrapper def_readonly; //Only used for the default constructor
+
 		bool signed_vals;
 		bitstream_wrapper& bt;
 };

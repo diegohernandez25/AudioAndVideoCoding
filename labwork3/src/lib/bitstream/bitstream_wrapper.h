@@ -11,7 +11,8 @@ using std::fstream;
 
 class bitstream_wrapper{
     public:
-        bitstream_wrapper(bitstream& bs,bool write) : bs(bs) {
+        bitstream_wrapper():bs(def_readonly){};
+        bitstream_wrapper(bitstream& bs,bool write):bs(bs){
 			acc=0;
 			this->write=write;
         };
@@ -33,6 +34,8 @@ class bitstream_wrapper{
 		uint getBits();
         
     private:
+		bitstream def_readonly; //Only used for the default constructor
+
 		bool write;
 		uint acc;
 		bitstream& bs;

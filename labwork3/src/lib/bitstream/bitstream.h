@@ -10,6 +10,7 @@ using std::fstream;
 
 class bitstream : public fstream {
     public:
+        bitstream(){}
         bitstream(const char *fname, ios_base::openmode mode) : fstream(fname, mode) {
             if (mode & std::ios::out) {
                 pointer = 7;

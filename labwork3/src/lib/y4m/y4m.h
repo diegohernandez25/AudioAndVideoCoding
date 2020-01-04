@@ -5,8 +5,6 @@
 #include "opencv2/imgproc.hpp"
 
 //TODO test with odd width and height
-//FIXME BLOCK SIZE ONLY WORKS FOR POWERS OF 2 
-
 class y4m{
 	public:
 		//Constant values

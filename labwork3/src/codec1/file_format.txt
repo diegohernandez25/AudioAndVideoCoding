@@ -27,7 +27,7 @@ ELSE:
 	(4B) Block Size
 	FRAME0:
 		BLOCK0:
-			() Predictor Used
+			(4bits) Predictor Used
 			() Y Residual Data		
 			() U Residual Data		
 			() V Residual Data		

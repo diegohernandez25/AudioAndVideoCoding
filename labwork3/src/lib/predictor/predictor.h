@@ -11,6 +11,7 @@ using namespace std;
 
 class predictor {
 public:
+    predictor(){};
     predictor(ushort width, ushort height);
     void newFrame(cv::Mat* mat);
     short predict(ushort x, ushort y, uint8_t mode);

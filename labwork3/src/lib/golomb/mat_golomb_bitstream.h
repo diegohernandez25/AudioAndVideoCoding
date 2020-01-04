@@ -10,8 +10,9 @@
 
 class mat_golomb_bitstream : public golomb_bitstream{
 	public:
-		mat_golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream_wrapper& bt);
+		mat_golomb_bitstream(){}
 		mat_golomb_bitstream(uint m,bitstream_wrapper& bt);
+		mat_golomb_bitstream(uint initial_m,uint blk_size,uint calc_interval,bitstream_wrapper& bt);
 
 		//template <typename T> void write_mat(cv::Mat& m,bool is_signed);
 		//template <typename T> void read_mat(cv::Mat& m,bool is_signed);
