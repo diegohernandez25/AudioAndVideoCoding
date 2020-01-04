@@ -29,14 +29,14 @@ void compensator::restore_block(cv::Mat& block,cv::Mat& block_residual,boost::ci
 	cv::add(block_residual,candidate,block,cv::noArray(),CV_8U);
 }
 cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>& hist){
-	cv::Mat	scores=cv::Mat::ones(curr.rows/macroblock_size,curr.cols/macroblock_size,CV_16UC4)*((1<<16)-1); 
+	cv::Mat	scores=cv::Mat::ones(std::ceil((float)curr.rows/macroblock_size),std::ceil((float)curr.cols/macroblock_size),CV_16UC4)*((1<<16)-1); 
 
-	//FIXME problema de macrobloco de 3x3 blocos 
 	cv::Mat block,candidate;
 	for(uint by=0;by<(uint)curr.rows;by+=macroblock_size){
 		for(uint bx=0;bx<(uint)curr.cols;bx+=macroblock_size){
 			uint macrox=macroblock_size;
 			uint macroy=macroblock_size;
+			bool print=false;
 			if(bx+macroblock_size>(uint)curr.cols){//last macro blocks blocks might not be complete
 				macrox=curr.cols-bx;
 			}
@@ -63,6 +63,7 @@ cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>&
 							entry[1]=fr; //Frame Nr
 							entry[2]=cx; //MVecX
 							entry[3]=cy; //MVecY
+							if(print) std::cout<<cv::Rect_<uint>(cx,cy,macrox,macroy)<<frame.size()<<std::endl;
 
 							if(curr_score<=lazy_score){ //jump to next block if satistied
 								goto block_iter;
@@ -71,6 +72,7 @@ cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>&
 					}
 				}
 			}
+			//if(print) std::cout<<"FINAL"<<cv::Rect_<uint>(scores.at<cv::Vec4w>(by/macroblock_size,bx/macroblock_size)[2],scores.at<cv::Vec4w>(by/macroblock_size,bx/macroblock_size)[3],macrox,macroy)<<std::endl;
 block_iter: ;
 		}
 	}
