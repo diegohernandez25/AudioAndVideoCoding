@@ -20,6 +20,7 @@ args::args(int argc, char** argv, int mode) {
 	skipNPixels = -1; 
 	macroSize = -1;
 	searchArea = -1;
+	searchDepth = -1;
 	keyPeriodicity = -1;
 	quantY = -1;
 	quantU = -1;
@@ -53,6 +54,7 @@ args::args(int argc, char** argv, int mode) {
 	if (mode > 1) {
 		cout << "	- Macroblock size: " << macroSize << "x" << macroSize << " blocks" << endl
 		 << "	- Search area: " << searchArea << " pixels" << endl
+		 << "	- Search depth: " << searchDepth << " frames" << endl
 		 << "	- Periodicity of key frames: " << keyPeriodicity << endl;
 	}
 	if (mode == 3) {
@@ -85,7 +87,9 @@ void args::printUsage() {
 	if (mode > 1) {
 		cout << "		--macrosize OR -m : macro size for inter-frame coding" << endl
 		 << "			RANGE: > 0" << endl
-		 << "		--searcharea OR -s : search area for inter-frame coding" << endl
+		 << "		--searcharea OR -a : search area for inter-frame coding" << endl
+		 << "			RANGE: > 0" << endl
+		 << "		--searchdepth OR -d : search depth for inter-frame coding" << endl
 		 << "			RANGE: > 0" << endl
 		 << "		--keyperiodicity OR -k : periodicity of the key frames. 0 means only the first frame is guaranteed to be fully I." << endl
 		 << "			RANGE: >= 0" << endl;
@@ -95,7 +99,7 @@ void args::printUsage() {
 		 <<"		--quantY OR -y : quantization steps for the prediction residuals of Y" << endl
 		 << "		--quantU OR -u : quantization steps for the prediction residuals of U" << endl
 		 << "		--quantV OR -v : quantization steps for the prediction residuals of V" << endl
-		 << "			RANGE:  0 <= q < 8" << endl;
+		 << "			RANGE:  0 <= q <= 8" << endl;
 	}
 }
 
@@ -159,14 +163,22 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			macroSize = atoi(argv[1]);
-		} else if(argv[0] == string("-s") || argv[0] == string("'--searcharea")) {
+		} else if(argv[0] == string("-a") || argv[0] == string("'--searcharea")) {
 		// searchArea
-			code = handleFlagParse(elem, argv[1], string("-s"), string("--searcharea"), string("search area"),
+			code = handleFlagParse(elem, argv[1], string("-a"), string("--searcharea"), string("search area"),
 									string("search area for inter-frame prediction"), string("search_area"),
 									string ("search area size"));
 			if (code < 0)
 				return -1;
 			searchArea = atoi(argv[1]);
+		} else if(argv[0] == string("-d") || argv[0] == string("'--searchdepth")) {
+		// searchDepth
+			code = handleFlagParse(elem, argv[1], string("-d"), string("--searchdepth"), string("search depth"),
+									string("search depth for inter-frame prediction"), string("search_depth"),
+									string ("search depth length"));
+			if (code < 0)
+				return -1;
+			searchDepth = atoi(argv[1]);
 		} else if(argv[0] == string("-k") || argv[0] == string("'--keyperiodicity")) {
 		// keyPeriodicity
 			code = handleFlagParse(elem, argv[1], string("-k"), string("--keyperiodicity"), string("key frame periodicity"),
@@ -312,6 +324,14 @@ int args::validateArgs() {
 			valid = false;
 		}
 
+		// Search depth
+		if (searchDepth == -1)
+			searchDepth = 4;
+		if (searchDepth < 1) {
+			cout << "Error: search depth must be greater than zero." << endl;
+			valid = false;
+		}
+
 		// Key periodicity
 		if (keyPeriodicity == -1)
 			keyPeriodicity = 0;
@@ -332,20 +352,20 @@ int args::validateArgs() {
 			cout << "Error: choose either the quantization steps or the DCT." << endl;
 			valid = false;
 		} else {
-			if (quantY > 7 || quantY < -1) {
-				cout << "Error: number of bits to quantize must be less than 8." << endl;
+			if (quantY > 8 || quantY < -1) {
+				cout << "Error: number of bits to quantize must be less or equal to 8." << endl;
 				valid = false;
 			} else if (quantY == -1) {
 				quantY = 2;
 			}
-			if (quantU > 7 || quantU < -1) {
-				cout << "Error: number of bits to quantize must be less than 8." << endl;
+			if (quantU > 8 || quantU < -1) {
+				cout << "Error: number of bits to quantize must be less or equal to 8." << endl;
 				valid = false;
 			} else if (quantU == -1) {
 				quantU = 2;
 			}
-			if (quantV > 7 || quantV < -1) {
-				cout << "Error: number of bits to quantize must be less than 8." << endl;
+			if (quantV > 8 || quantV < -1) {
+				cout << "Error: number of bits to quantize must be less or equal to 8." << endl;
 				valid = false;
 			} else if (quantV == -1) {
 				quantV = 2;

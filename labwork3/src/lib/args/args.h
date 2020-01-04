@@ -17,6 +17,7 @@ class args {
         int skipNPixels; 
         int macroSize;
         int searchArea;
+        int searchDepth;
         int keyPeriodicity;
         int quantY;
         int quantU;
