@@ -52,6 +52,7 @@ class enc_lossy{
 		void i_frame();
 		void p_frame(cv::Mat& y,cv::Mat& u,cv::Mat& v);
 		void write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv::Mat& u,cv::Mat& v);
+		void applyBlockQuant(uint bx, uint by, uint bw_y, uint bh_y, uint bw_uv, uint bh_uv, uint pred);
 		void write_block(uint bx,uint by);
 
 };
