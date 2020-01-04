@@ -33,24 +33,31 @@ void bitstream_wrapper::addPadding() {
 }
 
 uint8_t bitstream_wrapper::readBit(){
+	acc++;
 	return bs.readBit();
 }
 void bitstream_wrapper::readBit(uint8_t* bit){
+	acc++;
 	bs.readBit(bit);
 }
 uint32_t bitstream_wrapper::readNBits(uint n){
+	acc+=n;
 	return bs.readNBits(n);
 }
 void bitstream_wrapper::readNBits(uint32_t* bits, uint n){
+	acc+=n;
 	bs.readNBits(bits,n);
 }
 char bitstream_wrapper::readChar(){
+	acc+=sizeof(char)*8;
 	return bs.readChar();
 }
 void bitstream_wrapper::readChar(char* c){
+	acc+=sizeof(char)*8;
 	bs.readChar(c);
 }
 void bitstream_wrapper::readNChars(char* c, uint n){
+	acc+=sizeof(char)*8*n;
 	bs.readNChars(c,n);
 }
 
