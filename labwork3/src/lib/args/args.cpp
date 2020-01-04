@@ -84,11 +84,11 @@ void args::printUsage() {
 	}
 	if (mode > 1) {
 		cout << "		--macrosize OR -m : macro size for inter-frame coding" << endl
-		 << "			RANGE: > 0" << endl //TODO >0 , def 2
+		 << "			RANGE: > 0" << endl
 		 << "		--searcharea OR -s : search area for inter-frame coding" << endl
-		 << "			RANGE: > 0" << endl //TODO >0 , def 4
-		 << "		--keyperiodicity OR -k : periodicity of the key frames" << endl
-		 << "			RANGE: > 0" << endl;
+		 << "			RANGE: > 0" << endl
+		 << "		--keyperiodicity OR -k : periodicity of the key frames. 0 means only the first frame is guaranteed to be fully I." << endl
+		 << "			RANGE: >= 0" << endl;
 	}
 	if (mode == 3) {
 		cout << "		--quantY OR -y : quantization steps for the prediction residuals of Y" << endl
@@ -311,9 +311,9 @@ int args::validateArgs() {
 
 		// Key periodicity
 		if (keyPeriodicity == -1)
-			keyPeriodicity = 30;
-		if (keyPeriodicity < 1) {
-			cout << "Error: key frame periodicity must be greater than zero." << endl;
+			keyPeriodicity = 0;
+		if (keyPeriodicity < 0) {
+			cout << "Error: key frame periodicity must be at least zero." << endl;
 			valid = false;
 		}
 	}
