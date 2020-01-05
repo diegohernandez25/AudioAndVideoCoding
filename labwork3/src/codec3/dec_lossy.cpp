@@ -208,9 +208,9 @@ void dec_lossy::read_block(uint bx,uint by){
 	if(useDct) {
 		//TODO
 	} else {
-		res_y *= pow(2, quantY);
-		res_u *= pow(2, quantU);
-		res_v *= pow(2, quantV);
+		res_y *= (int)pow(2, quantY);
+		res_u *= (int)pow(2, quantU);
+		res_v *= (int)pow(2, quantV);
 	}
 
 	pd_y.reconstructBlock(bx*bw_y,by*bh_y,best_pred,&res_y);
