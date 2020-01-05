@@ -26,11 +26,13 @@ using namespace std;
 class zigzag {
 public:
     zigzag(cv::Mat block);
-    zigzag(vector<short> vect);
-
+    zigzag(vector<short> vect, int rows, int cols);
 
     vector<short> load_zigzag();
     cv::Mat inverse_zigzag();
+
+    int get_rows();
+    int get_cols();
     cv::Mat get_mat();
     vector<short> get_vect();
 
@@ -38,7 +40,15 @@ public:
 private:
     cv::Mat mat;
     vector<short> vect;
-};
+    int rows, cols;
 
+    vector<short> load_zigzag_n_m();
+    vector<short> load_zigzag_m_n();
+    vector<short> load_zigzag_sqr();
+
+    cv::Mat inverse_zigzag_sqr();
+    cv::Mat inverse_zigzag_n_m();
+    cv::Mat inverse_zigzag_m_n();
+};
 
 #endif //DCT_ZIGZAG_H
