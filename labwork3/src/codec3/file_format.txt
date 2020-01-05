@@ -15,9 +15,9 @@ Hybrid Lossless:
 (1b) DCT flag
 
 IF NOT DCT flag:
-	(3b) Y quant
-	(3b) U quant
-	(3b) V quant
+	(2B) Y quant
+	(2B) U quant
+	(2B) V quant
 
 FRAME0:
 	(1bit) I-Frame flag
