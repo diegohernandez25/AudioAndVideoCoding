@@ -31,8 +31,8 @@ using namespace std;
 
 class dct{
 public:
-    dct(int height, int width, int block_size=BLOCK_SIZE_DEFAULT);
-    dct(cv::Mat image, int block_size=BLOCK_SIZE_DEFAULT);
+    dct(int height, int width, cv::Size block_size);
+    dct(cv::Mat image, cv::Size block_size);
 
     int get_height_blk();
     int get_width_blk();
@@ -57,7 +57,7 @@ public:
 
     vector<vector<tuple<short,short>>> get_vect();
 
-    int get_block_size();
+    cv::Size get_block_size();
 
 private:
     cv::Mat image;
@@ -69,7 +69,8 @@ private:
     int height_blk;
     int width_blk;
     int total_blk;
-    int block_size=BLOCK_SIZE_DEFAULT;
+    //int block_size=BLOCK_SIZE_DEFAULT;
+    cv::Size block_size;
 
     int height_padded;
     int width_padded;

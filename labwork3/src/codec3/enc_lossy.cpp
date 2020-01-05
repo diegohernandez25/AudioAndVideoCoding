@@ -58,7 +58,7 @@ void enc_lossy::encode(){
 	bs.writeNBits(cfg.searchDepth,sizeof(uint16_t)*8);
 
 	//Write lossy mode
-	bs.writeBit(cfg.dct?0b1:0b0);
+	bs.writeBit(cfg.dct?1:0);
 	if(cfg.dct) {
 		// TODO dct params?
 	} else {
@@ -169,40 +169,58 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	bs.writeNBits(mvec[1],sizeof(ushort)*8); //Frame Nr
 	bs.writeNBits(mvec[2],sizeof(ushort)*8); //VecX
 	bs.writeNBits(mvec[3],sizeof(ushort)*8); //VecY
+	cv::Vec3w rcv_mvec(mvec[1],mvec[2],mvec[3]);
 
 	cp.apply_block_residual(res_macro_y,hist_y,mvec);
 
 	//readjust vectors sizes
 	mvec[2]/=mbw_y/mbw_uv;
 	mvec[3]/=mbh_y/mbh_uv;
-
 	cp.apply_block_residual(res_macro_u,hist_u,mvec);
 	cp.apply_block_residual(res_macro_v,hist_v,mvec);
 
+
+	//TODO DCT?
+	res_macro_y/=(int)pow(2, cfg.quantY); //Quantization
+	res_macro_u/=(int)pow(2, cfg.quantU); //Quantization
+	res_macro_v/=(int)pow(2, cfg.quantV); //Quantization
 	gb_y.write_mat(res_macro_y,true);
 	gb_u.write_mat(res_macro_u,true);
 	gb_v.write_mat(res_macro_v,true);
-		
+
+	//Feedback
+	res_macro_y*=(int)pow(2, cfg.quantY);
+	res_macro_u*=(int)pow(2, cfg.quantU);
+	res_macro_v*=(int)pow(2, cfg.quantV);
+	cv::Mat blky=y(cv::Rect_<uint>(mbx*mbw_y,mby*mbh_y,macroy_x,macroy_y));
+	cp.restore_block(blky,res_macro_y,hist_y,rcv_mvec);
+
+	rcv_mvec[1]/=mbw_y/mbw_uv;
+	rcv_mvec[2]/=mbh_y/mbh_uv;
+    cv::Mat blku=u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
+    cv::Mat blkv=v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
+    cp.restore_block(blku,res_macro_u,hist_u,rcv_mvec);
+    cp.restore_block(blkv,res_macro_v,hist_v,rcv_mvec);
 }
 
 void enc_lossy::applyBlockQuant(uint bx, uint by, uint bw_y, uint bh_y, uint bw_uv, uint bh_uv, uint pred) {
 	short quant_res;
 	for (uint j = by*bh_y; j < by*bh_y+bh_y; j++) {
 		for (uint i = bx*bw_y; i < bx*bw_y+bw_y; i++) {
-			quant_res = (int)(pd_y.calcResidual(i, j, pred) / pow(2, cfg.quantY)) << cfg.quantY;
-			pd_y.reconstruct(i, j, pred, quant_res);
-			res_y.at<short>(j-by*bh_y, i-bx*bw_y) = (quant_res >> cfg.quantY);
+			quant_res = (int)(pd_y.calcResidual(i, j, pred) / pow(2, cfg.quantY));
+			res_y.at<short>(j-by*bh_y, i-bx*bw_y) = quant_res;
+			pd_y.reconstruct(i, j, pred, quant_res*pow(2, cfg.quantY));
 		}
 	}
 
 	for (uint j = by*bh_uv; j < by*bh_uv+bh_uv; j++) {
 		for (uint i = bx*bw_uv; i < bx*bw_uv+bw_uv; i++) {
-			quant_res = (int)(pd_u.calcResidual(i, j, pred) / pow(2, cfg.quantU)) << cfg.quantU;
-			pd_u.reconstruct(i, j, pred, quant_res);
-			res_u.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantU);
-			quant_res = (int)(pd_v.calcResidual(i, j, pred) / pow(2, cfg.quantV)) << cfg.quantV;
-			pd_v.reconstruct(i, j, pred, quant_res);
-			res_v.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantV);
+			quant_res = (int)(pd_u.calcResidual(i, j, pred) / pow(2, cfg.quantU));
+			res_u.at<short>(j-by*bh_uv, i-bx*bw_uv) = quant_res;
+			pd_u.reconstruct(i, j, pred, quant_res*pow(2, cfg.quantU));
+			quant_res = (int)(pd_v.calcResidual(i, j, pred) / pow(2, cfg.quantV));
+			res_v.at<short>(j-by*bh_uv, i-bx*bw_uv) = quant_res;
+			pd_v.reconstruct(i, j, pred, quant_res*pow(2, cfg.quantV));
 		}
 	}
 }
