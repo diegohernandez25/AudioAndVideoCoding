@@ -281,10 +281,10 @@ int args::validateArgs() {
 				cout << "Error: block size must be greater than zero." << endl;
 				valid = false;
 			}
-		}
-		if (blockSize%2 != 0) {
-			cout << "Error: block size must be an even number." << endl;
-			valid = false;
+			if (blockSize%2 != 0) {
+				cout << "Error: block size must be an even number." << endl;
+				valid = false;
+			}
 		}
 
 		// TODO replace values, see if necessary
