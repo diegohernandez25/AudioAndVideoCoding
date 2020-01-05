@@ -22,7 +22,6 @@ set( DECODER_3 src/codec3/dec_lossy.cpp )
 AUX_SOURCE_DIRECTORY( src/lib/bitstream/ BITSTREAM)
 AUX_SOURCE_DIRECTORY( src/lib/golomb/ GOLOMB)
 AUX_SOURCE_DIRECTORY( src/lib/predictor/ PREDICTOR)
-AUX_SOURCE_DIRECTORY( src/lib/quantization/ QUANTIZATION)
 AUX_SOURCE_DIRECTORY( src/lib/y4m/ Y4M)
 AUX_SOURCE_DIRECTORY( src/lib/dct/rle/ RLE)
 AUX_SOURCE_DIRECTORY( src/lib/dct/zigzag/ ZZ)
@@ -34,7 +33,6 @@ add_library( L_ARGS STATIC ${ARGS})
 add_library( L_BITSTREAM STATIC ${BITSTREAM})
 add_library( L_GOLOMB STATIC ${GOLOMB})
 add_library( L_PREDICTOR STATIC ${PREDICTOR})
-add_library( L_QUANTIZATION STATIC ${QUANTIZATION})
 add_library( L_Y4M STATIC ${Y4M})
 add_library( L_RLE STATIC ${RLE})
 add_library( L_ZZ STATIC ${ZZ})
@@ -80,7 +78,6 @@ target_link_libraries(cod1
 					L_BITSTREAM
 					L_GOLOMB
 					L_PREDICTOR
-					L_QUANTIZATION
 					L_Y4M
 					)
 
@@ -90,7 +87,6 @@ target_link_libraries(cod2
 					L_BITSTREAM
 					L_GOLOMB
 					L_PREDICTOR
-					L_QUANTIZATION
 					L_Y4M
 					)
 
@@ -100,7 +96,6 @@ target_link_libraries(cod3
 					L_BITSTREAM
 					L_GOLOMB
 					L_PREDICTOR
-					L_QUANTIZATION
 					L_Y4M
 					L_DCT
 					)
@@ -111,7 +106,6 @@ target_link_libraries(dec1
 					L_BITSTREAM
 					L_GOLOMB
 					L_PREDICTOR
-					L_QUANTIZATION
 					L_Y4M
 					)
 
@@ -121,7 +115,6 @@ target_link_libraries(dec2
 					L_BITSTREAM
 					L_GOLOMB
 					L_PREDICTOR
-					L_QUANTIZATION
 					L_Y4M
 					)
 
@@ -131,7 +124,6 @@ target_link_libraries(dec3
 					L_BITSTREAM
 					L_GOLOMB
 					L_PREDICTOR
-					L_QUANTIZATION
 					L_Y4M
 					L_DCT
 					)

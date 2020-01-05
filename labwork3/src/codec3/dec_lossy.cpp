@@ -58,7 +58,6 @@ int dec_lossy::decode(){
 		quantU = bs.readNBits(3);
 		quantV = bs.readNBits(3);
 	}
-	std::cout << int(quantY) << int(quantU) << int(quantV) << std::endl;
 
 	//Create new video
 	out.init(width,height,color_space,predBlockSize);
@@ -103,9 +102,10 @@ int dec_lossy::decode(){
 		hist_v.push_back(v);
 
 		out.push_frame(y,u,v);
-	
+		std::cout << "Processed frame " << f+1 << "/" << num_frames << "\r" << std::flush;
 	}
 	out.save(cfg.fileOut);
+	std::cout << std::endl;
 	return 0;
 }
 
@@ -140,8 +140,8 @@ void dec_lossy::p_frame(cv::Mat& y,cv::Mat& u,cv::Mat& v){
 
 void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat& v){
 	uint framenr=bs.readNBits(sizeof(ushort)*8); //Frame Nr
-	uint vecx=bs.readNBits(sizeof(uint)*8); //VecX
-	uint vecy=bs.readNBits(sizeof(uint)*8); //VecY
+	uint vecx=bs.readNBits(sizeof(ushort)*8); //VecX
+	uint vecy=bs.readNBits(sizeof(ushort)*8); //VecY
 	cv::Vec3w mvec(framenr,vecx,vecy);
 
     uint mbw_y=out.get_bsize_y().width*macroSize;
@@ -154,12 +154,10 @@ void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat&
     uint macrouv_x=mbw_uv;
     uint macrouv_y=mbh_uv;
     if(mbx*mbw_y+mbw_y>(uint)y.cols){
-        std::cout<<"hey"<<std::endl;
         macroy_x=y.cols-mbx*mbw_y;
         macrouv_x=u.cols-mbx*mbw_uv;
     }
     if(mby*mbh_y+mbh_y>(uint)y.rows){
-        std::cout<<"ho"<<std::endl;
         macroy_y=y.rows-mby*mbh_y;
         macrouv_y=u.rows-mby*mbh_uv;
     }

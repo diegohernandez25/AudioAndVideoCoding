@@ -19,9 +19,9 @@ void enc_lossy::encode(){
 	pd_v=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 
 	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); //TODO add to ARGS search_depth and lazy_score
-	hist_y=boost::circular_buffer<cv::Mat>(compensator_depth);
-	hist_u=boost::circular_buffer<cv::Mat>(compensator_depth);
-	hist_v=boost::circular_buffer<cv::Mat>(compensator_depth);
+	hist_y=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
+	hist_u=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
+	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	
 	//Write magic
     bs.writeNChars((char*) magic,strlen(magic));
@@ -55,7 +55,7 @@ void enc_lossy::encode(){
 	bs.writeNBits(cfg.macroSize,sizeof(uint)*8);
 
 	//Write search depth
-	bs.writeNBits(compensator_depth,sizeof(uint16_t)*8);
+	bs.writeNBits(cfg.searchDepth,sizeof(uint16_t)*8);
 
 	//Write lossy mode
 	bs.writeBit(cfg.dct?0b1:0b0);
@@ -74,6 +74,10 @@ void enc_lossy::encode(){
 
 	bool first_frame=true;
 	uint i_frame_count=0;
+	uint p_count = 0;
+	uint i_count = 0;
+	uint total_count = 0;
+
 	//Add Data
 	do{
 		cv::Mat y=in.get_y(); 
@@ -82,22 +86,29 @@ void enc_lossy::encode(){
 
 		pd_y.newFrame(&y);
 		pd_u.newFrame(&u);
-		pd_v.newFrame(&v);
+		pd_v.newFrame(&v);	
 
 		if(first_frame||(i_frame_count==(uint)cfg.keyPeriodicity&&cfg.keyPeriodicity!=0)){
 			i_frame();
 			first_frame=false;
 			i_frame_count=0;
+			i_count++;
 		}
 		else{
 			p_frame(y,u,v);
 			i_frame_count++;
+			p_count++;
 		}
 
 		hist_y.push_back(y);
 		hist_u.push_back(u);
 		hist_v.push_back(v);
-	}while(in.next_frame());	
+
+
+		std::cout << "Processed frame " << ++total_count << "/" << in.get_num_frames() << " || P-frame count: " << p_count 
+				  << " || I-frame count: " << i_count <<"\r" << std::flush;
+	}while(in.next_frame());
+	std::cout << std::endl;
 }
 
 void enc_lossy::i_frame(){
@@ -144,12 +155,10 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	uint macrouv_x=mbw_uv;
 	uint macrouv_y=mbh_uv;
 	if(mbx*mbw_y+mbw_y>(uint)y.cols){
-		std::cout<<"hey"<<std::endl;
 		macroy_x=y.cols-mbx*mbw_y;
 		macrouv_x=u.cols-mbx*mbw_uv;
 	}
 	if(mby*mbh_y+mbh_y>(uint)y.rows){
-		std::cout<<"ho"<<std::endl;
 		macroy_y=y.rows-mby*mbh_y;
 		macrouv_y=u.rows-mby*mbh_uv;
 	}
@@ -158,8 +167,8 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y)).convertTo(res_macro_v,CV_16S);
 
 	bs.writeNBits(mvec[1],sizeof(ushort)*8); //Frame Nr
-	bs.writeNBits(mvec[2],sizeof(uint)*8); //VecX
-	bs.writeNBits(mvec[3],sizeof(uint)*8); //VecY
+	bs.writeNBits(mvec[2],sizeof(ushort)*8); //VecX
+	bs.writeNBits(mvec[3],sizeof(ushort)*8); //VecY
 
 	cp.apply_block_residual(res_macro_y,hist_y,mvec);
 
@@ -176,13 +185,33 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 		
 }
 
+void enc_lossy::applyBlockQuant(uint bx, uint by, uint bw_y, uint bh_y, uint bw_uv, uint bh_uv, uint pred) {
+	short quant_res;
+	for (uint j = by*bh_y; j < by*bh_y+bh_y; j++) {
+		for (uint i = bx*bw_y; i < bx*bw_y+bw_y; i++) {
+			quant_res = (int)(pd_y.calcResidual(i, j, pred) / pow(2, cfg.quantY)) << cfg.quantY;
+			pd_y.reconstruct(i, j, pred, quant_res);
+			res_y.at<short>(j-by*bh_y, i-bx*bw_y) = (quant_res >> cfg.quantY);
+		}
+	}
+
+	for (uint j = by*bh_uv; j < by*bh_uv+bh_uv; j++) {
+		for (uint i = bx*bw_uv; i < bx*bw_uv+bw_uv; i++) {
+			quant_res = (int)(pd_u.calcResidual(i, j, pred) / pow(2, cfg.quantU)) << cfg.quantU;
+			pd_u.reconstruct(i, j, pred, quant_res);
+			res_u.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantU);
+			quant_res = (int)(pd_v.calcResidual(i, j, pred) / pow(2, cfg.quantV)) << cfg.quantV;
+			pd_v.reconstruct(i, j, pred, quant_res);
+			res_v.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantV);
+		}
+	}
+}
+
 void enc_lossy::write_block(uint bx,uint by){
 	uint bw_y=in.get_bsize_y().width;
 	uint bh_y=in.get_bsize_y().height;
 	uint bw_uv=in.get_bsize_uv().width;
 	uint bh_uv=in.get_bsize_uv().height;
-	quant q;
-	short quant_res;
 	
 	uint8_t best_pred;
 	if(cfg.jpegPredictor==9){ //NOT forced mode
@@ -193,24 +222,11 @@ void enc_lossy::write_block(uint bx,uint by){
 	else{
 		best_pred=cfg.jpegPredictor;
 	}
-
-	for (uint j = by*bh_y; j < by*bh_y+bh_y; j++) {
-		for (uint i = bx*bw_y; i < bx*bw_y+bw_y; i++) {
-			quant_res = q.midrise(cfg.quantY, pd_y.calcResidual(i, j, best_pred));
-			pd_y.reconstruct(i, j, best_pred, quant_res);
-			res_y.at<short>(j-by*bh_y, i-bx*bw_y) = (quant_res >> cfg.quantY);
-		}
-	}
-
-	for (uint j = by*bh_uv; j < by*bh_uv+bh_uv; j++) {
-		for (uint i = bx*bw_uv; i < bx*bw_uv+bw_uv; i++) {
-			quant_res = q.midrise(cfg.quantU, pd_u.calcResidual(i, j, best_pred));
-			pd_u.reconstruct(i, j, best_pred, quant_res);
-			res_u.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantU);
-			quant_res = q.midrise(cfg.quantV, pd_v.calcResidual(i, j, best_pred));
-			pd_v.reconstruct(i, j, best_pred, quant_res);
-			res_v.at<short>(j-by*bh_uv, i-bx*bw_uv) = (quant_res >> cfg.quantV);
-		}
+	
+	if (cfg.dct) {
+		// TODO
+	} else {
+		applyBlockQuant(bx, by, bw_y, bh_y, bw_uv, bh_uv, best_pred);
 	}
 
 	gb_y.write_mat(res_y,true);

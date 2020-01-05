@@ -19,9 +19,9 @@ void enc_hybrid::encode(){
 	pd_v=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 
 	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); //TODO add to ARGS search_depth and lazy_score
-	hist_y=boost::circular_buffer<cv::Mat>(compensator_depth);
-	hist_u=boost::circular_buffer<cv::Mat>(compensator_depth);
-	hist_v=boost::circular_buffer<cv::Mat>(compensator_depth);
+	hist_y=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
+	hist_u=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
+	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	
 	//Write magic
     bs.writeNChars((char*) magic,strlen(magic));
@@ -55,7 +55,7 @@ void enc_hybrid::encode(){
 	bs.writeNBits(cfg.macroSize,sizeof(uint)*8);
 
 	//Write search depth
-	bs.writeNBits(compensator_depth,sizeof(uint16_t)*8);
+	bs.writeNBits(cfg.searchDepth,sizeof(uint16_t)*8);
 
 	res_y=cv::Mat(in.get_bsize_y(),CV_16S);
 	res_u=cv::Mat(in.get_bsize_uv(),CV_16S);
@@ -135,12 +135,10 @@ void enc_hybrid::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv
 	uint macrouv_x=mbw_uv;
 	uint macrouv_y=mbh_uv;
 	if(mbx*mbw_y+mbw_y>(uint)y.cols){
-		std::cout<<"hey"<<std::endl;
 		macroy_x=y.cols-mbx*mbw_y;
 		macrouv_x=u.cols-mbx*mbw_uv;
 	}
 	if(mby*mbh_y+mbh_y>(uint)y.rows){
-		std::cout<<"ho"<<std::endl;
 		macroy_y=y.rows-mby*mbh_y;
 		macrouv_y=u.rows-mby*mbh_uv;
 	}
@@ -149,8 +147,8 @@ void enc_hybrid::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv
 	v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y)).convertTo(res_macro_v,CV_16S);
 
 	bs.writeNBits(mvec[1],sizeof(ushort)*8); //Frame Nr
-	bs.writeNBits(mvec[2],sizeof(uint)*8); //VecX
-	bs.writeNBits(mvec[3],sizeof(uint)*8); //VecY
+	bs.writeNBits(mvec[2],sizeof(ushort)*8); //VecX
+	bs.writeNBits(mvec[3],sizeof(ushort)*8); //VecY
 
 	cp.apply_block_residual(res_macro_y,hist_y,mvec);
 

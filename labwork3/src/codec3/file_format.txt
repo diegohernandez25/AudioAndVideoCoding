@@ -1,6 +1,6 @@
 Hybrid Lossless:
 
-(5B) Magic number: "VMAD1"
+(5B) Magic number: "VMAD2"
 (4B) Width
 (4B) Height
 (1B) Color Space (Value returned by y4m)
@@ -12,6 +12,12 @@ Hybrid Lossless:
 (4B) Block Size
 (4B) MacroBlock Size
 (2B) Search depth
+(1b) DCT flag
+
+IF NOT DCT flag:
+	(3b) Y quant
+	(3b) U quant
+	(3b) V quant
 
 FRAME0:
 	(1bit) I-Frame flag
