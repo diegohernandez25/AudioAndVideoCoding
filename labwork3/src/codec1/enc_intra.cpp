@@ -73,6 +73,7 @@ void encode(args& cfg){
 	cv::Mat res_y(block_size_y,CV_16S);
 	cv::Mat res_u(block_size_uv,CV_16S);
 	cv::Mat res_v(block_size_uv,CV_16S);
+	uint total_count = 0;
 	//Add Data
 	do{
 		cv::Mat y=in.get_y(); 
@@ -114,7 +115,9 @@ void encode(args& cfg){
 			gb_v.write_mat(res_v,true);	
 		}
 
-	}while(in.next_frame());	
+		std::cout << "Processed frame " << ++total_count << "/" << in.get_num_frames() << "\r" << std::flush;
+	}while(in.next_frame());
+	std::cout << std::endl;	
 }
 
 int main(int argc,char** argv){

@@ -130,9 +130,10 @@ int decode(args& cfg){
 		}
 
 		out.push_frame(y,u,v);
-	
+		std::cout << "Processed frame " << f+1 << "/" << num_frames << "\r" << std::flush;
 	}
 	out.save(cfg.fileOut);
+	std::cout << std::endl;
 	return 0;
 }
 
