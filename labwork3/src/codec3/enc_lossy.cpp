@@ -74,6 +74,10 @@ void enc_lossy::encode(){
 
 	bool first_frame=true;
 	uint i_frame_count=0;
+	uint p_count = 0;
+	uint i_count = 0;
+	uint total_count = 0;
+
 	//Add Data
 	do{
 		cv::Mat y=in.get_y(); 
@@ -82,22 +86,29 @@ void enc_lossy::encode(){
 
 		pd_y.newFrame(&y);
 		pd_u.newFrame(&u);
-		pd_v.newFrame(&v);
+		pd_v.newFrame(&v);	
 
 		if(first_frame||(i_frame_count==(uint)cfg.keyPeriodicity&&cfg.keyPeriodicity!=0)){
 			i_frame();
 			first_frame=false;
 			i_frame_count=0;
+			i_count++;
 		}
 		else{
 			p_frame(y,u,v);
 			i_frame_count++;
+			p_count++;
 		}
 
 		hist_y.push_back(y);
 		hist_u.push_back(u);
 		hist_v.push_back(v);
-	}while(in.next_frame());	
+
+
+		std::cout << "Processed frame " << ++total_count << "/" << in.get_num_frames() << " || P-frame count: " << p_count 
+				  << " || I-frame count: " << i_count <<"\r" << std::flush;
+	}while(in.next_frame());
+	std::cout << std::endl;
 }
 
 void enc_lossy::i_frame(){
