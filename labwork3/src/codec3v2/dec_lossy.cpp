@@ -62,7 +62,6 @@ int decode(args& cfg){
 	out.set_framerate(framerate[0],framerate[1]);
 	out.set_aspect(aspect[0],aspect[1]);
 	out.set_interlace(interlace);
-	out.print_header();
 
 	golomb_bitstream gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 	golomb_bitstream gb_y_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);

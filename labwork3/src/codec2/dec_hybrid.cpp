@@ -58,7 +58,6 @@ int dec_hybrid::decode(){
 	out.set_framerate(framerate[0],framerate[1]);
 	out.set_aspect(aspect[0],aspect[1]);
 	out.set_interlace(interlace);
-	out.print_header();
 
 	cp=compensator(predBlockSize*macroSize,0,0);
     hist_y=boost::circular_buffer<cv::Mat>(compensator_depth);
