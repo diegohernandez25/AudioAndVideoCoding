@@ -13,11 +13,9 @@ Hybrid Lossy:
 (4B) MacroBlock Size
 (2B) Search depth
 (1b) DCT flag
-
-IF NOT DCT flag:
-	(2B) Y quant
-	(2B) U quant
-	(2B) V quant
+(2B) Y quant
+(2B) U quant
+(2B) V quant
 
 FRAME0:
 	(1bit) I-Frame flag
