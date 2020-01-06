@@ -127,7 +127,7 @@ int rle::get_variant_vector_size() {
     int count=0;
     for(tuple<short,short>t:vect_rle)
         count+=std::get<0>(t) + 1;
-    return count -1;
+    return count-1;
 }
 
 vector<short> rle::load_rle(){
@@ -159,5 +159,3 @@ int rle::get_num_zeros(){
 vector<short> rle::get_vector(){return vect;}
 
 vector<tuple<short, short>> rle::get_vector_rle(){return vect_rle;}
-
-

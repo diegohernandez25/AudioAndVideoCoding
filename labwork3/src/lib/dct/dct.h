@@ -14,10 +14,8 @@
 #include <vector>
 #include <ctime>
 #include <tuple>
-
 #include <cassert>
 #include <cmath>
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -31,33 +29,31 @@ using namespace std;
 
 class dct{
 public:
-    dct(int height, int width, cv::Size block_size);
-    dct(cv::Mat image, cv::Size block_size);
+    dct(){}
+    dct(int height, int width, cv::Size block_size, int quant_lvl=1);
+    dct(cv::Mat image, cv::Size block_size, int quant_lvl=1);
 
     int get_height_blk();
     int get_width_blk();
     int get_total_blk();
-
     int get_height_padded();
     int get_width_padded();
-
     int get_rstr_scnr_blk_ptr();
+    vector<vector<tuple<short,short>>> get_vect();
 
     cv::Mat get_image();
     cv::Mat get_padded_image();
     cv::Mat get_rcvrd_image();
 
+    cv::Size get_block_size();
 
     vector<tuple<short,short>> dct_quant_rle_blck(cv::Mat blck, bool mask=false);
     cv::Mat reverse_dct_quant_rle_blck(vector<tuple<short, short>> rle_vctr, bool mask=false);
 
+    vector<vector<tuple<short,short>>> dct_quant_rle_frame(bool mask=false);
     cv::Mat reverse_dct_quant_rle_frame(vector<vector<tuple<short,short>>> rle_vctrs, bool mask=false);
-    void dct_quant_rle_frame(bool mask=false);
+
     bool upload_coded_blck(vector<tuple<short, short>> rle_vct, bool mask=false);
-
-    vector<vector<tuple<short,short>>> get_vect();
-
-    cv::Size get_block_size();
 
 private:
     cv::Mat image;
@@ -69,7 +65,6 @@ private:
     int height_blk;
     int width_blk;
     int total_blk;
-    //int block_size=BLOCK_SIZE_DEFAULT;
     cv::Size block_size;
 
     int height_padded;
@@ -86,6 +81,7 @@ private:
                             49, 64, 78, 87, 103, 121, 129, 101,
                             72, 92, 95, 98, 112, 100, 103, 99};
 
+
     int quant_array_mask[64] = {1, 1, 1, 1, 1, 1, 1, 1,
                                 1, 1, 1, 1, 1, 1, 1, 0,
                                 1, 1, 1, 1, 1, 1, 0, 0,
@@ -95,11 +91,10 @@ private:
                                 1, 1, 0, 0, 0, 0, 0, 0,
                                 1, 0, 0, 0, 0, 0, 0, 0,};
 
-    cv::Mat quant_mat = cv::Mat(8, 8, CV_16S, quant_array);
+    cv::Mat quant_mat;
+    cv::Mat subtraction_mat;
     cv::Mat quant_mat_mask = cv::Mat(8, 8, CV_16S, quant_array_mask);
     void change_quant_mats();
-
-
 };
 
 #endif //DCT_DCT_H
