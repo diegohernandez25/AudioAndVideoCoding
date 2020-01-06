@@ -91,7 +91,7 @@ void args::printUsage() {
 		 << "		--searcharea OR -a : search area for inter-frame coding" << endl
 		 << "			RANGE: > 0" << endl
 		 << "		--searchdepth OR -d : search depth for inter-frame coding" << endl
-		 << "			RANGE: > 0" << endl
+		 << "			RANGE:  0 < d < 16" << endl
 		 << "		--keyperiodicity OR -k : periodicity of the key frames. 0 means only the first frame is guaranteed to be fully I." << endl
 		 << "			RANGE: >= 0" << endl;
 	}
@@ -329,8 +329,8 @@ int args::validateArgs() {
 		// Search depth
 		if (searchDepth == -1)
 			searchDepth = 4;
-		if (searchDepth < 1) {
-			cout << "Error: search depth must be greater than zero." << endl;
+		if (searchDepth < 1 || searchDepth > 15) {
+			cout << "Error: search depth must be greater than zero and less than 16." << endl;
 			valid = false;
 		}
 
