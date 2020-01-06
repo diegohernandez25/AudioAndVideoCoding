@@ -166,7 +166,7 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y)).convertTo(res_macro_u,CV_16S);
 	v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y)).convertTo(res_macro_v,CV_16S);
 
-	bs.writeNBits(mvec[1],sizeof(4); //Frame Nr
+	bs.writeNBits(mvec[1],sizeof(4)); //Frame Nr
 	bs.writeNBits(mvec[2],sizeof(ushort)*8); //VecX
 	bs.writeNBits(mvec[3],sizeof(ushort)*8); //VecY
 	cv::Vec3w rcv_mvec(mvec[1],mvec[2],mvec[3]);
