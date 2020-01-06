@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const char* magic="VMAD0";
+const char* magic="VMAD4";
 
 uint golomb_initial_m=5;
 uint golomb_blk_size=128;
