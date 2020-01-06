@@ -137,8 +137,6 @@ void dct::change_quant_mats() {
     else
         cv::resize(this->quant_mat,this->quant_mat,cv::Size(block_size.width,block_size.height));
 
-
-    cout << this->quant_mat << endl;
 }
 
 int dct::get_height_blk() {return height_blk;}

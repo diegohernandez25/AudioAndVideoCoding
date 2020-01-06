@@ -40,7 +40,7 @@ void enc_lossy::encode(){
 	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 
 	//Write magic
-  bs.writeNChars((char*) magic,strlen(magic));
+	bs.writeNChars((char*) magic,strlen(magic));
 
 	//Write Width/Height (Y4M)
 	bs.writeNBits(in.get_width(),sizeof(uint)*8);
@@ -80,13 +80,11 @@ void enc_lossy::encode(){
 		dct_y=dct(int(in.get_height()),int(in.get_width()),in.get_bsize_y(),3);
 		dct_u=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3);
 		dct_v=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3);
-
-	} else {
-		//Write quant bits for each channel
-		bs.writeNBits(cfg.qualY, sizeof(short)*8);
-		bs.writeNBits(cfg.qualU, sizeof(short)*8);
-		bs.writeNBits(cfg.qualV, sizeof(short)*8);
 	}
+	//Write quant bits for each channel
+	bs.writeNBits(cfg.qualY, sizeof(short)*8);
+	bs.writeNBits(cfg.qualU, sizeof(short)*8);
+	bs.writeNBits(cfg.qualV, sizeof(short)*8);
 
 	res_y=cv::Mat(in.get_bsize_y(),CV_16S);
 	res_u=cv::Mat(in.get_bsize_uv(),CV_16S);
@@ -199,54 +197,27 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	cp.apply_block_residual(res_macro_u,hist_u,mvec);
 	cp.apply_block_residual(res_macro_v,hist_v,mvec);
 
-	if(cfg.dct){
-		rle_y=dct_y.dct_quant_rle_blck(res_y, false);
-		rle_u=dct_u.dct_quant_rle_blck(res_u, false);
-		rle_v=dct_v.dct_quant_rle_blck(res_v, false);
+	res_macro_y/=(int)cfg.qualY; //Quantization
+	res_macro_u/=(int)cfg.qualU; //Quantization
+	res_macro_v/=(int)cfg.qualV; //Quantization
+	gb_y.write_mat(res_macro_y,true);
+	gb_u.write_mat(res_macro_u,true);
+	gb_v.write_mat(res_macro_v,true);
 
-		res_macro_y=dct_y.reverse_dct_quant_rle_blck(rle_y, false);
-		res_macro_u=dct_u.reverse_dct_quant_rle_blck(rle_u, false);
-		res_macro_v=dct_v.reverse_dct_quant_rle_blck(rle_v, false);
-
-		for(tuple<short,short> t:rle_y){
-			gb_y_rle_zeros.write_signed_val(std::get<0>(t));
-			gb_y_rle.write_signed_val(std::get<1>(t));
-		}
-
-		for(tuple<short,short> t:rle_u){
-			gb_u_rle_zeros.write_signed_val(std::get<0>(t));
-			gb_u_rle.write_signed_val(std::get<1>(t));
-		}
-		for(tuple<short,short> t:rle_v){
-			gb_v_rle_zeros.write_signed_val(std::get<0>(t));
-			gb_v_rle.write_signed_val(std::get<1>(t));
-		}
-
-	}
-	else{
-		res_macro_y/=(int)cfg.qualY; //Quantization
-		res_macro_u/=(int)cfg.qualU; //Quantization
-		res_macro_v/=(int)cfg.qualV; //Quantization
-		gb_y.write_mat(res_macro_y,true);
-		gb_u.write_mat(res_macro_u,true);
-		gb_v.write_mat(res_macro_v,true);
-
-		//Feedback
-		res_macro_y*=(int)cfg.qualY;
-		res_macro_u*=(int)cfg.qualU;
-		res_macro_v*=(int)cfg.qualV;
-	}
-
+	//Feedback
+	res_macro_y*=(int)cfg.qualY;
+	res_macro_u*=(int)cfg.qualU;
+	res_macro_v*=(int)cfg.qualV;
 
 	cv::Mat blky=y(cv::Rect_<uint>(mbx*mbw_y,mby*mbh_y,macroy_x,macroy_y));
 	cp.restore_block(blky,res_macro_y,hist_y,rcv_mvec);
 
 	rcv_mvec[1]/=mbw_y/mbw_uv;
 	rcv_mvec[2]/=mbh_y/mbh_uv;
-  cv::Mat blku=u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
-  cv::Mat blkv=v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
-  cp.restore_block(blku,res_macro_u,hist_u,rcv_mvec);
-  cp.restore_block(blkv,res_macro_v,hist_v,rcv_mvec);
+	cv::Mat blku=u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
+	cv::Mat blkv=v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
+	cp.restore_block(blku,res_macro_u,hist_u,rcv_mvec);
+	cp.restore_block(blkv,res_macro_v,hist_v,rcv_mvec);
 }
 
 void enc_lossy::applyBlockQuant(uint bx, uint by, uint bw_y, uint bh_y, uint bw_uv, uint bh_uv, uint pred) {
