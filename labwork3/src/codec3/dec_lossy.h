@@ -1,3 +1,4 @@
+#include <opencv2/photo.hpp>
 #include "../lib/args/args.h"
 #include "../lib/bitstream/bitstream.h"
 #include "../lib/bitstream/bitstream_wrapper.h"
@@ -5,6 +6,7 @@
 #include "../lib/predictor/compensator.h"
 #include "../lib/golomb/mat_golomb_bitstream.h"
 #include "../lib/y4m/y4m.h"
+#include "../lib/dct/dct.h"
 
 class dec_lossy{
 
@@ -25,7 +27,7 @@ class dec_lossy{
 		uint compensator_lazy_score;
 
 
-		//Members	
+		//Members
 		args& cfg;
 
 		uint pred_mode;
@@ -44,11 +46,24 @@ class dec_lossy{
 		mat_golomb_bitstream gb_u;
 		mat_golomb_bitstream gb_v;
 
+		golomb_bitstream gb_y_rle;
+		golomb_bitstream gb_u_rle;
+		golomb_bitstream gb_v_rle;
+		golomb_bitstream gb_y_rle_zeros;
+		golomb_bitstream gb_u_rle_zeros;
+		golomb_bitstream gb_v_rle_zeros;
+
 		predictor pd_y;
 		predictor pd_u;
 		predictor pd_v;
 
-		compensator cp; 
+		dct dct_y;
+		dct dct_u;
+		dct dct_v;
+
+		vector<tuple<short,short>> rle_y, rle_u, rle_v;
+
+		compensator cp;
 		boost::circular_buffer<cv::Mat> hist_y,hist_u,hist_v;
 
 		cv::Mat res_y,res_macro_y;
