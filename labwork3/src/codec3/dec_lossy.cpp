@@ -67,7 +67,6 @@ int dec_lossy::decode(){
 	out.set_framerate(framerate[0],framerate[1]);
 	out.set_aspect(aspect[0],aspect[1]);
 	out.set_interlace(interlace);
-	out.print_header();
 
 	if (useDct){
 		cv::Size uv_size=out.get_uv_size();

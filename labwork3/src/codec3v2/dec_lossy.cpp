@@ -26,7 +26,11 @@ int decode(args& cfg){
 	//Check magic
 	char is_magic[strlen(magic)];
 	bs.readNChars(is_magic,sizeof(is_magic));
-	if(strncmp(magic,is_magic,strlen(magic))!=0) return -1;
+	if(strncmp(magic,is_magic,strlen(magic))!=0){
+			std::cout<<"Invalid MADV File!" <<std::endl;
+			return -1;
+		}
+
 
 	//Read Width/Height (Y4M)
 	uint width=bs.readNBits(sizeof(uint)*8);
@@ -58,7 +62,6 @@ int decode(args& cfg){
 	out.set_framerate(framerate[0],framerate[1]);
 	out.set_aspect(aspect[0],aspect[1]);
 	out.set_interlace(interlace);
-	out.print_header();
 
 	golomb_bitstream gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 	golomb_bitstream gb_y_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
@@ -140,7 +143,7 @@ int decode(args& cfg){
 		}
 		//Put frame into video.
 		out.push_frame(y,u,v);
-
+		std::cout << "Processed frame " << f+1 << "/" << num_frames << "\r" << std::flush;
 	}
 	out.save(cfg.fileOut);
 	return 0;
