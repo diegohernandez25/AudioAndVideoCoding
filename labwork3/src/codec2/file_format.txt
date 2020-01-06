@@ -37,7 +37,7 @@ MACROBLOCK:
 		BLOCK1 /
 
 	ELSE:
-		(2B) Frame nr
+		(4b) Frame nr
 		(2B) VecX
 		(2B) VecY
 		

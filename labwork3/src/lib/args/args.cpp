@@ -22,9 +22,9 @@ args::args(int argc, char** argv, int mode) {
 	searchArea = -1;
 	searchDepth = -1;
 	keyPeriodicity = -1;
-	quantY = -1;
-	quantU = -1;
-	quantV = -1;
+	qualY = -1;
+	qualU = -1;
+	qualV = -1;
 	dct = true;
 
 	int valid = parseArgs(argc-1, argv+1);
@@ -59,9 +59,10 @@ args::args(int argc, char** argv, int mode) {
 	}
 	if (mode == 3) {
 		if (dct)
-			cout << "	- Using DCT" << endl;
+			cout << "	- Using DCT with levels of Y, U, V: ";
 		else
-			cout << "	- Quantization of Y, U, V: " << quantY << ", " << quantU << ", " << quantV << endl;
+			cout << "	- Quantization levels of Y, U, V: ";
+		cout << qualY << ", " << qualU << ", " << qualV << endl;
 	}
 }
 
@@ -90,16 +91,16 @@ void args::printUsage() {
 		 << "		--searcharea OR -a : search area for inter-frame coding" << endl
 		 << "			RANGE: > 0" << endl
 		 << "		--searchdepth OR -d : search depth for inter-frame coding" << endl
-		 << "			RANGE: > 0" << endl
+		 << "			RANGE:  0 < d < 16" << endl
 		 << "		--keyperiodicity OR -k : periodicity of the key frames. 0 means only the first frame is guaranteed to be fully I." << endl
 		 << "			RANGE: >= 0" << endl;
 	}
 	if (mode == 3) {
 		cout <<  "		--quant OR -q : simple quantization instead of using DCT" << endl
-		 <<"		--quantY OR -y : quantization steps for the prediction residuals of Y" << endl
-		 << "		--quantU OR -u : quantization steps for the prediction residuals of U" << endl
-		 << "		--quantV OR -v : quantization steps for the prediction residuals of V" << endl
-		 << "			RANGE:  0 <= q <= 8" << endl;
+		 <<"		--qualY OR -y : quality level for the prediction residuals of Y" << endl
+		 << "		--qualU OR -u : quality level for the prediction residuals of U" << endl
+		 << "		--qualV OR -v : quality level for the prediction residuals of V" << endl
+		 << "			RANGE:  >= 0 (lower means better)" << endl;
 	}
 }
 
@@ -187,33 +188,30 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			keyPeriodicity = atoi(argv[1]);
-		} else if(argv[0] == string("-y") || argv[0] == string("'--quantY")) {
-		// quantY
-			code = handleFlagParse(elem, argv[1], string("-y"), string("--quantY"), string("quantization value for Y"),
-									string("bits to quantize"), string("number_of_bits"),
-									string ("number of bits to be quantized in Y residuals"));
+		} else if(argv[0] == string("-y") || argv[0] == string("'--qualY")) {
+		// qualY
+			code = handleFlagParse(elem, argv[1], string("-y"), string("--qualY"), string("quality level for Y"),
+									string("level of quality"), string("level"),
+									string ("quality level for quantization in Y residuals"));
 			if (code < 0)
 				return -1;
-			quantY = atoi(argv[1]);
-			dct = false;
-		} else if(argv[0] == string("-u") || argv[0] == string("'--quantU")) {
-		// quantU
-			code = handleFlagParse(elem, argv[1], string("-u"), string("--quantU"), string("quantization value for U"),
-									string("bits to quantize"), string("number_of_bits"),
-									string ("number of bits to be quantized in U residuals"));
+			qualY = atoi(argv[1]);
+		} else if(argv[0] == string("-u") || argv[0] == string("'--qualU")) {
+		// qualU
+			code = handleFlagParse(elem, argv[1], string("-u"), string("--qualU"), string("quality level for U"),
+									string("level of quality"), string("level"),
+									string ("quality level for quantization in U residuals"));
 			if (code < 0)
 				return -1;
-			quantU = atoi(argv[1]);
-			dct = false;
-		} else if(argv[0] == string("-v") || argv[0] == string("'--quantV")) {
-		// quantV
-			code = handleFlagParse(elem, argv[1], string("-v"), string("--quantV"), string("quantization value for V"),
-									string("bits to quantize"), string("number_of_bits"),
-									string ("number of bits to be quantized in V residuals"));
+			qualU = atoi(argv[1]);
+		} else if(argv[0] == string("-v") || argv[0] == string("'--qualV")) {
+		// qualV
+			code = handleFlagParse(elem, argv[1], string("-v"), string("--qualV"), string("quality level for V"),
+									string("level of quality"), string("level"),
+									string ("quality level for quantization in V residuals"));
 			if (code < 0)
 				return -1;
-			quantV = atoi(argv[1]);
-			dct = false;
+			qualV = atoi(argv[1]);
 		} else {
 			cout << "Error: invalid flag '" << argv[0] << "'" << endl;
 			return -1;
@@ -281,10 +279,10 @@ int args::validateArgs() {
 				cout << "Error: block size must be greater than zero." << endl;
 				valid = false;
 			}
-		}
-		if (blockSize%2 != 0) {
-			cout << "Error: block size must be an even number." << endl;
-			valid = false;
+			if (blockSize%2 != 0) {
+				cout << "Error: block size must be an even number." << endl;
+				valid = false;
+			}
 		}
 
 		// TODO replace values, see if necessary
@@ -331,8 +329,8 @@ int args::validateArgs() {
 		// Search depth
 		if (searchDepth == -1)
 			searchDepth = 4;
-		if (searchDepth < 1) {
-			cout << "Error: search depth must be greater than zero." << endl;
+		if (searchDepth < 1 || searchDepth > 15) {
+			cout << "Error: search depth must be greater than zero and less than 16." << endl;
 			valid = false;
 		}
 
@@ -346,31 +344,30 @@ int args::validateArgs() {
 	}
 
 	if (mode < 3) {
-		if (quantY + quantU + quantV != -3 || !dct) {
+		if (qualY + qualU + qualV != -3 || !dct) {
 			cout << "Error: quantization and DCT are only available on lossy encoder." << endl;
 			valid = false;
 		}
 	} else {
 		// Quantization
-		if (!dct) {
-			if (quantY > 8 || quantY < -1) {
-				cout << "Error: number of bits to quantize must be less or equal to 8." << endl;
-				valid = false;
-			} else if (quantY == -1) {
-				quantY = 2;
-			}
-			if (quantU > 8 || quantU < -1) {
-				cout << "Error: number of bits to quantize must be less or equal to 8." << endl;
-				valid = false;
-			} else if (quantU == -1) {
-				quantU = 2;
-			}
-			if (quantV > 8 || quantV < -1) {
-				cout << "Error: number of bits to quantize must be less or equal to 8." << endl;
-				valid = false;
-			} else if (quantV == -1) {
-				quantV = 2;
-			}
+		// TODO change defaults for dct?
+		if (qualY < -1) {
+			cout << "Error: level of quality must be less or equal to 0." << endl;
+			valid = false;
+		} else if (qualY == -1) {
+			qualY = 6;
+		}
+		if (qualU < -1) {
+			cout << "Error: level of quality must be less or equal to 0." << endl;
+			valid = false;
+		} else if (qualU == -1) {
+			qualU = 6;
+		}
+		if (qualV < -1) {
+			cout << "Error: level of quality must be less or equal to 0." << endl;
+			valid = false;
+		} else if (qualV == -1) {
+			qualV = 6;
 		}
 	}
 	

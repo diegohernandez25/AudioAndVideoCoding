@@ -34,9 +34,9 @@ class dec_lossy{
 		uint predBlockSize;
 		uint macroSize;
 		uint8_t useDct;
-		uint8_t quantY;
-		uint8_t quantU;
-		uint8_t quantV;
+		uint8_t qualY;
+		uint8_t qualU;
+		uint8_t qualV;
 
 		y4m out;
 		bitstream bss;

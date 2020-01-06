@@ -19,11 +19,11 @@ class enc_hybrid{
 		//Parameters
 		uint golomb_initial_m=5;
 		uint golomb_blk_size=128;
-		uint golomb_calc_interval=16;
+		uint golomb_calc_interval=16; 
 
 		uint compensator_lazy_score=0;
 
-		uint macroblock_threshold=1000;//FIXME
+		uint macroblock_threshold=94; //TODO add to args?
 
 		//Members	
 		args& cfg;

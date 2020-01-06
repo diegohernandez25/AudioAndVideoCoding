@@ -19,9 +19,9 @@ class args {
         int searchArea;
         int searchDepth;
         int keyPeriodicity;
-        int quantY;
-        int quantU;
-        int quantV;
+        int qualY;
+        int qualU;
+        int qualV;
         bool dct;
 
 	private:

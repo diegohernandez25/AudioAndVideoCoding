@@ -57,6 +57,13 @@ int dec_lossy::decode(){
 
 	//Read lossy mode
 	useDct = bs.readBit();
+	if (useDct) {
+		// TODO dct params?
+	} else {
+		qualY = bs.readNBits(sizeof(short)*8);
+		qualU = bs.readNBits(sizeof(short)*8);
+		qualV = bs.readNBits(sizeof(short)*8);
+	}
 
 	//Create new video
 	out.init(width,height,color_space,predBlockSize);
@@ -76,9 +83,9 @@ int dec_lossy::decode(){
   	rle_v.reserve(out.get_bsize_uv().height*out.get_bsize_uv().width);
 
 	} else {
-		quantY = bs.readNBits(3);
-		quantU = bs.readNBits(3);
-		quantV = bs.readNBits(3);
+    qualY = bs.readNBits(sizeof(short)*8);
+		qualU = bs.readNBits(sizeof(short)*8);
+		qualV = bs.readNBits(sizeof(short)*8);
 	}
 
 	cp=compensator(predBlockSize*macroSize,0,0);
@@ -154,39 +161,39 @@ void dec_lossy::p_frame(cv::Mat& y,cv::Mat& u,cv::Mat& v){
 }
 
 void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat& v){
-	uint framenr=bs.readNBits(sizeof(ushort)*8); //Frame Nr
+	uint framenr=bs.readNBits(4); //Frame Nr
 	uint vecx=bs.readNBits(sizeof(ushort)*8); //VecX
 	uint vecy=bs.readNBits(sizeof(ushort)*8); //VecY
 	cv::Vec3w mvec(framenr,vecx,vecy);
 
-  uint mbw_y=out.get_bsize_y().width*macroSize;
-  uint mbh_y=out.get_bsize_y().height*macroSize;
-  uint mbw_uv=out.get_bsize_uv().width*macroSize;
-  uint mbh_uv=out.get_bsize_uv().height*macroSize;
+    uint mbw_y=out.get_bsize_y().width*macroSize;
+    uint mbh_y=out.get_bsize_y().height*macroSize;
+    uint mbw_uv=out.get_bsize_uv().width*macroSize;
+    uint mbh_uv=out.get_bsize_uv().height*macroSize;
 
-  uint macroy_x=mbw_y;
-  uint macroy_y=mbh_y;
-  uint macrouv_x=mbw_uv;
-  uint macrouv_y=mbh_uv;
-  if(mbx*mbw_y+mbw_y>(uint)y.cols){
-      macroy_x=y.cols-mbx*mbw_y;
-      macrouv_x=u.cols-mbx*mbw_uv;
-  }
-  if(mby*mbh_y+mbh_y>(uint)y.rows){
-      macroy_y=y.rows-mby*mbh_y;
-      macrouv_y=u.rows-mby*mbh_uv;
-  }
+    uint macroy_x=mbw_y;
+    uint macroy_y=mbh_y;
+    uint macrouv_x=mbw_uv;
+    uint macrouv_y=mbh_uv;
+    if(mbx*mbw_y+mbw_y>(uint)y.cols){
+        macroy_x=y.cols-mbx*mbw_y;
+        macrouv_x=u.cols-mbx*mbw_uv;
+    }
+    if(mby*mbh_y+mbh_y>(uint)y.rows){
+        macroy_y=y.rows-mby*mbh_y;
+        macrouv_y=u.rows-mby*mbh_uv;
+    }
 
 	res_macro_y=cv::Mat(macroy_y,macroy_x,CV_16S);
 	res_macro_u=cv::Mat(macrouv_y,macrouv_x,CV_16S);
 	res_macro_v=cv::Mat(macrouv_y,macrouv_x,CV_16S);
 
-  gb_y.read_mat(res_macro_y,true);
-  gb_u.read_mat(res_macro_u,true);
-  gb_v.read_mat(res_macro_v,true);
-	res_macro_y*=pow(2, quantY); //De-Quantization //TODO maybe use another params?
-  res_macro_u*=pow(2, quantU); //De-Quantization
-  res_macro_v*=pow(2, quantV); //De-Quantization
+    gb_y.read_mat(res_macro_y,true);
+    gb_u.read_mat(res_macro_u,true);
+    gb_v.read_mat(res_macro_v,true);
+	res_macro_y*=qualY; //De-Quantization //TODO maybe use another params?
+    res_macro_u*=qualU; //De-Quantization
+    res_macro_v*=qualV; //De-Quantization
 
 	cv::Mat blky=y(cv::Rect_<uint>(mbx*mbw_y,mby*mbh_y,macroy_x,macroy_y));
 	cv::Mat blku=u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
@@ -246,13 +253,14 @@ void dec_lossy::read_block(uint bx,uint by){
     res_v=dct_v.reverse_dct_quant_rle_blck(rle_v, false);
 
 	} else {
+
     gb_y.read_mat(res_y,true);
     gb_u.read_mat(res_u,true);
     gb_v.read_mat(res_v,true);
 
-		res_y *= pow(2, quantY);
-		res_u *= pow(2, quantU);
-		res_v *= pow(2, quantV);
+    res_y *= (int)qualY;
+    res_u *= (int)qualU;
+    res_v *= (int)qualV;
 	}
 
 	pd_y.reconstructBlock(bx*bw_y,by*bh_y,best_pred,&res_y);
