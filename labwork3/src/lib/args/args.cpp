@@ -3,12 +3,15 @@
 
 using namespace std;
 
-args::args(int argc, char** argv, int mode) {
-	if (mode < 0 || mode > 3)
+args::args(int argc, char** argv, double mode) {
+	if (mode < 0 || mode > 4)
 		exit(0);
 
 	args::mode = mode;
 	
+	if (mode == 4)
+		mode = 0.5;
+
 	if (argc < 5) {
 		printUsage();
 		exit(0);
@@ -220,22 +223,24 @@ int args::validateArgs() {
 		valid = false;
 	}
 
-	if (mode < 1) {
+	if (mode == 0) {
 		if (jpegPredictor >= 0 || blockSize >= 0) {
 			cout << "Error: predictor mode is only available as an encoding argument." << endl;
 			valid = false;
 		}
 	} else {
-		// Predictor
-		if (jpegPredictor > 9) {
-			cout << "Error: predictor order must be between 0 and 9." << endl
-				<< "				0 - no prediction" << endl
-				<< "				1-7 - JPEG linear predictors" << endl
-				<< "				8 - non-linear predictor JPEG-LS" << endl
-		 		<< "				9 - auto-find best JPEG linear predictor for each block " << endl;
-			valid = false;
-		} else if (jpegPredictor < 0) {
-			jpegPredictor = 9;
+		if (mode > 0.5) {
+			// Predictor
+			if (jpegPredictor > 9) {
+				cout << "Error: predictor order must be between 0 and 9." << endl
+					<< "				0 - no prediction" << endl
+					<< "				1-7 - JPEG linear predictors" << endl
+					<< "				8 - non-linear predictor JPEG-LS" << endl
+					<< "				9 - auto-find best JPEG linear predictor for each block " << endl;
+				valid = false;
+			} else if (jpegPredictor < 0) {
+				jpegPredictor = 9;
+			}
 		}
 
 		// Block size

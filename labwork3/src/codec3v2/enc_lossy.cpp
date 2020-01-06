@@ -16,8 +16,6 @@ uint golomb_initial_m=5;
 uint golomb_blk_size=128;
 uint golomb_calc_interval=16;
 
-//JPEG pred (0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
-
 void encode(args& cfg){
 	y4m in;
 	if(!in.load(cfg.fileIn,cfg.blockSize)){
@@ -40,14 +38,9 @@ void encode(args& cfg){
 	golomb_bitstream gb_v_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
 	cv::Size block_size_y,block_size_uv;
-	if(cfg.jpegPredictor==9){
-		block_size_y=in.get_bsize_y();
-		block_size_uv=in.get_bsize_uv();
-	}
-	else{
-		block_size_y=in.get_y_size();
-		block_size_uv=in.get_uv_size();
-	}
+
+	block_size_y=in.get_bsize_y();
+	block_size_uv=in.get_bsize_uv();
 
 	cv::Size uv_size=in.get_uv_size();
 
@@ -79,12 +72,8 @@ void encode(args& cfg){
 	//Write Number of Frames
 	bs.writeNBits(in.get_num_frames(),sizeof(uint)*8);
 
-	//Write Forced Prediction
-	bs.writeNBits(cfg.jpegPredictor,sizeof(uint8_t)*8);
-
-	//Write block size, if needed
-	if(cfg.jpegPredictor==9)
-		bs.writeNBits(cfg.blockSize,sizeof(uint)*8);
+	//Write block size
+	bs.writeNBits(cfg.blockSize,sizeof(uint)*8);
 
 	cv::Mat res_y(block_size_y,CV_16S);
 	cv::Mat res_u(block_size_uv,CV_16S);
@@ -130,6 +119,6 @@ void encode(args& cfg){
 
 
 int main(int argc,char** argv){
-	args cfg = args(argc, argv, 3);
+	args cfg = args(argc, argv, 4);
 	encode(cfg);
 }
