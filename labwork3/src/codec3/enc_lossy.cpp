@@ -110,7 +110,7 @@ void enc_lossy::encode(){
 
 		if(first_frame||(i_frame_count==(uint)cfg.keyPeriodicity&&cfg.keyPeriodicity!=0)){
 			i_frame();
-			//first_frame=false;
+			first_frame=false;
 			i_frame_count=0;
 			i_count++;
 		}
