@@ -135,7 +135,10 @@ void dct::change_quant_mats() {
     if(block_size.width<=BLOCK_SIZE_DEFAULT && block_size.height<=BLOCK_SIZE_DEFAULT)
         this->quant_mat = quant_mat(cv::Rect(0,0,block_size.width, block_size.height));
     else
-        this->quant_mat = this->quant_mat_mask(cv::Rect(0,0,block_size.width,block_size.height));
+        cv::resize(this->quant_mat,this->quant_mat,cv::Size(block_size.width,block_size.height));
+
+
+    cout << this->quant_mat << endl;
 }
 
 int dct::get_height_blk() {return height_blk;}
