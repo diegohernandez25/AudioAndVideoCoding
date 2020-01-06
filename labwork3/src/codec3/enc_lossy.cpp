@@ -22,7 +22,12 @@ enc_lossy::enc_lossy(args& cfg):
 
 
 void enc_lossy::encode(){
-	in.load(cfg.fileIn,cfg.blockSize);
+    if(!in.load(cfg.fileIn,cfg.blockSize)){
+        std::cout<<"Invalid Y4M File!"<<std::endl;
+        return;
+    }
+
+
 	in.print_header();
 
 	pd_y=predictor(in.get_bsize_y().width,in.get_bsize_y().height);

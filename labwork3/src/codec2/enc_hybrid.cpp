@@ -11,7 +11,11 @@ enc_hybrid::enc_hybrid(args& cfg):
 	gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs){}
 
 void enc_hybrid::encode(){
-	in.load(cfg.fileIn,cfg.blockSize);
+	if(!in.load(cfg.fileIn,cfg.blockSize)){
+		std::cout<<"Invalid Y4M File!"<<std::endl;
+		return;
+	}
+
 	in.print_header();
 
 	pd_y=predictor(in.get_bsize_y().width,in.get_bsize_y().height);
@@ -97,6 +101,7 @@ void enc_hybrid::encode(){
                   << " || I-frame count: " << i_count <<"\r" << std::flush;
 
 	}while(in.next_frame());	
+	std::cout << std::endl;
 }
 
 void enc_hybrid::i_frame(){

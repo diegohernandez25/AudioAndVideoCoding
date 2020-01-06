@@ -20,7 +20,11 @@ int dec_lossy::decode(){
 	//Check magic
 	char is_magic[strlen(magic)];
 	bs.readNChars(is_magic,sizeof(is_magic));
-	if(strncmp(magic,is_magic,strlen(magic))!=0) return -1;
+    if(strncmp(magic,is_magic,strlen(magic))!=0){
+        std::cout<<"Invalid MADV File!" <<std::endl;
+        return -1;
+    }
+
 
 	//Read Width/Height (Y4M)
 	uint width=bs.readNBits(sizeof(uint)*8);

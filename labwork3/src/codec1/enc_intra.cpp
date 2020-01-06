@@ -18,7 +18,11 @@ uint golomb_calc_interval=16;
 
 void encode(args& cfg){
 	y4m in;
-	in.load(cfg.fileIn,cfg.jpegPredictor==9?cfg.blockSize:0);
+    if(!in.load(cfg.fileIn,cfg.jpegPredictor==9?cfg.blockSize:0)){
+        std::cout<<"Invalid Y4M File!"<<std::endl;
+        return;
+    }
+
 	in.print_header();
 
 	bitstream bss(cfg.fileOut.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);	
