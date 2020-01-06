@@ -49,13 +49,8 @@ int decode(args& cfg){
 	//Read Number of Frames
 	uint num_frames=bs.readNBits(sizeof(uint)*8);
 
-	//Read Forced Prediction
-	uint pred_mode=bs.readNBits(sizeof(uint8_t)*8);
-
-	//Read block size, if present
-	uint predBlockSize=0;
-	if(pred_mode==9)
-		predBlockSize=bs.readNBits(sizeof(uint)*8);
+	//Read block size
+	uint predBlockSize=bs.readNBits(sizeof(uint)*8);
 
 	//Create new video
 	y4m out;
@@ -75,14 +70,9 @@ int decode(args& cfg){
 	golomb_bitstream gb_v_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
 	cv::Size block_size_y,block_size_uv;
-	if(pred_mode==9){
-		block_size_y=out.get_bsize_y();
-		block_size_uv=out.get_bsize_uv();
-	}
-	else{
-		block_size_y=out.get_y_size();
-		block_size_uv=out.get_uv_size();
-	}
+
+	block_size_y=out.get_bsize_y();
+	block_size_uv=out.get_bsize_uv();
 
 	cv::Size uv_size=out.get_uv_size();
 	dct dct_y = dct(int(height), int(width), block_size_y,3);
