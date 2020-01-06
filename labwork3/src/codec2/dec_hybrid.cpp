@@ -4,9 +4,9 @@ dec_hybrid::dec_hybrid(args& cfg):
     cfg(cfg),
     bss(cfg.fileIn.c_str(),std::ios::binary|std::ios::in),
     bs(bss,true),
-    gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
-    gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
-    gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs){}
+    gb_y(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
+    gb_u(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
+    gb_v(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs){}
 
 
 int dec_hybrid::decode(){

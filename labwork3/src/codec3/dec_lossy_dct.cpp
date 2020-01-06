@@ -15,8 +15,6 @@ using namespace std;
 const char* magic="VMAD0";
 
 uint golomb_initial_m=5;
-uint golomb_blk_size=128;
-uint golomb_calc_interval=16;
 
 void print_tuple_vector(vector<tuple<short,short>> v){
 	for(tuple<short, short>t:v)

@@ -6,9 +6,9 @@ enc_hybrid::enc_hybrid(args& cfg):
 	cfg(cfg),
 	bss(cfg.fileOut.c_str(),std::ios::trunc|std::ios::binary|std::ios::out),
 	bs(bss,true),
-	gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
-	gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
-	gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs){}
+	gb_y(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
+	gb_u(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
+	gb_v(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs){}
 
 void enc_hybrid::encode(){
 	if(!in.load(cfg.fileIn,cfg.blockSize)){
@@ -22,7 +22,7 @@ void enc_hybrid::encode(){
 	pd_u=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 	pd_v=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 
-	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); //TODO add to ARGS search_depth and lazy_score
+	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); 
 	hist_y=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_u=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
