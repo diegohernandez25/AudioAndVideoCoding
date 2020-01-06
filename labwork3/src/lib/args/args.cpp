@@ -343,7 +343,7 @@ int args::validateArgs() {
 	}
 
 	if (mode < 3) {
-		if (qualY + qualU + qualV != -3 || !dct) {
+		if (qualY + qualU + qualV != -3 || dct) {
 			cout << "Error: quantization and DCT are only available on lossy encoder." << endl;
 			valid = false;
 		}
