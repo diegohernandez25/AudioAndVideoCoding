@@ -272,7 +272,6 @@ bool y4m::fetch(){
 		else
 			val=frame_header.substr(currptr+1,nextptr-currptr+1);
 
-		//TODO interpret frame_header specific options?
 	}
 
 	//From OpenCV documentation:
@@ -356,7 +355,6 @@ bool y4m::next_frame(){
 	return frame_ptr<v_y.size();
 }
 
-//FIXME use aspect ratio
 cv::Mat y4m::get_bgr(){
 	cv::Mat fy=v_y[frame_ptr];
 	cv::Mat adj_u,adj_v;

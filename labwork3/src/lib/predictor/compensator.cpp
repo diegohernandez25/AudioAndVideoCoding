@@ -1,9 +1,6 @@
 #include "compensator.h"
-#include <iostream> //FIXME remove
 
-//TODO logarithmic motion tracker
-
-//assumes image comes already padded
+//Assumes image comes already padded
 compensator::compensator(uint macroblock_size,uint search_radius,uint lazy_score){
 	this->search_radius=search_radius;
 	this->lazy_score=lazy_score;

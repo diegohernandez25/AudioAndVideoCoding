@@ -57,7 +57,7 @@ cv::Mat dct::reverse_dct_quant_rle_blck(vector<tuple<short , short>> rle_vct, bo
 
     rle r_tmp=rle(rle_vct);
     vector<short>  zigzag_vct=r_tmp.load_variant_rle(block_size.height*block_size.width);
-    zigzag z=zigzag(zigzag_vct,block_size.height,block_size.width); //FIXME: Change block size not square.
+    zigzag z=zigzag(zigzag_vct,block_size.height,block_size.width); 
     zz_block=z.inverse_zigzag();
 
     if(mask) cv::multiply(zz_block,quant_mat_mask,quant_block);

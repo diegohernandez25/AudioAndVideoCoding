@@ -220,7 +220,7 @@ void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat&
     gb_y.read_mat(res_macro_y,true);
   	gb_u.read_mat(res_macro_u,true);
   	gb_v.read_mat(res_macro_v,true);
-  	res_macro_y*=qualY; //De-Quantization //TODO maybe use another params?
+  	res_macro_y*=qualY; //De-Quantization
   	res_macro_u*=qualU; //De-Quantization
   	res_macro_v*=qualV; //De-Quantization
   }
