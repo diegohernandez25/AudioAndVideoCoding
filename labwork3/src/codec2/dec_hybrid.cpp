@@ -92,6 +92,7 @@ int dec_hybrid::decode(){
 		hist_v.push_back(v);
 
 		out.push_frame(y,u,v);
+		std::cout << "Processed frame " << f+1 << "/" << num_frames << "\r" << std::flush;
 	
 	}
 	out.save(cfg.fileOut);

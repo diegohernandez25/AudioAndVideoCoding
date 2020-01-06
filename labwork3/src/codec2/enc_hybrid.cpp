@@ -63,6 +63,10 @@ void enc_hybrid::encode(){
 
 	bool first_frame=true;
 	uint i_frame_count=0;
+	uint p_count = 0;
+    uint i_count = 0;
+    uint total_count = 0;
+
 	//Add Data
 	do{
 		cv::Mat y=in.get_y(); 
@@ -77,21 +81,25 @@ void enc_hybrid::encode(){
 			i_frame();
 			first_frame=false;
 			i_frame_count=0;
+			i_count++;
 		}
 		else{
 			p_frame(y,u,v);
 			i_frame_count++;
+			p_count++;
 		}
 
 		hist_y.push_back(y);
 		hist_u.push_back(u);
 		hist_v.push_back(v);
 
+		std::cout << "Processed frame " << ++total_count << "/" << in.get_num_frames() << " || P-frame count: " << p_count
+                  << " || I-frame count: " << i_count <<"\r" << std::flush;
+
 	}while(in.next_frame());	
 }
 
 void enc_hybrid::i_frame(){
-	std::cout<<"I"<<std::flush;
 	bs.writeBit(1); //Means I-Frame
 	for(uint by=0;by*cfg.blockSize<(uint)in.get_y_size().height;by++){
 		for(uint bx=0;bx*cfg.blockSize<(uint)in.get_y_size().width;bx++){
@@ -101,7 +109,6 @@ void enc_hybrid::i_frame(){
 }
 
 void enc_hybrid::p_frame(cv::Mat& y,cv::Mat& u,cv::Mat& v){
-	std::cout<<"P"<<std::flush;
 	bs.writeBit(0); //Means P-Frame
 
 	cv::Mat matches=cp.find_matches(y,hist_y);
