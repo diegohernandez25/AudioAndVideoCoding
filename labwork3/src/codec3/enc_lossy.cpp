@@ -34,7 +34,7 @@ void enc_lossy::encode(){
 	pd_u=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 	pd_v=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 
-	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); 
+	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score);
 	hist_y=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_u=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
@@ -77,9 +77,9 @@ void enc_lossy::encode(){
 	bs.writeBit(cfg.dct?1:0);
 	if(cfg.dct) {
 		cv::Size uv_size=in.get_uv_size();
-		dct_y=dct(int(in.get_height()),int(in.get_width()),in.get_bsize_y(),3);
-		dct_u=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3);
-		dct_v=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3);
+		dct_y=dct(int(in.get_height()),int(in.get_width()),in.get_bsize_y(),3,false);
+		dct_u=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3,true);
+		dct_v=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3,true);
 
 	} else {
 		//Write quant bits for each channel

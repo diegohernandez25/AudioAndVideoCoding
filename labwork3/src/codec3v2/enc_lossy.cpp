@@ -44,9 +44,9 @@ void encode(args& cfg){
 
 	cv::Size uv_size=in.get_uv_size();
 
-  dct dct_y( int(in.get_height()), int(in.get_width()),block_size_y,3);
-	dct dct_u( int(uv_size.height), int(uv_size.width),block_size_uv,3);
-	dct dct_v( int(uv_size.height), int(uv_size.width),block_size_uv,3);
+  dct dct_y( int(in.get_height()), int(in.get_width()),block_size_y,3,false);
+	dct dct_u( int(uv_size.height), int(uv_size.width),block_size_uv,3,true);
+	dct dct_v( int(uv_size.height), int(uv_size.width),block_size_uv,3,true);
 
 	vector<tuple<short,short>> rle_y, rle_u, rle_v;
 

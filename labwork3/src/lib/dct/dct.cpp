@@ -4,11 +4,15 @@
 
 #include "dct.h"
 
-dct::dct(int height, int width, cv::Size block_size, int quant_lvl){
+dct::dct(int height, int width, cv::Size block_size, int quant_lvl, bool chroma){
     assert(quant_lvl>0);
 
     this->block_size=block_size;
-    this->quant_mat=cv::Mat(BLOCK_SIZE_DEFAULT, BLOCK_SIZE_DEFAULT, CV_16S, this->quant_array)/quant_lvl;
+    if(!chroma)
+        this->quant_mat=cv::Mat(BLOCK_SIZE_DEFAULT, BLOCK_SIZE_DEFAULT, CV_16S, this->quant_array)/quant_lvl;
+    else
+        this->quant_mat=cv::Mat(BLOCK_SIZE_DEFAULT, BLOCK_SIZE_DEFAULT, CV_16S, this->quant_array_chroma)/quant_lvl;
+
     this->subtraction_mat=cv::Mat(block_size.height,block_size.width,CV_32F,128);
 
     if(block_size.height!=block_size.width || block_size.width!=BLOCK_SIZE_DEFAULT || block_size.height!=BLOCK_SIZE_DEFAULT)
@@ -25,7 +29,7 @@ dct::dct(int height, int width, cv::Size block_size, int quant_lvl){
     this->padded_image.create(height_padded, width_padded, 0);
 }
 
-dct::dct(cv::Mat image, cv::Size block_size, int quant_lvl) : dct(image.rows, image.cols, block_size, quant_lvl) {
+dct::dct(cv::Mat image, cv::Size block_size, int quant_lvl,  bool chroma) : dct(image.rows, image.cols, block_size, quant_lvl, chroma) {
     this->image = image;
     image.copyTo(padded_image(cv::Rect(0,0,image.cols, image.rows)));
     this->padded_image.convertTo(padded_image, CV_8UC1);
@@ -137,8 +141,6 @@ void dct::change_quant_mats() {
     else
         cv::resize(this->quant_mat,this->quant_mat,cv::Size(block_size.width,block_size.height));
 
-
-    cout << this->quant_mat << endl;
 }
 
 int dct::get_height_blk() {return height_blk;}

@@ -78,9 +78,9 @@ int decode(args& cfg){
 	block_size_uv=out.get_bsize_uv();
 
 	cv::Size uv_size=out.get_uv_size();
-	dct dct_y = dct(int(height), int(width), block_size_y,3);
-	dct dct_u = dct(int(uv_size.height), int(uv_size.width), block_size_uv,3);
-	dct dct_v = dct(int(uv_size.height), int(uv_size.width), block_size_uv,3);
+	dct dct_y = dct(int(height), int(width), block_size_y,3, false);
+	dct dct_u = dct(int(uv_size.height), int(uv_size.width), block_size_uv,3, false);
+	dct dct_v = dct(int(uv_size.height), int(uv_size.width), block_size_uv,3, false);
 
 	vector<tuple<short,short>> rle_y, rle_u, rle_v;
 	rle_y.reserve(block_size_y.height*block_size_y.width);

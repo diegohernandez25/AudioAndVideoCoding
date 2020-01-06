@@ -30,8 +30,8 @@ using namespace std;
 class dct{
 public:
     dct(){}
-    dct(int height, int width, cv::Size block_size, int quant_lvl=1);
-    dct(cv::Mat image, cv::Size block_size, int quant_lvl=1);
+    dct(int height, int width, cv::Size block_size, int quant_lvl=1, bool chroma=false);
+    dct(cv::Mat image, cv::Size block_size, int quant_lvl=1, bool chroma=false);
 
     int get_height_blk();
     int get_width_blk();
@@ -80,6 +80,15 @@ private:
                             24, 35, 55, 64, 81, 104, 113, 92,
                             49, 64, 78, 87, 103, 121, 129, 101,
                             72, 92, 95, 98, 112, 100, 103, 99};
+
+    short quant_array_chroma[64]={    17, 18, 24, 47, 99, 99, 99, 99,
+                                      18, 21, 26, 66, 99, 99, 99, 99,
+                                      24, 26, 56, 99, 99, 99, 99, 99,
+                                      47, 66, 99, 99, 99, 99, 99, 99,
+                                      99, 99, 99, 99, 99, 99, 99, 99,
+                                      99, 99, 99, 99, 99, 99, 99, 99,
+                                      99, 99, 99, 99, 99, 99, 99, 99,
+                                      99, 99, 99, 99, 99, 99, 99, 99};
 
 
     short quant_array_mask[64] = {1, 1, 1, 1, 1, 1, 1, 1,

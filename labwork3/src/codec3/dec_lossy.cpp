@@ -70,9 +70,9 @@ int dec_lossy::decode(){
 
 	if (useDct){
 		cv::Size uv_size=out.get_uv_size();
-		this->dct_y=dct(int(out.get_height()), int(out.get_width()),out.get_bsize_y(),3);
-		this->dct_u=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
-		this->dct_v=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
+		this->dct_y=dct(int(out.get_height()), int(out.get_width()),out.get_bsize_y(),3,false);
+		this->dct_u=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3,true);
+		this->dct_v=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3,true);
 
 		rle_y.reserve(out.get_bsize_y().height*out.get_bsize_y().width);
 		rle_u.reserve(out.get_bsize_uv().height*out.get_bsize_uv().width);
