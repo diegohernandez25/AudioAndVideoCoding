@@ -130,7 +130,7 @@ void dec_hybrid::p_frame(cv::Mat& y,cv::Mat& u,cv::Mat& v){
 }
 
 void dec_hybrid::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat& v){
-	uint framenr=bs.readNBits(sizeof(ushort)*8); //Frame Nr
+	uint framenr=bs.readNBits(4); //Frame Nr
 	uint vecx=bs.readNBits(sizeof(ushort)*8); //VecX
 	uint vecy=bs.readNBits(sizeof(ushort)*8); //VecY
 	cv::Vec3w mvec(framenr,vecx,vecy);

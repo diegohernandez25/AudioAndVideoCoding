@@ -126,7 +126,7 @@ void enc_lossy::p_frame(cv::Mat& y,cv::Mat& u,cv::Mat& v){
 	cv::Mat matches=cp.find_matches(y,hist_y);
 	for(uint mby=0;mby*cfg.blockSize*cfg.macroSize<(uint)y.rows;mby++){
 		for(uint mbx=0;mbx*cfg.blockSize*cfg.macroSize<(uint)y.cols;mbx++){
-			if(matches.at<cv::Vec4w>(mby,mbx)[0]>macroblock_threshold){ //Code with intra (I-Block)
+			if(matches.at<cv::Vec4w>(mby,mbx)[0]>macroblock_threshold*cfg.blockSize*cfg.macroSize){ //Code with intra (I-Block)
 				bs.writeBit(1); //Means I-Block
 				//Iterate through blocks of macroblock
 				for(uint by=mby*cfg.macroSize;by<(mby+1)*cfg.macroSize&&by*cfg.blockSize<(uint)y.rows;by++){ 
@@ -166,7 +166,7 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y)).convertTo(res_macro_u,CV_16S);
 	v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y)).convertTo(res_macro_v,CV_16S);
 
-	bs.writeNBits(mvec[1],sizeof(ushort)*8); //Frame Nr
+	bs.writeNBits(mvec[1],sizeof(4); //Frame Nr
 	bs.writeNBits(mvec[2],sizeof(ushort)*8); //VecX
 	bs.writeNBits(mvec[3],sizeof(ushort)*8); //VecY
 	cv::Vec3w rcv_mvec(mvec[1],mvec[2],mvec[3]);

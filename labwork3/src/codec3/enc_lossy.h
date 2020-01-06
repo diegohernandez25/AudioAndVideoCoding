@@ -23,7 +23,7 @@ class enc_lossy{
 
 		uint compensator_lazy_score=0;
 
-		uint macroblock_threshold=1000;//FIXME
+		uint macroblock_threshold=94; //TODO add to args?
 
 		//Members	
 		args& cfg;
