@@ -18,8 +18,8 @@ set( ENCODER_2 src/codec2/enc_hybrid.cpp )
 set( DECODER_2 src/codec2/dec_hybrid.cpp )
 set( ENCODER_3 src/codec3/enc_lossy.cpp )
 set( DECODER_3 src/codec3/dec_lossy.cpp )
-set( ENCODER_3_DCT src/codec3/enc_lossy_dct.cpp )
-set( DECODER_3_DCT src/codec3/dec_lossy_dct.cpp )
+set( ENCODER_3V2 src/codec3v2/enc_lossy.cpp )
+set( DECODER_3V2 src/codec3v2/dec_lossy.cpp )
 
 AUX_SOURCE_DIRECTORY( src/lib/bitstream/ BITSTREAM)
 AUX_SOURCE_DIRECTORY( src/lib/golomb/ GOLOMB)
@@ -44,11 +44,11 @@ add_executable( player ${PLAYER} )
 add_executable( cod1 ${ENCODER_1} )
 add_executable( cod2 ${ENCODER_2} )
 add_executable( cod3 ${ENCODER_3} )
-add_executable( cod3dct ${ENCODER_3_DCT} )
+add_executable( cod3v2 ${ENCODER_3V2} )
 add_executable( dec1 ${DECODER_1} )
 add_executable( dec2 ${DECODER_2} )
 add_executable( dec3 ${DECODER_3} )
-add_executable( dec3dct ${DECODER_3_DCT} )
+add_executable( dec3v2 ${DECODER_3V2} )
 
 target_link_libraries(L_Y4M
 					${OpenCV_LIBS}
@@ -104,7 +104,7 @@ target_link_libraries(cod3
 					L_DCT
 					)
 
-target_link_libraries(cod3dct
+target_link_libraries(cod3v2
 					${OpenCV_LIBS}
 					L_ARGS
 					L_BITSTREAM
@@ -142,7 +142,7 @@ target_link_libraries(dec3
 					L_DCT
 					)
 
-target_link_libraries(dec3dct
+target_link_libraries(dec3v2
 					${OpenCV_LIBS}
 					L_ARGS
 					L_BITSTREAM
