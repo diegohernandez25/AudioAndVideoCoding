@@ -20,7 +20,11 @@ uint golomb_calc_interval=16;
 
 void encode(args& cfg){
 	y4m in;
-	in.load(cfg.fileIn,cfg.jpegPredictor==9?cfg.blockSize:0);
+	if(!in.load(cfg.fileIn,cfg.blockSize)){
+        std::cout<<"Invalid Y4M File!"<<std::endl;
+        return;
+    }
+
 	in.print_header();
 
 	bitstream bss(cfg.fileOut.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
@@ -85,7 +89,7 @@ void encode(args& cfg){
 	cv::Mat res_y(block_size_y,CV_16S);
 	cv::Mat res_u(block_size_uv,CV_16S);
 	cv::Mat res_v(block_size_uv,CV_16S);
-
+	uint total_count = 0;
 
 	do{
 		cv::Mat y=in.get_y();
@@ -120,6 +124,7 @@ void encode(args& cfg){
 				}
 			}
 		}
+		std::cout << "Processed frame " << ++total_count << "/" << in.get_num_frames() << "\r" << std::flush;
 	}while(in.next_frame());
 }
 
