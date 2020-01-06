@@ -77,12 +77,8 @@ void args::printUsage() {
 		 << "				1-7 - JPEG linear predictors" << endl
 		 << "				8 - non-linear predictor JPEG-LS" << endl
 		 << "				9 - auto-find best JPEG linear predictor for each block " << endl
-		 << "		--blocksize OR -b : block size for inter-frame coding" << endl
-		 << "			RANGE: > 0" << endl
-		 << "		--window OR -w : golomb window size for which the m will be calculated" << endl
-		 << "			RANGE:  > 1" << endl
-		 << "		--pixels OR -x : golomb amount of pixels to be skipped before calculating a new 'm'" << endl
-		 << "			RANGE:  0 <= x < window" << endl;
+		 << "		--blocksize OR -b : block size in pixels" << endl
+		 << "			RANGE: > 0" << endl;
 	}
 	if (mode > 1) {
 		cout << "		--macrosize OR -m : macro size for inter-frame coding" << endl
