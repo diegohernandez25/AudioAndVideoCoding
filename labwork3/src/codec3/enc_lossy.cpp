@@ -173,6 +173,7 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	uint macroy_y=mbh_y;
 	uint macrouv_x=mbw_uv;
 	uint macrouv_y=mbh_uv;
+
 	if(mbx*mbw_y+mbw_y>(uint)y.cols){
 		macroy_x=y.cols-mbx*mbw_y;
 		macrouv_x=u.cols-mbx*mbw_uv;
@@ -200,17 +201,45 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 
 
 	//TODO DCT?
-	res_macro_y/=(int)cfg.qualY; //Quantization
-	res_macro_u/=(int)cfg.qualU; //Quantization
-	res_macro_v/=(int)cfg.qualV; //Quantization
-	gb_y.write_mat(res_macro_y,true);
-	gb_u.write_mat(res_macro_u,true);
-	gb_v.write_mat(res_macro_v,true);
+	if(cfg.dct){
+		rle_y=dct_y.dct_quant_rle_blck(res_y, false);
+		rle_u=dct_u.dct_quant_rle_blck(res_u, false);
+		rle_v=dct_v.dct_quant_rle_blck(res_v, false);
 
-	//Feedback
-	res_macro_y*=(int)cfg.qualY;
-	res_macro_u*=(int)cfg.qualU;
-	res_macro_v*=(int)cfg.qualV;
+		res_macro_y=dct_y.reverse_dct_quant_rle_blck(rle_y, false);
+		res_macro_u=dct_u.reverse_dct_quant_rle_blck(rle_u, false);
+		res_macro_v=dct_v.reverse_dct_quant_rle_blck(rle_v, false);
+
+		for(tuple<short,short> t:rle_y){
+			gb_y_rle_zeros.write_signed_val(std::get<0>(t));
+			gb_y_rle.write_signed_val(std::get<1>(t));
+		}
+
+		for(tuple<short,short> t:rle_u){
+			gb_u_rle_zeros.write_signed_val(std::get<0>(t));
+			gb_u_rle.write_signed_val(std::get<1>(t));
+		}
+		for(tuple<short,short> t:rle_v){
+			gb_v_rle_zeros.write_signed_val(std::get<0>(t));
+			gb_v_rle.write_signed_val(std::get<1>(t));
+		}
+
+	}
+	else{
+		res_macro_y/=(int)cfg.qualY; //Quantization
+		res_macro_u/=(int)cfg.qualU; //Quantization
+		res_macro_v/=(int)cfg.qualV; //Quantization
+		gb_y.write_mat(res_macro_y,true);
+		gb_u.write_mat(res_macro_u,true);
+		gb_v.write_mat(res_macro_v,true);
+
+		//Feedback
+		res_macro_y*=(int)cfg.qualY;
+		res_macro_u*=(int)cfg.qualU;
+		res_macro_v*=(int)cfg.qualV;
+	}
+
+
 	cv::Mat blky=y(cv::Rect_<uint>(mbx*mbw_y,mby*mbh_y,macroy_x,macroy_y));
 	cp.restore_block(blky,res_macro_y,hist_y,rcv_mvec);
 
@@ -263,7 +292,6 @@ void enc_lossy::write_block(uint bx,uint by){
 	}
 
 	if (cfg.dct) {
-		// TODO
 		pd_y.calcBlockResiduals(bx*bw_y,by*bh_y,best_pred,&res_y);
 		pd_u.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_u);
 		pd_v.calcBlockResiduals(bx*bw_uv,by*bh_uv,best_pred,&res_v);

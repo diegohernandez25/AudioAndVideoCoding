@@ -161,6 +161,7 @@ void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat&
 	uint framenr=bs.readNBits(4); //Frame Nr
 	uint vecx=bs.readNBits(sizeof(ushort)*8); //VecX
 	uint vecy=bs.readNBits(sizeof(ushort)*8); //VecY
+
 	cv::Vec3w mvec(framenr,vecx,vecy);
 
     uint mbw_y=out.get_bsize_y().width*macroSize;
@@ -185,12 +186,45 @@ void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat&
 	res_macro_u=cv::Mat(macrouv_y,macrouv_x,CV_16S);
 	res_macro_v=cv::Mat(macrouv_y,macrouv_x,CV_16S);
 
-	gb_y.read_mat(res_macro_y,true);
-	gb_u.read_mat(res_macro_u,true);
-	gb_v.read_mat(res_macro_v,true);
-	res_macro_y*=qualY; //De-Quantization //TODO maybe use another params?
-	res_macro_u*=qualU; //De-Quantization
-	res_macro_v*=qualV; //De-Quantization
+
+  if(useDct){
+    short n_zeros,val;
+    rle_macro_y.clear();
+		rle_macro_u.clear();
+		rle_macro_v.clear();
+
+		while (true) {
+		  n_zeros=gb_y_rle_zeros.read_signed_val();
+		  val=gb_y_rle.read_signed_val();
+		  rle_macro_y.push_back(make_tuple(n_zeros,val));
+		  if(n_zeros==0 && val==0) break;
+		}
+		while(true){
+		  n_zeros=gb_u_rle_zeros.read_signed_val();
+		  val=gb_u_rle.read_signed_val();
+		  rle_macro_u.push_back(make_tuple(n_zeros,val));
+		  if(n_zeros==0 && val==0) break;
+		}
+		while(true){
+		  n_zeros=gb_v_rle_zeros.read_signed_val();
+		  val=gb_v_rle.read_signed_val();
+		  rle_macro_v.push_back(make_tuple(n_zeros,val));
+		  if(n_zeros==0 && val==0) break;
+		}
+
+		res_macro_y=dct_y.reverse_dct_quant_rle_blck(rle_macro_y, false);
+		res_macro_u=dct_u.reverse_dct_quant_rle_blck(rle_macro_u, false);
+		res_macro_v=dct_v.reverse_dct_quant_rle_blck(rle_macro_v, false);
+
+  }
+  else{
+    gb_y.read_mat(res_macro_y,true);
+  	gb_u.read_mat(res_macro_u,true);
+  	gb_v.read_mat(res_macro_v,true);
+  	res_macro_y*=qualY; //De-Quantization //TODO maybe use another params?
+  	res_macro_u*=qualU; //De-Quantization
+  	res_macro_v*=qualV; //De-Quantization
+  }
 
 	cv::Mat blky=y(cv::Rect_<uint>(mbx*mbw_y,mby*mbh_y,macroy_x,macroy_y));
 	cv::Mat blku=u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));

@@ -62,7 +62,8 @@ class dec_lossy{
 		dct dct_v;
 
 		vector<tuple<short,short>> rle_y, rle_u, rle_v;
-
+		vector<tuple<short,short>> rle_macro_y, rle_macro_u, rle_macro_v;
+    
 		compensator cp;
 		boost::circular_buffer<cv::Mat> hist_y,hist_u,hist_v;
 
