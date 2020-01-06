@@ -16,8 +16,6 @@ args::args(int argc, char** argv, int mode) {
 
 	jpegPredictor = -1;
 	blockSize = -1;
-	windowSize = -1;
-	skipNPixels = -1; 
 	macroSize = -1;
 	searchArea = -1;
 	searchDepth = -1;
@@ -48,8 +46,6 @@ args::args(int argc, char** argv, int mode) {
 			cout << "Auto linear JPEG per block" << endl;
 		if (blockSize > -1)
 			cout << "	- Block size: " << blockSize << "x" << blockSize << " pixels" << endl;
-		cout << "	- Window size: " << windowSize << " pixels" << endl
-			 << "	- Skip " << skipNPixels << " pixels before recalculating 'm'" << endl;
 	}
 	if (mode > 1) {
 		cout << "	- Macroblock size: " << macroSize << "x" << macroSize << " blocks" << endl
@@ -141,21 +137,6 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			blockSize = atoi(argv[1]);
-		} else if(argv[0] == string("-w") || argv[0] == string("'--window")) {
-		// windowSize
-			code = handleFlagParse(elem, argv[1], string("-w"), string("--window"), string("size"),
-									string("window size"), string("window_size"), string ("'m' calculation window"));
-			if (code < 0)
-				return -1;
-			windowSize = atoi(argv[1]);
-		} else if(argv[0] == string("-x") || argv[0] == string("'--pixels")) {
-		// skipNPixels
-			code = handleFlagParse(elem, argv[1], string("-x"), string("--pixels"), string("number of pixels"),
-									string("amount of pixels to be skipped"), string("number_of_pixels"),
-									string ("amount of pixels to be skipped before recalculating 'm'"));
-			if (code < 0)
-				return -1;
-			skipNPixels = atoi(argv[1]);
 		} else if(argv[0] == string("-m") || argv[0] == string("'--macrosize")) {
 		// macroSize
 			code = handleFlagParse(elem, argv[1], string("-m"), string("--macrosize"), string("macroblock size"),
@@ -244,14 +225,6 @@ int args::validateArgs() {
 			cout << "Error: predictor mode is only available as an encoding argument." << endl;
 			valid = false;
 		}
-		if (windowSize >= 0) {
-			cout << "Error: window size is only available as an encoding argument." << endl;
-			valid = false;
-		}
-		if (skipNPixels >= 0) {
-			cout << "Error: window size is only available as an encoding argument." << endl;
-			valid = false;
-		}
 	} else {
 		// Predictor
 		if (jpegPredictor > 9) {
@@ -283,23 +256,6 @@ int args::validateArgs() {
 				cout << "Error: block size must be an even number." << endl;
 				valid = false;
 			}
-		}
-
-		// Window
-		if (windowSize == -1) {
-			windowSize = 128;
-		}
-		else if (windowSize < 1) {
-			cout << "Error: window size must be greater than zero." << endl;
-			valid = false;
-		}
-
-		// Skip pixels
-		if (skipNPixels >= windowSize || skipNPixels < -1) {
-			cout << "Error: amount of pixels to skip must be less than the window size." << endl;
-			valid = false;
-		} else if (skipNPixels == -1) {
-			skipNPixels = 16;
 		}
 	}
 

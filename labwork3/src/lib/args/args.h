@@ -13,8 +13,6 @@ class args {
         string fileOut;
         int jpegPredictor;
         int blockSize;
-        int windowSize;
-        int skipNPixels; 
         int macroSize;
         int searchArea;
         int searchDepth;
