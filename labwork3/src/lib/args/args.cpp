@@ -102,7 +102,7 @@ void args::printUsage() {
 int args::parseArgs(int elem, char** argv) {
 	elem--;
 	int code;
-	if(argv[0] == string("-q") || argv[0] == string("'--quant")) {
+	if(argv[0] == string("-q") || argv[0] == string("'--dct")) {
 	// dct
 		dct = true;
 	} else {
