@@ -7,12 +7,12 @@ dec_lossy::dec_lossy(args& cfg):
     gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
     gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
     gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
-    gb_y_rle(golomb_initial_m,bs),
-    gb_u_rle(golomb_initial_m,bs),
-    gb_v_rle(golomb_initial_m,bs),
-    gb_y_rle_zeros(golomb_initial_m,bs),
-    gb_u_rle_zeros(golomb_initial_m,bs),
-    gb_v_rle_zeros(golomb_initial_m,bs){}
+    gb_y_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_u_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_v_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_y_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_u_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_v_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs){}
 
 
 int dec_lossy::decode(){
@@ -78,9 +78,9 @@ int dec_lossy::decode(){
 
   if (useDct) {
     cv::Size uv_size=out.get_uv_size();
-    this->dct_y=dct(int(out.get_height()), int(out.get_width()),out.get_bsize_y(),1);
-  	this->dct_u=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),1);
-  	this->dct_v=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),1);
+    this->dct_y=dct(int(out.get_height()), int(out.get_width()),out.get_bsize_y(),3);
+  	this->dct_u=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
+  	this->dct_v=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
 
     rle_y.reserve(out.get_bsize_y().height*out.get_bsize_y().width);
   	rle_u.reserve(out.get_bsize_uv().height*out.get_bsize_uv().width);

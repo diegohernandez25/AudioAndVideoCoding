@@ -9,12 +9,12 @@ enc_lossy::enc_lossy(args& cfg):
 	gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
 	gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
 	gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
-	gb_y_rle(golomb_initial_m,bs),
-	gb_u_rle(golomb_initial_m,bs),
-	gb_v_rle(golomb_initial_m,bs),
-	gb_y_rle_zeros(golomb_initial_m,bs),
-	gb_u_rle_zeros(golomb_initial_m,bs),
-	gb_v_rle_zeros(golomb_initial_m,bs),
+	gb_y_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+	gb_u_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+	gb_v_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+	gb_y_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+	gb_u_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+	gb_v_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
 	dct_y(),
 	dct_u(),
 	dct_v(){}
@@ -77,9 +77,9 @@ void enc_lossy::encode(){
 	bs.writeBit(cfg.dct?1:0);
 	if(cfg.dct) {
 		cv::Size uv_size=in.get_uv_size();
-		dct_y=dct(int(in.get_height()),int(in.get_width()),in.get_bsize_y(),1);
-		dct_u=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),1);
-		dct_v=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),1);
+		dct_y=dct(int(in.get_height()),int(in.get_width()),in.get_bsize_y(),3);
+		dct_u=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3);
+		dct_v=dct(int(uv_size.height),int(uv_size.width),in.get_bsize_uv(),3);
 
 	} else {
 		//Write quant bits for each channel
