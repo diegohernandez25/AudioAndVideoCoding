@@ -34,7 +34,7 @@ void enc_lossy::encode(){
 	pd_u=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 	pd_v=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 
-	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); //TODO add to ARGS search_depth and lazy_score
+	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); 
 	hist_y=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_u=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
@@ -199,8 +199,6 @@ void enc_lossy::write_macroblock(uint mbx,uint mby,cv::Vec4w mvec,cv::Mat& y,cv:
 	cp.apply_block_residual(res_macro_u,hist_u,mvec);
 	cp.apply_block_residual(res_macro_v,hist_v,mvec);
 
-
-	//TODO DCT?
 	if(cfg.dct){
 		rle_y=dct_y.dct_quant_rle_blck(res_y, false);
 		rle_u=dct_u.dct_quant_rle_blck(res_u, false);
@@ -283,8 +281,7 @@ void enc_lossy::write_block(uint bx,uint by){
 
 	uint8_t best_pred;
 	if(cfg.jpegPredictor==9){ //NOT forced mode
-		best_pred=std::get<0>(pd_y.calcBestResiduals(bx*bw_y,by*bh_y,&res_y));//FIXME do something with score
-		//Maybe return tuple and let the other function decide
+		best_pred=std::get<0>(pd_y.calcBestResiduals(bx*bw_y,by*bh_y,&res_y));
 		bs.writeNBits(best_pred,4);
 	}
 	else{

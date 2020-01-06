@@ -4,7 +4,6 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc.hpp"
 
-//TODO test with odd width and height
 class y4m{
 	public:
 		//Constant values
@@ -24,7 +23,6 @@ class y4m{
 		void print_header();
 		bool load(std::string &y4mfile,uint block_size=0);
 		void save(std::string &y4mfile);
-		//FIXME need to add way toput sizeon save
 
 		//Creation
 		void init(uint width,uint height,uint8_t color_space,uint block_size=0);

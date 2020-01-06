@@ -22,7 +22,7 @@ void enc_hybrid::encode(){
 	pd_u=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 	pd_v=predictor(in.get_bsize_uv().width,in.get_bsize_uv().height);
 
-	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); //TODO add to ARGS search_depth and lazy_score
+	cp=compensator(cfg.macroSize*cfg.blockSize,cfg.searchArea,compensator_lazy_score); 
 	hist_y=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_u=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
 	hist_v=boost::circular_buffer<cv::Mat>(cfg.searchDepth);
@@ -186,8 +186,7 @@ void enc_hybrid::write_block(uint bx,uint by){
 	
 	uint8_t best_pred;
 	if(cfg.jpegPredictor==9){ //NOT forced mode
-		best_pred=std::get<0>(pd_y.calcBestResiduals(bx*bw_y,by*bh_y,&res_y));//FIXME do something with score
-		//Maybe return tuple and let the other function decide
+		best_pred=std::get<0>(pd_y.calcBestResiduals(bx*bw_y,by*bh_y,&res_y));
 		bs.writeNBits(best_pred,4);
 	}
 	else{

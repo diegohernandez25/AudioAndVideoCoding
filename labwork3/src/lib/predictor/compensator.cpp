@@ -1,9 +1,6 @@
 #include "compensator.h"
-#include <iostream> //FIXME remove
 
-//TODO logarithmic motion tracker
-
-//assumes image comes already padded
+//Assumes image comes already padded
 compensator::compensator(uint macroblock_size,uint search_radius,uint lazy_score){
 	this->search_radius=search_radius;
 	this->lazy_score=lazy_score;
@@ -36,7 +33,6 @@ cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>&
 		for(uint bx=0;bx<(uint)curr.cols;bx+=macroblock_size){
 			uint macrox=macroblock_size;
 			uint macroy=macroblock_size;
-			bool print=false;
 			if(bx+macroblock_size>(uint)curr.cols){//last macro blocks blocks might not be complete
 				macrox=curr.cols-bx;
 			}
@@ -63,7 +59,6 @@ cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>&
 							entry[1]=fr; //Frame Nr
 							entry[2]=cx; //MVecX
 							entry[3]=cy; //MVecY
-							if(print) std::cout<<cv::Rect_<uint>(cx,cy,macrox,macroy)<<frame.size()<<std::endl;
 
 							if(curr_score<=lazy_score){ //jump to next block if satistied
 								goto block_iter;
@@ -72,7 +67,6 @@ cv::Mat compensator::find_matches(cv::Mat& curr,boost::circular_buffer<cv::Mat>&
 					}
 				}
 			}
-			//if(print) std::cout<<"FINAL"<<cv::Rect_<uint>(scores.at<cv::Vec4w>(by/macroblock_size,bx/macroblock_size)[2],scores.at<cv::Vec4w>(by/macroblock_size,bx/macroblock_size)[3],macrox,macroy)<<std::endl;
 block_iter: ;
 		}
 	}

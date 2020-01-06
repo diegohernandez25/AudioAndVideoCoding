@@ -6,6 +6,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
+#include <tuple>
+
 // Convert uchar element from the matrix to an int and calculate
 // the power of two
 int pow2(uchar elem) {
@@ -63,19 +65,20 @@ int maximumPerPixelError(cv::Mat* mats) {
 }
 
 // Process the given matrices
-int processMats(cv::Mat orig, cv::Mat compr) {
+std::tuple<double, int> processMats(cv::Mat orig, cv::Mat compr) {
 	cv::Mat diff_mat[3];
+	std::tuple<double, int> tup = std::make_tuple(-1,-1);
 
 	// Quit if not able to read images
 	if (orig.empty() || compr.empty()) {
 		std::cout << "Error: Image file could not be open." << std::endl;
-		return -1;
+		return tup;
 	}
 
 	// Compare the dimensions of both images
 	if (orig.cols != compr.cols || orig.rows != compr.rows) {
 		std::cout << "Error: Both images must have the same dimensions." << std::endl;
-		return -1;
+		return tup;
 	}
 
 	// Split matrices by color channel
@@ -89,7 +92,7 @@ int processMats(cv::Mat orig, cv::Mat compr) {
 	for (int i=0; i<3; i++) {
 		tmp = calculatePsnr(split_orig[i], split_compr[i], diff_mat[i]);
 		if (tmp < 0)
-			return -1;
+			return tup;
 		psnr += tmp;
 	}
 
@@ -97,10 +100,9 @@ int processMats(cv::Mat orig, cv::Mat compr) {
 
 	// Return the average of the three channels
 	std::cout << "PSNR: " << psnr/3 << "dB" << std::endl;
-
-	
 	std::cout << "Maximum per pixel error: " << maxErr << std::endl;
-	return 0;
+	tup = std::make_tuple(psnr/3, maxErr);
+	return tup;
 }
 
 int main(int argc, char* argv[]) {
@@ -137,7 +139,7 @@ int main(int argc, char* argv[]) {
 		image_original = cv::imread(argv[2], cv::IMREAD_UNCHANGED );
 		image_compressed = cv::imread(argv[3], cv::IMREAD_UNCHANGED );
 		// Process both images
-		return processMats(image_original, image_compressed);
+		return std::get<0>(processMats(image_original, image_compressed));
 	
 	// Compare two videos
 	} else {
@@ -155,6 +157,12 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 
+		std::tuple<double, int> tup;
+		int maxErr = 0;
+		double psnr = 0;
+		int total = 0;
+		double maxPsnr = 0;
+		double minPsnr = 1000;
 		// Cycle through all the frames
 		while (true) {
 			// Get next frame
@@ -165,9 +173,20 @@ int main(int argc, char* argv[]) {
 				break;
 			
 			// Process current frame from both sources
-			processMats(frame_orig, frame_compr);
-			// TODO the maximum per pixel absolute error
+			tup = processMats(frame_orig, frame_compr);
+			total++;
+			if (std::get<1>(tup) > maxErr)
+				maxErr = std::get<1>(tup);
+			psnr += std::get<0>(tup);
+			if (std::get<0>(tup) > maxPsnr)
+				maxPsnr = std::get<0>(tup);
+			if (std::get<0>(tup) < minPsnr)
+				minPsnr = std::get<0>(tup);
+			
 		}
+
+		std::cout << std::endl << "TOTAL max error: " << maxErr << std::endl << "AVERAGE PSNR: " << psnr/total << std::endl
+		 << "MIN PSNR: " << minPsnr << std::endl << "MAX PSNR: " << maxPsnr << std::endl;
 
 		// Closes the capture
 		cap_orig.release();
