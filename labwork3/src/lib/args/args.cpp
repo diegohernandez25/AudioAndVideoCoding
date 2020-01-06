@@ -315,19 +315,19 @@ int args::validateArgs() {
 			cout << "Error: level of quality must be less or equal to 0." << endl;
 			valid = false;
 		} else if (qualY == -1) {
-			qualY = 6;
+			qualY = 10;
 		}
 		if (qualU < -1) {
 			cout << "Error: level of quality must be less or equal to 0." << endl;
 			valid = false;
 		} else if (qualU == -1) {
-			qualU = 6;
+			qualU = 10;
 		}
 		if (qualV < -1) {
 			cout << "Error: level of quality must be less or equal to 0." << endl;
 			valid = false;
 		} else if (qualV == -1) {
-			qualV = 6;
+			qualV = 10;
 		}
 	}
 	
