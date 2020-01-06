@@ -54,9 +54,9 @@ int dec_lossy::decode(){
 	if (useDct) {
 		// TODO dct params?
 	} else {
-		quantY = bs.readNBits(3);
-		quantU = bs.readNBits(3);
-		quantV = bs.readNBits(3);
+		qualY = bs.readNBits(sizeof(short)*8);
+		qualU = bs.readNBits(sizeof(short)*8);
+		qualV = bs.readNBits(sizeof(short)*8);
 	}
 
 	//Create new video
@@ -169,9 +169,9 @@ void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat&
     gb_y.read_mat(res_macro_y,true);
     gb_u.read_mat(res_macro_u,true);
     gb_v.read_mat(res_macro_v,true);
-	res_macro_y*=pow(2, quantY); //De-Quantization //TODO maybe use another params?
-    res_macro_u*=pow(2, quantU); //De-Quantization
-    res_macro_v*=pow(2, quantV); //De-Quantization
+	res_macro_y*=qualY; //De-Quantization //TODO maybe use another params?
+    res_macro_u*=qualU; //De-Quantization
+    res_macro_v*=qualV; //De-Quantization
 
 	cv::Mat blky=y(cv::Rect_<uint>(mbx*mbw_y,mby*mbh_y,macroy_x,macroy_y));
 	cv::Mat blku=u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
@@ -208,9 +208,9 @@ void dec_lossy::read_block(uint bx,uint by){
 	if(useDct) {
 		//TODO
 	} else {
-		res_y *= (int)pow(2, quantY);
-		res_u *= (int)pow(2, quantU);
-		res_v *= (int)pow(2, quantV);
+		res_y *= (int)qualY;
+		res_u *= (int)qualU;
+		res_v *= (int)qualV;
 	}
 
 	pd_y.reconstructBlock(bx*bw_y,by*bh_y,best_pred,&res_y);
