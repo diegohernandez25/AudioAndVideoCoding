@@ -7,7 +7,7 @@ using namespace std;
 
 class args {
 	public:
-        args(int argc, char** argv, int mode);
+        args(int argc, char** argv, double mode);
 
 		string fileIn;
         string fileOut;
