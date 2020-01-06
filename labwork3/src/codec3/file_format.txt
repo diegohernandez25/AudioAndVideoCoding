@@ -1,4 +1,4 @@
-Hybrid Lossless:
+Hybrid Lossy:
 
 (5B) Magic number: "VMAD2"
 (4B) Width
