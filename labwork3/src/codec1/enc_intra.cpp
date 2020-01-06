@@ -11,6 +11,8 @@ using namespace std;
 const char* magic="VMAD0";
 
 uint golomb_initial_m=5;
+uint golomb_blk_size=128;
+uint golomb_calc_interval=16;
 
 //JPEG pred (0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
 
@@ -26,9 +28,9 @@ void encode(args& cfg){
 	bitstream bss(cfg.fileOut.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);	
 	bitstream_wrapper bs(bss,true);	
 
-	mat_golomb_bitstream gb_y(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs);
-	mat_golomb_bitstream gb_u(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs);
-	mat_golomb_bitstream gb_v(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs);
+	mat_golomb_bitstream gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	mat_golomb_bitstream gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	mat_golomb_bitstream gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
 	cv::Size block_size_y,block_size_uv;
 	if(cfg.jpegPredictor==9){

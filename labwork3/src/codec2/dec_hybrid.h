@@ -18,6 +18,8 @@ class dec_hybrid{
 
 		//Parameters
 		uint golomb_initial_m=5;
+		uint golomb_blk_size=128;
+		uint golomb_calc_interval=16;
 
 		uint compensator_depth;
 		uint compensator_lazy_score;

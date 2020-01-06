@@ -4,15 +4,15 @@ dec_lossy::dec_lossy(args& cfg):
     cfg(cfg),
     bss(cfg.fileIn.c_str(),std::ios::binary|std::ios::in),
     bs(bss,true),
-    gb_y(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_u(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_v(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_y_rle(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_u_rle(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_v_rle(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_y_rle_zeros(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_u_rle_zeros(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs),
-    gb_v_rle_zeros(golomb_initial_m,cfg.windowSize,cfg.skipNPixels,bs){}
+    gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_y_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_u_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_v_rle(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_y_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_u_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs),
+    gb_v_rle_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs){}
 
 
 int dec_lossy::decode(){
