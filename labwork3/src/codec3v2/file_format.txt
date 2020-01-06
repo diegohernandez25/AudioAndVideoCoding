@@ -1,0 +1,22 @@
+DCT Only:
+
+(5B) Magic number: "VMAD4"
+(4B) Width
+(4B) Height
+(1B) Color Space (Value returned by y4m)
+(1B) Interlaced (Value returned by y4m)
+(4+4B) Frame Rate
+(4B+4B) Aspect Ratio
+(4B) Num of Frames
+(4B) Block Size
+
+FRAME0:
+    BLOCK0:
+        () Y RLE/DCT Residual Data		
+        () U RLE/DCT Residual Data		
+        () V RLE/DCT Residual Data		
+    BLOCK1:
+        ...
+FRAME1:
+    ...
+
