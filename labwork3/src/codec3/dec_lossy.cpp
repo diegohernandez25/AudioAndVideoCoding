@@ -61,13 +61,6 @@ int dec_lossy::decode(){
 
 	//Read lossy mode
 	useDct = bs.readBit();
-	if (useDct) {
-		// TODO dct params?
-	} else {
-		qualY = bs.readNBits(sizeof(short)*8);
-		qualU = bs.readNBits(sizeof(short)*8);
-		qualV = bs.readNBits(sizeof(short)*8);
-	}
 
 	//Create new video
 	out.init(width,height,color_space,predBlockSize);
@@ -76,34 +69,34 @@ int dec_lossy::decode(){
 	out.set_interlace(interlace);
 	out.print_header();
 
-  if (useDct) {
-    cv::Size uv_size=out.get_uv_size();
-    this->dct_y=dct(int(out.get_height()), int(out.get_width()),out.get_bsize_y(),3);
-  	this->dct_u=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
-  	this->dct_v=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
+	if (useDct){
+		cv::Size uv_size=out.get_uv_size();
+		this->dct_y=dct(int(out.get_height()), int(out.get_width()),out.get_bsize_y(),3);
+		this->dct_u=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
+		this->dct_v=dct(int(uv_size.height), int(uv_size.width),out.get_bsize_uv(),3);
 
-    rle_y.reserve(out.get_bsize_y().height*out.get_bsize_y().width);
-  	rle_u.reserve(out.get_bsize_uv().height*out.get_bsize_uv().width);
-  	rle_v.reserve(out.get_bsize_uv().height*out.get_bsize_uv().width);
-
-	} else {
-    qualY = bs.readNBits(sizeof(short)*8);
+		rle_y.reserve(out.get_bsize_y().height*out.get_bsize_y().width);
+		rle_u.reserve(out.get_bsize_uv().height*out.get_bsize_uv().width);
+		rle_v.reserve(out.get_bsize_uv().height*out.get_bsize_uv().width);
+	}
+	else{
+		qualY = bs.readNBits(sizeof(short)*8);
 		qualU = bs.readNBits(sizeof(short)*8);
 		qualV = bs.readNBits(sizeof(short)*8);
 	}
 
 	cp=compensator(predBlockSize*macroSize,0,0);
-  hist_y=boost::circular_buffer<cv::Mat>(compensator_depth);
-  hist_u=boost::circular_buffer<cv::Mat>(compensator_depth);
-  hist_v=boost::circular_buffer<cv::Mat>(compensator_depth);
+	hist_y=boost::circular_buffer<cv::Mat>(compensator_depth);
+	hist_u=boost::circular_buffer<cv::Mat>(compensator_depth);
+	hist_v=boost::circular_buffer<cv::Mat>(compensator_depth);
 
 	pd_y=predictor(out.get_bsize_y().width,out.get_bsize_y().height);
 	pd_u=predictor(out.get_bsize_uv().width,out.get_bsize_uv().height);
 	pd_v=predictor(out.get_bsize_uv().width,out.get_bsize_uv().height);
 
 	res_y=cv::Mat(out.get_bsize_y(),CV_16S);
-  res_u=cv::Mat(out.get_bsize_uv(),CV_16S);
-  res_v=cv::Mat(out.get_bsize_uv(),CV_16S);
+	res_u=cv::Mat(out.get_bsize_uv(),CV_16S);
+	res_v=cv::Mat(out.get_bsize_uv(),CV_16S);
 
 	//Get Data
 	for(uint f=0;f<num_frames;f++){
@@ -192,22 +185,22 @@ void dec_lossy::read_macroblock(uint mbx,uint mby,cv::Mat& y,cv::Mat& u,cv::Mat&
 	res_macro_u=cv::Mat(macrouv_y,macrouv_x,CV_16S);
 	res_macro_v=cv::Mat(macrouv_y,macrouv_x,CV_16S);
 
-    gb_y.read_mat(res_macro_y,true);
-    gb_u.read_mat(res_macro_u,true);
-    gb_v.read_mat(res_macro_v,true);
+	gb_y.read_mat(res_macro_y,true);
+	gb_u.read_mat(res_macro_u,true);
+	gb_v.read_mat(res_macro_v,true);
 	res_macro_y*=qualY; //De-Quantization //TODO maybe use another params?
-    res_macro_u*=qualU; //De-Quantization
-    res_macro_v*=qualV; //De-Quantization
+	res_macro_u*=qualU; //De-Quantization
+	res_macro_v*=qualV; //De-Quantization
 
 	cv::Mat blky=y(cv::Rect_<uint>(mbx*mbw_y,mby*mbh_y,macroy_x,macroy_y));
 	cv::Mat blku=u(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
 	cv::Mat blkv=v(cv::Rect_<uint>(mbx*mbw_uv,mby*mbh_uv,macrouv_x,macrouv_y));
 
-  cp.restore_block(blky,res_macro_y,hist_y,mvec);
+	cp.restore_block(blky,res_macro_y,hist_y,mvec);
 
-  //readjust vectors sizes
-  mvec[1]/=mbw_y/mbw_uv;
-  mvec[2]/=mbh_y/mbh_uv;
+	//readjust vectors sizes
+	mvec[1]/=mbw_y/mbw_uv;
+	mvec[2]/=mbh_y/mbh_uv;
 
 	cp.restore_block(blku,res_macro_u,hist_u,mvec);
 	cp.restore_block(blkv,res_macro_v,hist_v,mvec);
@@ -228,43 +221,44 @@ void dec_lossy::read_block(uint bx,uint by){
 	}
 
 	if(useDct) {
-    short n_zeros,val;
-    rle_y.clear();
-    rle_u.clear();
-    rle_v.clear();
+		short n_zeros,val;
+		rle_y.clear();
+		rle_u.clear();
+		rle_v.clear();
 
-    while (true) {
-      n_zeros=gb_y_rle_zeros.read_signed_val();
-      val=gb_y_rle.read_signed_val();
-      rle_y.push_back(make_tuple(n_zeros,val));
-      if(n_zeros==0 && val==0) break;
-    }
-    while(true){
-      n_zeros=gb_u_rle_zeros.read_signed_val();
-      val=gb_u_rle.read_signed_val();
-      rle_u.push_back(make_tuple(n_zeros,val));
-      if(n_zeros==0 && val==0) break;
-    }
-    while(true){
-      n_zeros=gb_v_rle_zeros.read_signed_val();
-      val=gb_v_rle.read_signed_val();
-      rle_v.push_back(make_tuple(n_zeros,val));
-      if(n_zeros==0 && val==0) break;
-    }
+		while (true) {
+		  n_zeros=gb_y_rle_zeros.read_signed_val();
+		  val=gb_y_rle.read_signed_val();
+		  rle_y.push_back(make_tuple(n_zeros,val));
+		  if(n_zeros==0 && val==0) break;
+		}
+		while(true){
+		  n_zeros=gb_u_rle_zeros.read_signed_val();
+		  val=gb_u_rle.read_signed_val();
+		  rle_u.push_back(make_tuple(n_zeros,val));
+		  if(n_zeros==0 && val==0) break;
+		}
+		while(true){
+		  n_zeros=gb_v_rle_zeros.read_signed_val();
+		  val=gb_v_rle.read_signed_val();
+		  rle_v.push_back(make_tuple(n_zeros,val));
+		  if(n_zeros==0 && val==0) break;
+		}
 
-    res_y=dct_y.reverse_dct_quant_rle_blck(rle_y, false);
-    res_u=dct_u.reverse_dct_quant_rle_blck(rle_u, false);
-    res_v=dct_v.reverse_dct_quant_rle_blck(rle_v, false);
+		res_y=dct_y.reverse_dct_quant_rle_blck(rle_y, false);
+		res_u=dct_u.reverse_dct_quant_rle_blck(rle_u, false);
+		res_v=dct_v.reverse_dct_quant_rle_blck(rle_v, false);
 
-	} else {
+	}
+	else {
 
-    gb_y.read_mat(res_y,true);
-    gb_u.read_mat(res_u,true);
-    gb_v.read_mat(res_v,true);
+		gb_y.read_mat(res_y,true);
+		gb_u.read_mat(res_u,true);
+		gb_v.read_mat(res_v,true);
 
-    res_y *= (int)qualY;
-    res_u *= (int)qualU;
-    res_v *= (int)qualV;
+		res_y *= (int)qualY;
+		res_u *= (int)qualU;
+		res_v *= (int)qualV;
 	}
 
 	pd_y.reconstructBlock(bx*bw_y,by*bh_y,best_pred,&res_y);
