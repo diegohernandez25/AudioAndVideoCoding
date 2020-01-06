@@ -16,8 +16,6 @@ args::args(int argc, char** argv, int mode) {
 
 	jpegPredictor = -1;
 	blockSize = -1;
-	windowSize = -1;
-	skipNPixels = -1; 
 	macroSize = -1;
 	searchArea = -1;
 	searchDepth = -1;
@@ -25,7 +23,7 @@ args::args(int argc, char** argv, int mode) {
 	qualY = -1;
 	qualU = -1;
 	qualV = -1;
-	dct = true;
+	dct = false;
 
 	int valid = parseArgs(argc-1, argv+1);
 	if (valid >= 0)
@@ -48,8 +46,6 @@ args::args(int argc, char** argv, int mode) {
 			cout << "Auto linear JPEG per block" << endl;
 		if (blockSize > -1)
 			cout << "	- Block size: " << blockSize << "x" << blockSize << " pixels" << endl;
-		cout << "	- Window size: " << windowSize << endl
-			 << "	- Skip " << skipNPixels << " pixels before recalculating 'm'" << endl;
 	}
 	if (mode > 1) {
 		cout << "	- Macroblock size: " << macroSize << "x" << macroSize << " blocks" << endl
@@ -80,9 +76,9 @@ void args::printUsage() {
 		 << "				9 - auto-find best JPEG linear predictor for each block " << endl
 		 << "		--blocksize OR -b : block size for inter-frame coding" << endl
 		 << "			RANGE: > 0" << endl
-		 << "		--window OR -w : window size for which the m will be calculated" << endl
+		 << "		--window OR -w : golomb window size for which the m will be calculated" << endl
 		 << "			RANGE:  > 1" << endl
-		 << "		--pixels OR -x : amount of pixels to be skipped before calculating a new 'm'" << endl
+		 << "		--pixels OR -x : golomb amount of pixels to be skipped before calculating a new 'm'" << endl
 		 << "			RANGE:  0 <= x < window" << endl;
 	}
 	if (mode > 1) {
@@ -96,7 +92,7 @@ void args::printUsage() {
 		 << "			RANGE: >= 0" << endl;
 	}
 	if (mode == 3) {
-		cout <<  "		--quant OR -q : simple quantization instead of using DCT" << endl
+		cout <<  "		--dct OR -q : use DCT instead of using simple quantization" << endl
 		 <<"		--qualY OR -y : quality level for the prediction residuals of Y" << endl
 		 << "		--qualU OR -u : quality level for the prediction residuals of U" << endl
 		 << "		--qualV OR -v : quality level for the prediction residuals of V" << endl
@@ -109,7 +105,7 @@ int args::parseArgs(int elem, char** argv) {
 	int code;
 	if(argv[0] == string("-q") || argv[0] == string("'--quant")) {
 	// dct
-		dct = false;
+		dct = true;
 	} else {
 		if(argv[0] == string("-i") || argv[0] == string("'--in")) {
 		// fileIn
@@ -141,21 +137,6 @@ int args::parseArgs(int elem, char** argv) {
 			if (code < 0)
 				return -1;
 			blockSize = atoi(argv[1]);
-		} else if(argv[0] == string("-w") || argv[0] == string("'--window")) {
-		// windowSize
-			code = handleFlagParse(elem, argv[1], string("-w"), string("--window"), string("size"),
-									string("window size"), string("window_size"), string ("'m' calculation window"));
-			if (code < 0)
-				return -1;
-			windowSize = atoi(argv[1]);
-		} else if(argv[0] == string("-x") || argv[0] == string("'--pixels")) {
-		// skipNPixels
-			code = handleFlagParse(elem, argv[1], string("-x"), string("--pixels"), string("number of pixels"),
-									string("amount of pixels to be skipped"), string("number_of_pixels"),
-									string ("amount of pixels to be skipped before recalculating 'm'"));
-			if (code < 0)
-				return -1;
-			skipNPixels = atoi(argv[1]);
 		} else if(argv[0] == string("-m") || argv[0] == string("'--macrosize")) {
 		// macroSize
 			code = handleFlagParse(elem, argv[1], string("-m"), string("--macrosize"), string("macroblock size"),
@@ -244,14 +225,6 @@ int args::validateArgs() {
 			cout << "Error: predictor mode is only available as an encoding argument." << endl;
 			valid = false;
 		}
-		if (windowSize >= 0) {
-			cout << "Error: window size is only available as an encoding argument." << endl;
-			valid = false;
-		}
-		if (skipNPixels >= 0) {
-			cout << "Error: window size is only available as an encoding argument." << endl;
-			valid = false;
-		}
 	} else {
 		// Predictor
 		if (jpegPredictor > 9) {
@@ -283,24 +256,6 @@ int args::validateArgs() {
 				cout << "Error: block size must be an even number." << endl;
 				valid = false;
 			}
-		}
-
-		// TODO replace values, see if necessary
-		// Window
-		if (windowSize == -1) {
-			windowSize = 128;
-		}
-		else if (windowSize < 1) {
-			cout << "Error: window size must be greater than zero." << endl;
-			valid = false;
-		}
-
-		// Skip pixels
-		if (skipNPixels >= windowSize || skipNPixels < -1) {
-			cout << "Error: amount of pixels to skip must be less than the window size." << endl;
-			valid = false;
-		} else if (skipNPixels == -1) {
-			skipNPixels = 32;
 		}
 	}
 
@@ -344,7 +299,7 @@ int args::validateArgs() {
 	}
 
 	if (mode < 3) {
-		if (qualY + qualU + qualV != -3 || !dct) {
+		if (qualY + qualU + qualV != -3 || dct) {
 			cout << "Error: quantization and DCT are only available on lossy encoder." << endl;
 			valid = false;
 		}
