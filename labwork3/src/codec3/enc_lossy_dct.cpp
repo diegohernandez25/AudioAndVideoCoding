@@ -100,8 +100,8 @@ void encode(args& cfg){
 		cv::Mat v=in.get_v();
 
 		if(cfg.jpegPredictor==9){
-			for(uint by=0;by*cfg.blockSize<y.rows;by++){
-				for(uint bx=0;bx*cfg.blockSize<y.cols;bx++){
+			for(uint by=0;by*cfg.blockSize<(uint)y.rows;by++){
+				for(uint bx=0;bx*cfg.blockSize<(uint)y.cols;bx++){
 					uint bw_y=in.get_bsize_y().width;
 					uint bh_y=in.get_bsize_y().height;
 					uint bw_uv=in.get_bsize_uv().width;
