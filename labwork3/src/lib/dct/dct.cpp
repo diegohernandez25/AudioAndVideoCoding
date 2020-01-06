@@ -36,13 +36,14 @@ vector<tuple<short,short>> dct::dct_quant_rle_blck(cv::Mat blck, bool mask) {
     cv::Mat  block, dct_block, quant_block;
 
     blck.convertTo(block,CV_32F);
-    block=block-subtraction_mat;
+    block=block-this->subtraction_mat;
 
     cv::dct(block, dct_block);
     dct_block.convertTo(dct_block, CV_16S);
 
     if(mask) cv::multiply(dct_block, quant_mat_mask, quant_block);
     else divide(dct_block,quant_mat, quant_block);
+
 
     zigzag z = zigzag(quant_block);
     vector<short> tmp = z.load_zigzag();
@@ -64,7 +65,7 @@ cv::Mat dct::reverse_dct_quant_rle_blck(vector<tuple<short , short>> rle_vct, bo
 
     quant_block.convertTo(quant_block, CV_32F);
     cv::dct(quant_block, dct_block, cv::DCT_INVERSE);
-    dct_block=dct_block+subtraction_mat;
+    dct_block=dct_block+this->subtraction_mat;
     dct_block.convertTo(res, CV_16S);
     return res;
 }

@@ -18,13 +18,6 @@ uint golomb_initial_m=5;
 uint golomb_blk_size=128;
 uint golomb_calc_interval=16;
 
-void print_tuple_vector(vector<tuple<short,short>> v){
-	for(tuple<short, short>t:v)
-		cout<<"("<<std::get<0>(t)<<","<<std::get<1>(t)<<")";
-	cout << endl;
-}
-
-
 int decode(args& cfg){
 
 	bitstream bss(cfg.fileIn.c_str(),std::ios::binary|std::ios::in);
@@ -72,14 +65,14 @@ int decode(args& cfg){
 	out.set_interlace(interlace);
 	out.print_header();
 
-	golomb_bitstream gb_y(golomb_initial_m, bs);
-	golomb_bitstream gb_y_zeros(golomb_initial_m, bs);
+	golomb_bitstream gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	golomb_bitstream gb_y_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
-	golomb_bitstream gb_u(golomb_initial_m, bs);
-	golomb_bitstream gb_u_zeros(golomb_initial_m, bs);
+	golomb_bitstream gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	golomb_bitstream gb_u_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
-	golomb_bitstream gb_v(golomb_initial_m, bs);
-	golomb_bitstream gb_v_zeros(golomb_initial_m, bs);
+	golomb_bitstream gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	golomb_bitstream gb_v_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
 	cv::Size block_size_y,block_size_uv;
 	if(pred_mode==9){
@@ -92,9 +85,9 @@ int decode(args& cfg){
 	}
 
 	cv::Size uv_size=out.get_uv_size();
-	dct dct_y = dct(int(height), int(width), block_size_y);
-	dct dct_u = dct(int(uv_size.height), int(uv_size.width), block_size_uv);
-	dct dct_v = dct(int(uv_size.height), int(uv_size.width), block_size_uv);
+	dct dct_y = dct(int(height), int(width), block_size_y,3);
+	dct dct_u = dct(int(uv_size.height), int(uv_size.width), block_size_uv,3);
+	dct dct_v = dct(int(uv_size.height), int(uv_size.width), block_size_uv,3);
 
 	vector<tuple<short,short>> rle_y, rle_u, rle_v;
 	rle_y.reserve(block_size_y.height*block_size_y.width);
@@ -112,53 +105,48 @@ int decode(args& cfg){
 		cv::Mat u(out.get_paduv_size(),CV_8U);
 		cv::Mat v(out.get_paduv_size(),CV_8U);
 
-		if(pred_mode==9){
-			for(uint by=0;by*predBlockSize<(uint)y.rows;by++){
-				for(uint bx=0;bx*predBlockSize<(uint)y.cols;bx++){
-					uint bw_y=out.get_bsize_y().width;
-					uint bh_y=out.get_bsize_y().height;
-					uint bw_uv=out.get_bsize_uv().width;
-					uint bh_uv=out.get_bsize_uv().height;
 
-					rle_y.clear();
-					rle_u.clear();
-					rle_v.clear();
+		for(uint by=0;by*predBlockSize<(uint)y.rows;by++){
+			for(uint bx=0;bx*predBlockSize<(uint)y.cols;bx++){
+				uint bw_y=out.get_bsize_y().width;
+				uint bh_y=out.get_bsize_y().height;
+				uint bw_uv=out.get_bsize_uv().width;
+				uint bh_uv=out.get_bsize_uv().height;
 
-					//YUV residual
-					short n_zeros,val;
-					while (true) {
-						n_zeros=gb_y_zeros.read_signed_val();
-						val=gb_y.read_signed_val();
-						rle_y.push_back(make_tuple(n_zeros,val));
-						if(n_zeros==0 && val==0) break;
-					}
-					while(true){
-						n_zeros=gb_u_zeros.read_signed_val();
-						val=gb_u.read_signed_val();
-						rle_u.push_back(make_tuple(n_zeros,val));
-						if(n_zeros==0 && val==0) break;
-					}
-					while(true){
-						n_zeros=gb_v_zeros.read_signed_val();
-						val=gb_v.read_signed_val();
-						rle_v.push_back(make_tuple(n_zeros,val));
-						if(n_zeros==0 && val==0) break;
-					}
+				rle_y.clear();
+				rle_u.clear();
+				rle_v.clear();
 
-					res_y=dct_y.reverse_dct_quant_rle_blck(rle_y, false);
-					res_u=dct_u.reverse_dct_quant_rle_blck(rle_u, false);
-					res_v=dct_v.reverse_dct_quant_rle_blck(rle_v, false);
-
-					//Copy block to frame.
-					res_y.copyTo(y(cv::Rect(bx*bw_y,by*bh_y,bw_y,bh_y)));
-					res_u.copyTo(u(cv::Rect(bx*bw_uv,by*bh_uv,bw_uv,bh_uv)));
-					res_v.copyTo(v(cv::Rect(bx*bw_uv,by*bh_uv,bw_uv,bh_uv)));
+				//YUV residual
+				short n_zeros,val;
+				while (true) {
+					n_zeros=gb_y_zeros.read_signed_val();
+					val=gb_y.read_signed_val();
+					rle_y.push_back(make_tuple(n_zeros,val));
+					if(n_zeros==0 && val==0) break;
 				}
+				while(true){
+					n_zeros=gb_u_zeros.read_signed_val();
+					val=gb_u.read_signed_val();
+					rle_u.push_back(make_tuple(n_zeros,val));
+					if(n_zeros==0 && val==0) break;
+				}
+				while(true){
+					n_zeros=gb_v_zeros.read_signed_val();
+					val=gb_v.read_signed_val();
+					rle_v.push_back(make_tuple(n_zeros,val));
+					if(n_zeros==0 && val==0) break;
+				}
+
+				res_y=dct_y.reverse_dct_quant_rle_blck(rle_y, false);
+				res_u=dct_u.reverse_dct_quant_rle_blck(rle_u, false);
+				res_v=dct_v.reverse_dct_quant_rle_blck(rle_v, false);
+
+				//Copy block to frame.
+				res_y.copyTo(y(cv::Rect(bx*bw_y,by*bh_y,bw_y,bh_y)));
+				res_u.copyTo(u(cv::Rect(bx*bw_uv,by*bh_uv,bw_uv,bh_uv)));
+				res_v.copyTo(v(cv::Rect(bx*bw_uv,by*bh_uv,bw_uv,bh_uv)));
 			}
-		}
-		else{
-			cout << "EXIT" << endl;
-			return -1;
 		}
 		//Put frame into video.
 		out.push_frame(y,u,v);

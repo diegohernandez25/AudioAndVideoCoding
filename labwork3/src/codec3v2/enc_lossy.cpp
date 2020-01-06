@@ -16,12 +16,6 @@ uint golomb_initial_m=5;
 uint golomb_blk_size=128;
 uint golomb_calc_interval=16;
 
-void print_tuple_vector(vector<tuple<short,short>> v){
-	for(tuple<short, short>t:v)
-		cout<<"("<<std::get<0>(t)<<","<<std::get<1>(t)<<")";
-	cout << endl;
-}
-
 //JPEG pred (0-7 Normal JPEG Preditors, 8 JPEG-LS, 9 Auto prediction)
 
 void encode(args& cfg){
@@ -32,14 +26,14 @@ void encode(args& cfg){
 	bitstream bss(cfg.fileOut.c_str(),std::ios::trunc|std::ios::binary|std::ios::out);
 	bitstream_wrapper bs(bss,true);
 
-	golomb_bitstream gb_y(golomb_initial_m, bs);
-	golomb_bitstream gb_y_zeros(golomb_initial_m, bs);
+	golomb_bitstream gb_y(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	golomb_bitstream gb_y_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
-	golomb_bitstream gb_u(golomb_initial_m,bs);
-	golomb_bitstream gb_u_zeros(golomb_initial_m,bs);
+	golomb_bitstream gb_u(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	golomb_bitstream gb_u_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
-	golomb_bitstream gb_v(golomb_initial_m,bs);
-	golomb_bitstream gb_v_zeros(golomb_initial_m,bs);
+	golomb_bitstream gb_v(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
+	golomb_bitstream gb_v_zeros(golomb_initial_m,golomb_blk_size,golomb_calc_interval,bs);
 
 	cv::Size block_size_y,block_size_uv;
 	if(cfg.jpegPredictor==9){
@@ -53,9 +47,9 @@ void encode(args& cfg){
 
 	cv::Size uv_size=in.get_uv_size();
 
-  dct dct_y( int(in.get_height()), int(in.get_width()),block_size_y);
-	dct dct_u( int(uv_size.height), int(uv_size.width),block_size_uv);
-	dct dct_v( int(uv_size.height), int(uv_size.width),block_size_uv);
+  dct dct_y( int(in.get_height()), int(in.get_width()),block_size_y,3);
+	dct dct_u( int(uv_size.height), int(uv_size.width),block_size_uv,3);
+	dct dct_v( int(uv_size.height), int(uv_size.width),block_size_uv,3);
 
 	vector<tuple<short,short>> rle_y, rle_u, rle_v;
 
@@ -94,48 +88,37 @@ void encode(args& cfg){
 
 
 	do{
-		//GET BLOCKS.
 		cv::Mat y=in.get_y();
 		cv::Mat u=in.get_u();
 		cv::Mat v=in.get_v();
+		for(uint by=0;by*cfg.blockSize<(uint)y.rows;by++){
+			for(uint bx=0;bx*cfg.blockSize<(uint)y.cols;bx++){
+				uint bw_y=in.get_bsize_y().width;
+				uint bh_y=in.get_bsize_y().height;
+				uint bw_uv=in.get_bsize_uv().width;
+				uint bh_uv=in.get_bsize_uv().height;
 
-		if(cfg.jpegPredictor==9){
-			for(uint by=0;by*cfg.blockSize<(uint)y.rows;by++){
-				for(uint bx=0;bx*cfg.blockSize<(uint)y.cols;bx++){
-					uint bw_y=in.get_bsize_y().width;
-					uint bh_y=in.get_bsize_y().height;
-					uint bw_uv=in.get_bsize_uv().width;
-					uint bh_uv=in.get_bsize_uv().height;
+				cv::Mat res_y = y(cv::Rect(bx*bw_y,by*bh_y, bw_y, bh_y));
+				cv::Mat res_u = u(cv::Rect(bx*bw_uv,by*bh_uv, bw_uv, bh_uv));
+				cv::Mat res_v = v(cv::Rect(bx*bw_uv,by*bh_uv, bw_uv, bh_uv));
 
-					cv::Mat res_y = y(cv::Rect(bx*bw_y,by*bh_y, bw_y, bh_y));
-					cv::Mat res_u = u(cv::Rect(bx*bw_uv,by*bh_uv, bw_uv, bh_uv));
-					cv::Mat res_v = v(cv::Rect(bx*bw_uv,by*bh_uv, bw_uv, bh_uv));
+				rle_y=dct_y.dct_quant_rle_blck(res_y, false);
+				rle_u=dct_u.dct_quant_rle_blck(res_u, false);
+				rle_v=dct_v.dct_quant_rle_blck(res_v, false);
 
-					//cout << "a"<<endl;
-					//cout << "res_y size:\t("<<res_y.rows<<","<<res_y.cols<<")"<<endl;
-					rle_y=dct_y.dct_quant_rle_blck(res_y, false);
-					rle_u=dct_u.dct_quant_rle_blck(res_u, false);
-					rle_v=dct_v.dct_quant_rle_blck(res_v, false);
-
-					for(tuple<short,short> t:rle_y){
-						gb_y_zeros.write_signed_val(std::get<0>(t));
-						gb_y.write_signed_val(std::get<1>(t));
-					}
-					for(tuple<short,short> t:rle_u){
-						gb_u_zeros.write_signed_val(std::get<0>(t));
-						gb_u.write_signed_val(std::get<1>(t));
-					}
-					for(tuple<short,short> t:rle_v){
-						gb_v_zeros.write_signed_val(std::get<0>(t));
-						gb_v.write_signed_val(std::get<1>(t));
-					}
-
+				for(tuple<short,short> t:rle_y){
+					gb_y_zeros.write_signed_val(std::get<0>(t));
+					gb_y.write_signed_val(std::get<1>(t));
+				}
+				for(tuple<short,short> t:rle_u){
+					gb_u_zeros.write_signed_val(std::get<0>(t));
+					gb_u.write_signed_val(std::get<1>(t));
+				}
+				for(tuple<short,short> t:rle_v){
+					gb_v_zeros.write_signed_val(std::get<0>(t));
+					gb_v.write_signed_val(std::get<1>(t));
 				}
 			}
-		}
-		else{
-			cout << "EXIT" << endl;
-			return;
 		}
 	}while(in.next_frame());
 }
