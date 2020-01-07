@@ -306,7 +306,6 @@ int args::validateArgs() {
 		}
 	} else {
 		// Quantization
-		// TODO change defaults for dct?
 		if (qualY < -1) {
 			cout << "Error: level of quality must be less or equal to 0." << endl;
 			valid = false;
